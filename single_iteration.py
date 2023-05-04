@@ -71,7 +71,7 @@ def bo_iteration(X, y, c, bounds=None, acqf_str='', decay=None, iter=None, param
     
     new_x, n_memoised = optimize_acqf_by_mem(acqf=acqf, acqf_str=acqf_str, bounds=norm_bounds, iter=iter, prefix_pool=prefix_pool, seed=params['rand_seed'])
     
-    E_c, E_inv_c = [0], [0]
+    E_c, E_inv_c = [0], torch.tensor(0)
     if acqf_str == 'EEIPU':
         E_c = acqf.compute_expected_cost(new_x)
         E_inv_c = acqf.compute_expected_inverse_cost(new_x[:, None, :])

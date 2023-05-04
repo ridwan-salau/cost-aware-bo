@@ -4,7 +4,7 @@ from single_iteration import bo_iteration
 import numpy as np
 import torch
 from typing import Iterable
-DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+DEVICE = torch.device('cpu' if torch.cuda.is_available() else 'cpu')
 
 def get_initial_data(n, bounds=None, seed=0, params=None):
     X = generate_input_data(N=n, bounds=bounds, seed=seed)

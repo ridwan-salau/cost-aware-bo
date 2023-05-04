@@ -23,7 +23,7 @@ SYNTHETIC_FUNCTIONS = {
     'levy2': Levy(negate=True),
     'holdertable2': HolderTable(negate=True)
 }
-DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+DEVICE = torch.device('cpu' if torch.cuda.is_available() else 'cpu')
 
 def normalize(data, bounds=None):
     data_ = data + 0

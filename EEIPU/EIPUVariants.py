@@ -8,7 +8,7 @@ from torch.distributions import Normal
 from torch import Tensor
 import torch
 
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DEVICE = torch.device("cpu" if torch.cuda.is_available() else "cpu")
 
 class EIPUVariants(AnalyticAcquisitionFunction):
     r"""Modification of Standard Expected Improvement Class defined in BoTorch
@@ -149,7 +149,7 @@ class EIPUVariants(AnalyticAcquisitionFunction):
       
         if self.acq_type == "EIPU":
             X_new = self.unnormalizer(X.squeeze(1) + 0, bounds=self.bounds['x_cube'])
-            costs = self.cost_func(X_new)
+            costs = self.cost_func(X_new, self.params)
 
             costs = torch.stack(costs)
 

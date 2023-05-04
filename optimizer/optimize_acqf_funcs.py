@@ -27,6 +27,7 @@ from botorch.optim.initializers import (
     initialize_q_batch,
     gen_one_shot_kg_initial_conditions,
     TGenInitialConditions,
+    initialize_q_batch_nonneg,
 )
 from botorch.optim.stopping import ExpMAStoppingCriterion
 from botorch.optim.utils import _filter_kwargs
