@@ -28,6 +28,7 @@ class EIPUVariants(AnalyticAcquisitionFunction):
         cost_func = None,
         unstandardizer = None,
         unnormalizer = None,
+        cost_normalizer=None,
         bounds: Tensor = None,
         params: Dict = None,
         eta = None,
@@ -63,6 +64,7 @@ class EIPUVariants(AnalyticAcquisitionFunction):
         self.cost_func = cost_func
         self.unstandardizer = unstandardizer
         self.unnormalizer = unnormalizer
+        self.cost_normalizer = cost_normalizer
         self.bounds = bounds
         self.params = params
         self.eta = eta
@@ -82,17 +84,25 @@ class EIPUVariants(AnalyticAcquisitionFunction):
                 hyp_indexes = self.params['h_ind'][i]
                 cost_posterior = cost_model.posterior(X[:,:,hyp_indexes])
                 cost_samples = self.cost_sampler(cost_posterior)
+                cost_samples = cost_samples.to(DEVICE)
                 cost_samples = cost_samples.max(dim=2)[0]
 
                 cost_samples = self.unstandardizer(cost_samples, bounds=self.bounds['c'][:,i])
                 cost_samples = torch.exp(cost_samples)
 
                 cost_samples = self.acq_obj(cost_samples)
-                reshaped_samples = cost_samples[:,:,None]
-                cat_stages = reshaped_samples if (not torch.is_tensor(cat_stages)) else torch.cat([cat_stages, reshaped_samples], axis=2)
 
+                reshaped_samples = cost_samples[:,:,None]
+                reshaped_samples = reshaped_samples.to(DEVICE)
+                # reshaped_samples = torch.log(reshaped_samples)
+                # reshaped_samples = self.cost_normalizer(reshaped_samples, self.params)
+                cat_stages = reshaped_samples if (not torch.is_tensor(cat_stages)) else torch.cat([cat_stages, reshaped_samples], axis=2)
+        
+        n_mem, n_stages = delta, cat_stages.shape[2]
+        cat_stages[:,:,n_mem:n_stages] = self.cost_normalizer(cat_stages[:,:,n_mem:n_stages], self.params)
         
         cat_stages = cat_stages.sum(dim=-1)
+        
         cat_stages = 1/cat_stages
         cat_stages = cat_stages.mean(dim=0)
         return cat_stages
@@ -108,6 +118,7 @@ class EIPUVariants(AnalyticAcquisitionFunction):
             hyp_indexes = self.params['h_ind'][i]
             cost_posterior = cost_model.posterior(X[:,hyp_indexes])
             cost_samples = self.cost_sampler(cost_posterior)
+            cost_samples = cost_samples.to(DEVICE)
             cost_samples = cost_samples.max(dim=2)[0]
             
             cost_samples = self.unstandardizer(cost_samples, bounds=self.bounds['c'][:,i])
@@ -115,10 +126,6 @@ class EIPUVariants(AnalyticAcquisitionFunction):
             cost_obj = self.acq_obj(cost_samples)
             all_cost_obj.append(cost_obj.mean(dim=0).item())
         return all_cost_obj
-
-    def update_warmup(self, curr_iter):
-        self.warmup = (curr_iter < self.params['warmup_iters'])
-        return
 
     @t_batch_mode_transform(expected_q=1, assert_output_shape=False)
     def forward(self, X: Tensor, delta: int = 0, curr_iter: int = -1) -> Tensor:
@@ -142,23 +149,26 @@ class EIPUVariants(AnalyticAcquisitionFunction):
         ucdf = normal.cdf(u)
         updf = torch.exp(normal.log_prob(u))
         ei = sigma * (updf + u * ucdf)
-        
-        self.update_warmup(curr_iter)
-        if self.warmup and curr_iter > -1:
-            self.eta = self.params['warmup_eta']
+     
+        if self.acq_type == "EEIPU":
+            inv_cost =  self.compute_expected_inverse_cost(X, delta=delta)
+            return ei * (inv_cost**self.eta)
       
-        if self.acq_type == "EIPU":
+        elif "EIPU" in self.acq_type:
             X_new = self.unnormalizer(X.squeeze(1) + 0, bounds=self.bounds['x_cube'])
-            costs = self.cost_func(X_new)
+            costs = self.cost_func(X_new, self.params)
+            for stage in range(len(costs)):
+                costs[stage] = self.cost_normalizer(costs[stage], self.params)
+            if "MEMO" in self.acq_type:
+                for i in range(delta):
+                    eps = torch.full((costs[i].shape[0],1), 1e-2, device=DEVICE)
+                    costs[i] = eps
 
             costs = torch.stack(costs)
 
             costs = torch.sum(costs, dim=0)
+
             return ei / (costs.squeeze()**self.eta)
-     
-        elif self.acq_type == "EEIPU":
-            inv_cost =  self.compute_expected_inverse_cost(X, delta=delta)
-            return ei * (inv_cost**self.eta)
        
         else:
             raise Exception("ERROR: Only EIPU, EEIPU, EEIPU-INV are supported!")

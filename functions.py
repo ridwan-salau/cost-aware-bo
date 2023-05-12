@@ -1,29 +1,38 @@
 import torch
 import copy
 import random
+import math
 from collections import deque
 from botorch.models import SingleTaskGP
 from gpytorch.mlls import ExactMarginalLogLikelihood
+from gpytorch.kernels import RBFKernel, RQKernel, MaternKernel, PeriodicKernel, ScaleKernel, AdditiveKernel, ProductKernel
 from botorch.test_functions import Beale, Branin, Hartmann, EggHolder, StyblinskiTang, Rosenbrock, Levy, Shekel, Ackley,HolderTable, Michalewicz
+
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 SYNTHETIC_FUNCTIONS = {
     # Stage 1
     'branin2': Branin(negate=True, bounds=[[0,10], [0,10]]),
     'michale2': Michalewicz(negate=True),
-    'styblnski2': StyblinskiTang(dim=2, negate=True),
+    'styblinski2': StyblinskiTang(dim=2, negate=True),
     'beale2': Beale(negate=True),
     
     # Stage 2
     'ackley3': Ackley(dim=3, negate=True),
     'hartmann3':Hartmann(dim=3, negate=True),
-    'styblnski3': StyblinskiTang(dim=3, negate=True),
+    'styblinski3': StyblinskiTang(dim=3, negate=True),
     
     # Stage 3
     'rosenbrock2': Rosenbrock(negate=True),
     'levy2': Levy(negate=True),
     'holdertable2': HolderTable(negate=True)
 }
-DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# KERNELS = {
+#     'rbf': RBFKernel(ard_num_dims=7).to(DEVICE),
+#     'rqk': RQKernel(ard_num_dims=7).to(DEVICE),
+#     'matern': MaternKernel(ard_num_dims=7).to(DEVICE),
+#     'periodic': PeriodicKernel(ard_num_dims=7).to(DEVICE)
+# }
 
 def normalize(data, bounds=None):
     data_ = data + 0
@@ -32,7 +41,7 @@ def normalize(data, bounds=None):
     for dim in range(dims):
         mn, mx = bounds[0][dim].item(), bounds[1][dim].item()
         data_[:, dim] = (data_[:,dim] - mn) / (mx - mn)
-    return data_
+    return data_ 
 
 def unnormalize(data, bounds=None):
     data_ = data + 0
@@ -40,62 +49,87 @@ def unnormalize(data, bounds=None):
     for dim in range(dims):
         mn, mx = bounds[0][dim].item(), bounds[1][dim].item()
         data_[:, dim] = (data_[:, dim] * (mx-mn)) + mn
-    return data_
+    return data_ 
+
+def normalize_cost(data, params):
+    mn, mx = 10, 300
+    data = (data - mn) / (mx-mn)
+    alpha, eps = params['alpha'], params['norm_eps']
+    data = alpha * data + eps
+    try:
+        assert data.min() > 0
+    except:
+        print(f"EXCEPTION RAISED BECAUSE THE MINIMUM DATAPOINT IS = {data.min().item()}, MAXIMUM FOR SOME REASON IS = {data.max().item()}, SHAPE IS = {data.shape}, AND NUMBER OF NANS IS {torch.isnan(data.view(-1)).sum().item()}")
+    return data
 
 def standardize(data, bounds=None):
     data_ = data + 0
     mean, std = bounds[0].item(), bounds[1].item()
     data_ = (data_ - mean) / std
-    return data_
+    return data_ 
 
 def unstandardize(data, bounds=None):
     data_ = data + 0
     mean, std = bounds[0].item(), bounds[1].item()
     data_ = (data_ * std) + mean
-    return data_
+    return data_ 
 
 def logistic(x, params): # logistic function
-    return   ( 1./ (1 + torch.exp(-x*params['slope']))  )
+    log = ( 1./ (1 + torch.exp(-x*params['slope']))  )
+    return log 
 
 def sin(x, params): # sin
-    return torch.sin(x)
+    sine = torch.sin(x)
+    return sine 
 
 def cos(x, params): # cosine
-    return torch.cos(x)
+    cosine = torch.cos(x)
+    return cosine 
 
 def poly(x, params): # polynomial function
-    return x**params['degree']
+    nomial = x**params['degree']
+    return nomial 
+
+def bran(x1, x2, b, c, t, r):
+    return (x2 - b*x1**2 + c*x1 - r)**2 + (1 - t) * torch.cos(x1) + 10
 
 def apply(f, x, params={}, synthetic = False):
     if synthetic:
-        return params['scale'] * f(x) + params['shift']
+        val = params['scale'] * f(x) + params['shift']
     else:
-        return params['scale'] * f(x, params) + params['shift']
-    
+        val = params['scale'] * f(x, params) + params['shift']
+    return val 
+        
 def cost2D(X, ctype=1):
     if ctype==1:
-        cost = (apply(logistic, X[:,0], {'slope':5, 'scale':15, 'shift':20}) + apply(sin, X[:,1], {'scale':20,'shift':25}))
+        cost = (apply(cos, X[:,0], {'scale':20, 'shift':50}) + apply(logistic, X[:,1], {'scale':100,'shift':10, 'slope':5}))
+        # cost = (apply(logistic, X[:,0], {'slope':5, 'scale':15, 'shift':20}) + apply(sin, X[:,1], {'scale':20,'shift':25}))
     elif ctype==2:
         cost = (5*apply(cos, X[:,0], {'scale':10, 'shift':20}) - apply(sin, X[:,1], {'scale':25, 'shift':10}))
-        
+       
     elif ctype==3:
-        cost = (apply(logistic, X[:,0], {'slope':5, 'scale':25,'shift':10}) - apply(logistic, X[:,1],{'slope':3,'scale':2,'shift':3}))
+        cost = (apply(logistic, X[:,0], {'slope':3, 'scale':25,'shift':50}) + apply(poly, X[:,1],{'degree':3,'scale':1,'shift':50}))
     else:
         raise ValueError('Only cost types 1 to 3 acceptable')
-        
-    return cost.unsqueeze(-1)
+       
+    assert cost.min() > 0
+    cost = cost.unsqueeze(-1)
+    return cost
 
 def cost3D(X, ctype=1):
     if ctype==1:
-        cost = (apply(logistic, X[:,0], {'scale':5, 'shift':30, 'slope':30}) - apply(sin, X[:,1], {'scale':-12, 'shift':4}) + apply(cos, X[:,2], {'scale':5, 'shift':30}))
+        cost = (apply(logistic, X[:,0], {'scale':20, 'shift':50, 'slope':4}) + apply(sin, X[:,1], {'scale':30, 'shift':40}) + apply(cos, X[:,2], {'scale':5, 'shift':30}))
     elif ctype==2:
-        cost =  (apply(sin, X[:,1], {'scale':15, 'shift':6}) + apply(logistic, X[:,2], {'slope':5,'scale':27,'shift':10}))
+        cost =  (apply(sin, X[:,0], {'scale':20, 'shift':50}) + apply(logistic, X[:,2], {'slope':8,'scale':15,'shift':5}))
+        # cost =  (apply(sin, X[:,1], {'scale':15, 'shift':6}) + apply(logistic, X[:,2], {'slope':5,'scale':27,'shift':10}))
     elif ctype==3:
-        cost = (apply(logistic, X[:,0], {'scale':22, 'shift':5, 'slope':10}) - apply(sin, X[:,1], {'scale':-12, 'shift':5}) + apply(cos, X[:,2], {'scale':22, 'shift':5}))
+        cost = (apply(logistic, X[:,0], {'scale':22, 'shift':15, 'slope':3}) + apply(sin, X[:,1], {'scale':5, 'shift':10}) + apply(cos, X[:,2], {'scale':20, 'shift':25}))
     else:
         raise ValueError('Only cost types 1 to 3 acceptable')
-        
-    return cost.unsqueeze(-1)
+    
+    assert cost.min() > 0
+    cost = cost.unsqueeze(-1)
+    return cost
     
 def get_gen_bounds(param_idx, func_bounds, funcs=None, bound_type=''):
     lo_bounds, hi_bounds = [], []
@@ -132,6 +166,12 @@ def get_dataset_bounds(X, Y, C, gen_bounds):
         std_c_bounds[0].append(log_sc.mean().item())
         std_c_bounds[1].append(log_sc.std().item())
     bounds['c'] = torch.tensor(std_c_bounds, device=DEVICE)
+
+    c_cube = [[], []]
+    for stage_costs in C:
+        c_cube[0].append(stage_costs.min().item())
+        c_cube[1].append(stage_costs.max().item())
+    bounds['c_cube'] = torch.tensor(c_cube, device=DEVICE)
     
     return bounds
 
@@ -146,6 +186,7 @@ def get_random_observations(N=None, bounds=None):
             X = torch.cat((X, temp), dim=1)
         else:
             X = torch.distributions.uniform.Uniform(lo_bounds, hi_bounds).sample([N, 1])
+    X = X.to(DEVICE)
     return X
 
 def generate_input_data(N=None, bounds=None, seed=0):
@@ -166,7 +207,7 @@ def F(X, params):
         
         obj = SYNTHETIC_FUNCTIONS[f]
         F += obj(X[:, stage_params])
-    return F
+    return F.to(DEVICE)
 
 def Cost_F(X, params):
 
@@ -186,15 +227,25 @@ def Cost_F(X, params):
         costs.append(stage_cost)
     return costs
 
-def initialize_GP_model(X, y):
+def initialize_GP_model(X, y, params=None):
     X_, y_ = X + 0, y + 0
     gp_model = SingleTaskGP(X_, y_).to(X_)
-    mll = ExactMarginalLogLikelihood(gp_model.likelihood, gp_model)
+    gp_model = gp_model.to(DEVICE)
+    # if params is not None:
+    #     kernel = params['kernel']
+    #     kernel = KERNELS[kernel]
+    #     gp_model.covar_module = ScaleKernel(kernel).to(DEVICE)
+    mll = ExactMarginalLogLikelihood(gp_model.likelihood, gp_model).to(DEVICE)
     return mll, gp_model
 
-def generate_prefix_pool(X, params):
+def generate_prefix_pool(X, acqf, params):
     prefix_pool = []
     first_idx = params['n_init_data']
+
+    if acqf not in ['EEIPU', 'EIPU-MEMO']:
+        prefix_pool.append([])
+        return prefix_pool
+        
     for i, param_config in enumerate(X[first_idx:]):
         prefix = []
         n_stages = len(params['h_ind'])

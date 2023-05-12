@@ -1,0 +1,32 @@
+/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py:518: RuntimeWarning: Optimization failed in `gen_candidates_scipy` with the following warning(s):
+[OptimizationWarning('Optimization failed within `scipy.optimize.minimize` with status 2 and message ABNORMAL_TERMINATION_IN_LNSRCH.')]
+Trying again with a new set of initial conditions.
+  warnings.warn(first_warn_msg, RuntimeWarning)
+/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py:545: RuntimeWarning: Optimization failed on the second try, after generating a new set of initial conditions.
+  warnings.warn(
+Traceback (most recent call last):
+  File "/home/abdelmajid/workdir/cost-aware-bo/main.py", line 61, in <module>
+    bo_trial(trial_number=trial, acqf=args.acqf, wandb=wandb, params=params)
+  File "/home/abdelmajid/workdir/cost-aware-bo/single_trial.py", line 62, in bo_trial
+    new_x, n_memoised, E_c, E_inv_c, y_pred = bo_iteration(X, Y, C, bounds=bounds, acqf_str=acqf, decay=eta, iter=iteration, params=params)
+  File "/home/abdelmajid/workdir/cost-aware-bo/single_iteration.py", line 72, in bo_iteration
+    new_x, n_memoised = optimize_acqf_by_mem(acqf=acqf, acqf_str=acqf_str, bounds=norm_bounds, iter=iter, prefix_pool=prefix_pool, seed=params['rand_seed'])
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimize_mem_acqf.py", line 26, in optimize_acqf_by_mem
+    new_candidate, acqf_val = optimize_acqf(acq_function=acqf, acq_type=acqf_str, delta=pref_stages, curr_iter=iter, bounds=bounds, q=1, num_restarts=10, raw_samples=512, options={'seed': seed})
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 401, in optimize_acqf
+    return _optimize_acqf(opt_acqf_inputs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/optimize.py", line 554, in _optimize_acqf
+    return _optimize_acqf_batch(
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 414, in _optimize_acqf_batch
+    batch_initial_conditions = opt_inputs.get_ic_generator()(
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 221, in gen_batch_initial_conditions
+    ).cpu() if 'EIPU' not in acq_type else acq_function(
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/utils/transforms.py", line 287, in decorated
+    output = method(acqf, X, *args, **kwargs)
+  File "/home/abdelmajid/workdir/cost-aware-bo/EEIPU/EIPUVariants.py", line 157, in forward
+    costs[stage] = self.cost_normalizer(costs[stage], self.params)
+  File "/home/abdelmajid/workdir/cost-aware-bo/functions.py", line 62, in normalize_cost
+    assert data.min() > 0
+AssertionError

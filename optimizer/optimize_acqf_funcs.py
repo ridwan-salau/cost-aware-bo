@@ -27,11 +27,13 @@ from botorch.optim.initializers import (
     initialize_q_batch,
     gen_one_shot_kg_initial_conditions,
     TGenInitialConditions,
+    initialize_q_batch_nonneg
 )
 from botorch.optim.stopping import ExpMAStoppingCriterion
 from botorch.optim.utils import _filter_kwargs
 from functools import partial
 from typing import Any, Callable, Dict, List, NoReturn, Optional, Tuple, Type, Union
+from botorch.exceptions.warnings import BadInitialCandidatesWarning
 
 from botorch.generation.utils import _remove_fixed_features_from_optimization
 from botorch.logging import _get_logger

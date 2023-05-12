@@ -23,7 +23,7 @@ def optimize_acqf_by_mem(acqf=None, acqf_str=None, bounds=None, iter=None, prefi
         for i, pref_param in enumerate(prefix):
             bounds[0][i], bounds[1][i] = pref_param, pref_param
         
-        new_candidate, acqf_val = optimize_acqf(acq_function=acqf, acq_type=acqf_str, delta=pref_stages, curr_iter=iter, bounds=bounds, q=1, num_restarts=10, raw_samples=500, options={'seed': seed})
+        new_candidate, acqf_val = optimize_acqf(acq_function=acqf, acq_type=acqf_str, delta=pref_stages, curr_iter=iter, bounds=bounds, q=1, num_restarts=10, raw_samples=512, options={'seed': seed})
         
         best_candidate, best_acqf_val, n_memoised = update_candidate(new_candidate, acqf_val.item(), best_candidate, best_acqf_val, n_memoised, pref_stages)
     

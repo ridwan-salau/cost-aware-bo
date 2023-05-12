@@ -1,0 +1,71 @@
+BEFORE NORMALIZATION:
+tensor([[[ 19.8627,  28.4417,  35.3989],
+         [ 25.1827,  34.6929,  67.3078],
+         [ 14.3549,  26.2955, 107.6540],
+         ...,
+         [ 70.8794,  49.4017,  27.7991],
+         [ 26.4819,  20.6637,  13.4010],
+         [134.6009,  72.9631,  97.0510]],
+        [[ 11.6308,  22.0592,  11.7451],
+         [ 24.4606,  23.6581,  25.9806],
+         [ 10.6806,  14.5443,  32.1380],
+         ...,
+         [ 28.6297,  32.3365,  11.4084],
+         [  8.2325,  12.8997,  10.9867],
+         [ 17.3428,  59.4271,  31.8269]],
+        [[ 10.8853,  21.3760,  10.2458],
+         [ 24.3727,  22.5631,  23.0926],
+         [ 10.2968,  13.5162,  27.6712],
+         ...,
+         [ 25.5907,  30.6838,  10.2174],
+         [  7.1239,  12.1688,  10.7198],
+         [ 13.4573,  57.9366,  27.7239]],
+        ...,
+        [[ 10.0260,  20.5575,   8.6483],
+         [ 24.2640,  21.2742,  19.9504],
+         [  9.8395,  12.3407,  22.9806],
+         ...,
+         [ 22.2633,  28.7495,   8.9106],
+         [  5.9533,  11.3190,  10.3975],
+         [  9.8225,  56.1384,  23.3592]],
+        [[ 12.3644,  22.7092,  13.3234],
+         [ 24.5421,  24.7162,  28.9666],
+         [ 11.0477,  15.5627,  36.8995],
+         ...,
+         [ 31.7550,  33.9412,  12.6308],
+         [  9.4086,  13.6134,  11.2389],
+         [ 21.9193,  60.8373,  36.1520]],
+        [[ 14.1511,  24.2123,  17.5974],
+         [ 24.7228,  27.2214,  36.8262],
+         [ 11.9029,  18.0695,  50.0523],
+         ...,
+         [ 39.9117,  37.7696,  15.8117],
+         [ 12.6325,  15.3310,  11.8163],
+         [ 36.7501,  64.0685,  47.8900]]], device='cuda:0',
+       dtype=torch.float64)
+Traceback (most recent call last):
+  File "/home/abdelmajid/workdir/cost-aware-bo/main.py", line 61, in <module>
+    bo_trial(trial_number=trial, acqf=args.acqf, wandb=wandb, params=params)
+  File "/home/abdelmajid/workdir/cost-aware-bo/single_trial.py", line 62, in bo_trial
+    new_x, n_memoised, E_c, E_inv_c, y_pred = bo_iteration(X, Y, C, bounds=bounds, acqf_str=acqf, decay=eta, iter=iteration, params=params)
+  File "/home/abdelmajid/workdir/cost-aware-bo/single_iteration.py", line 72, in bo_iteration
+    new_x, n_memoised = optimize_acqf_by_mem(acqf=acqf, acqf_str=acqf_str, bounds=norm_bounds, iter=iter, prefix_pool=prefix_pool, seed=params['rand_seed'])
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimize_mem_acqf.py", line 26, in optimize_acqf_by_mem
+    new_candidate, acqf_val = optimize_acqf(acq_function=acqf, acq_type=acqf_str, delta=pref_stages, curr_iter=iter, bounds=bounds, q=1, num_restarts=10, raw_samples=512, options={'seed': seed})
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 401, in optimize_acqf
+    return _optimize_acqf(opt_acqf_inputs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/optimize.py", line 554, in _optimize_acqf
+    return _optimize_acqf_batch(
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 414, in _optimize_acqf_batch
+    batch_initial_conditions = opt_inputs.get_ic_generator()(
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 221, in gen_batch_initial_conditions
+    ).cpu() if 'EIPU' not in acq_type else acq_function(
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/utils/transforms.py", line 287, in decorated
+    output = method(acqf, X, *args, **kwargs)
+  File "/home/abdelmajid/workdir/cost-aware-bo/EEIPU/EIPUVariants.py", line 153, in forward
+    inv_cost =  self.compute_expected_inverse_cost(X, delta=delta)
+  File "/home/abdelmajid/workdir/cost-aware-bo/EEIPU/EIPUVariants.py", line 100, in compute_expected_inverse_cost
+    cat_stages = cost_normalizer(cat_stages, bounds['c_cube'])
+NameError: name 'cost_normalizer' is not defined

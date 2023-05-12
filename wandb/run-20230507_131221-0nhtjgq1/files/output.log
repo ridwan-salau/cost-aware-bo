@@ -1,0 +1,92 @@
+
+Testing on Trial 4 for Kernel matern
+Traceback (most recent call last):
+  File "/home/abdelmajid/workdir/cost-aware-bo/main.py", line 64, in <module>
+    bo_trial(trial_number=trial, acqf=args.acqf, wandb=wandb, params=params)
+  File "/home/abdelmajid/workdir/cost-aware-bo/single_trial.py", line 61, in bo_trial
+    new_x, n_memoised, E_c, E_inv_c, y_pred = bo_iteration(X, Y, C, bounds=bounds, acqf_str=acqf, decay=eta, iter=iteration, params=params)
+  File "/home/abdelmajid/workdir/cost-aware-bo/single_iteration.py", line 50, in bo_iteration
+    mll, gp_model = get_gp_models(train_x, train_y, params=params)
+  File "/home/abdelmajid/workdir/cost-aware-bo/single_iteration.py", line 13, in get_gp_models
+    fit_gpytorch_model(mll)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/fit.py", line 164, in fit_gpytorch_model
+    mll = fit_gpytorch_mll(
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/fit.py", line 105, in fit_gpytorch_mll
+    return FitGPyTorchMLL(
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/utils/dispatcher.py", line 93, in __call__
+    return func(*args, **kwargs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/fit.py", line 252, in _fit_fallback
+    optimizer(mll, closure=closure, **optimizer_kwargs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/fit.py", line 120, in fit_gpytorch_mll_scipy
+    result = scipy_minimize(
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/core.py", line 109, in scipy_minimize
+    raw = minimize_with_timeout(
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/utils/timeout.py", line 80, in minimize_with_timeout
+    return optimize.minimize(
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_minimize.py", line 696, in minimize
+    res = _minimize_lbfgsb(fun, x0, args, jac, bounds,
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_lbfgsb_py.py", line 305, in _minimize_lbfgsb
+    sf = _prepare_scalar_function(fun, x0, jac=jac, args=args, epsilon=eps,
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_optimize.py", line 332, in _prepare_scalar_function
+    sf = ScalarFunction(fun, x0, args, grad, hess,
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_differentiable_functions.py", line 158, in __init__
+    self._update_fun()
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_differentiable_functions.py", line 251, in _update_fun
+    self._update_fun_impl()
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_differentiable_functions.py", line 155, in update_fun
+    self.f = fun_wrapped(self.x)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_differentiable_functions.py", line 137, in fun_wrapped
+    fx = fun(np.copy(x), *args)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_optimize.py", line 76, in __call__
+    self._compute_if_needed(x, *args)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_optimize.py", line 70, in _compute_if_needed
+    fg = self.fun(x, *args)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/closures/core.py", line 160, in __call__
+    value, grads = _handle_numerical_errors(e, x=self.state, dtype=np_float64)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/utils/common.py", line 52, in _handle_numerical_errors
+    raise error  # pragma: nocover
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/closures/core.py", line 150, in __call__
+    value_tensor, grad_tensors = self.closure(**kwargs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/closures/core.py", line 64, in __call__
+    values = self.forward(**kwargs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/closures/model_closures.py", line 176, in closure
+    log_likelihood = mll(
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/gpytorch/module.py", line 30, in __call__
+    outputs = self.forward(*inputs, **kwargs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/gpytorch/mlls/exact_marginal_log_likelihood.py", line 64, in forward
+    res = output.log_prob(target)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/gpytorch/distributions/multivariate_normal.py", line 171, in log_prob
+    return super().log_prob(value)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/torch/distributions/multivariate_normal.py", line 216, in log_prob
+    M = _batch_mahalanobis(self._unbroadcasted_scale_tril, diff)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/gpytorch/distributions/multivariate_normal.py", line 88, in _unbroadcasted_scale_tril
+    ust = to_dense(self.lazy_covariance_matrix.cholesky())
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/linear_operator/operators/_linear_operator.py", line 1229, in cholesky
+    chol = self._cholesky(upper=False)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/linear_operator/utils/memoize.py", line 59, in g
+    return _add_to_cache(self, cache_name, method(self, *args, **kwargs), *args, kwargs_pkl=kwargs_pkl)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/linear_operator/operators/_linear_operator.py", line 478, in _cholesky
+    evaluated_kern_mat = self.evaluate_kernel()
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/linear_operator/operators/added_diag_linear_operator.py", line 191, in evaluate_kernel
+    added_diag_linear_op = self.representation_tree()(*self.representation())
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/linear_operator/operators/_linear_operator.py", line 1944, in representation_tree
+    return LinearOperatorRepresentationTree(self)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/linear_operator/operators/linear_operator_representation_tree.py", line 13, in __init__
+    representation_size = len(arg.representation())
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/gpytorch/lazy/lazy_evaluated_kernel_tensor.py", line 397, in representation
+    return self.evaluate_kernel().representation()
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/gpytorch/utils/memoize.py", line 59, in g
+    return _add_to_cache(self, cache_name, method(self, *args, **kwargs), *args, kwargs_pkl=kwargs_pkl)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/gpytorch/lazy/lazy_evaluated_kernel_tensor.py", line 25, in wrapped
+    output = method(self, *args, **kwargs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/gpytorch/lazy/lazy_evaluated_kernel_tensor.py", line 355, in evaluate_kernel
+    res = self.kernel(
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/gpytorch/kernels/kernel.py", line 524, in __call__
+    super(Kernel, self).__call__(x1_, x2_, last_dim_is_batch=last_dim_is_batch, **params)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/gpytorch/module.py", line 30, in __call__
+    outputs = self.forward(*inputs, **kwargs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/gpytorch/kernels/scale_kernel.py", line 109, in forward
+    orig_output = self.base_kernel.forward(x1, x2, diag=diag, last_dim_is_batch=last_dim_is_batch, **params)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/gpytorch/kernels/matern_kernel.py", line 97, in forward
+    x1_ = (x1 - mean).div(self.lengthscale)
+RuntimeError: Expected all tensors to be on the same device, but found at least two devices, cuda:0 and cpu!

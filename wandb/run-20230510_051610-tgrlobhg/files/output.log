@@ -1,0 +1,77 @@
+THE COST YOU ARE LOOKING FOR IS OF SHAPE 3 BY torch.Size([10, 1])
+HERE GOES NOTHING:
+[tensor([[178.8686],
+        [142.3885],
+        [166.2835],
+        [140.0669],
+        [165.0639],
+        [150.7251],
+        [140.1879],
+        [157.7061],
+        [143.7790],
+        [148.1848]], device='cuda:0', dtype=torch.float64,
+       grad_fn=<UnsqueezeBackward0>), tensor([[50.9055],
+        [75.0703],
+        [89.4242],
+        [35.6475],
+        [39.6915],
+        [50.0690],
+        [49.9782],
+        [50.3099],
+        [52.9417],
+        [49.4619]], device='cuda:0', dtype=torch.float64,
+       grad_fn=<UnsqueezeBackward0>), tensor([[107.5886],
+        [109.6853],
+        [127.4564],
+        [137.3130],
+        [101.8994],
+        [110.9771],
+        [139.0302],
+        [105.6217],
+        [108.2183],
+        [170.9543]], device='cuda:0', dtype=torch.float64,
+       grad_fn=<UnsqueezeBackward0>)]
+Traceback (most recent call last):
+  File "/home/abdelmajid/workdir/cost-aware-bo/main.py", line 61, in <module>
+    bo_trial(trial_number=trial, acqf=args.acqf, wandb=wandb, params=params)
+  File "/home/abdelmajid/workdir/cost-aware-bo/single_trial.py", line 59, in bo_trial
+    new_x, n_memoised, E_c, E_inv_c, y_pred = bo_iteration(X, Y, C, bounds=bounds, acqf_str=acqf, decay=eta, iter=iteration, params=params)
+  File "/home/abdelmajid/workdir/cost-aware-bo/single_iteration.py", line 72, in bo_iteration
+    new_x, n_memoised = optimize_acqf_by_mem(acqf=acqf, acqf_str=acqf_str, bounds=norm_bounds, iter=iter, prefix_pool=prefix_pool, seed=params['rand_seed'])
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimize_mem_acqf.py", line 26, in optimize_acqf_by_mem
+    new_candidate, acqf_val = optimize_acqf(acq_function=acqf, acq_type=acqf_str, delta=pref_stages, curr_iter=iter, bounds=bounds, q=1, num_restarts=10, raw_samples=512, options={'seed': seed})
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 401, in optimize_acqf
+    return _optimize_acqf(opt_acqf_inputs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/optimize.py", line 554, in _optimize_acqf
+    return _optimize_acqf_batch(
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 500, in _optimize_acqf_batch
+    batch_candidates, batch_acq_values, ws = _optimize_batch_candidates(timeout_sec)
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 483, in _optimize_batch_candidates
+    ) = opt_inputs.gen_candidates(
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 709, in gen_candidates_scipy
+    res = minimize_with_timeout(
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/utils/timeout.py", line 80, in minimize_with_timeout
+    return optimize.minimize(
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_minimize.py", line 696, in minimize
+    res = _minimize_lbfgsb(fun, x0, args, jac, bounds,
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_lbfgsb_py.py", line 305, in _minimize_lbfgsb
+    sf = _prepare_scalar_function(fun, x0, jac=jac, args=args, epsilon=eps,
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_optimize.py", line 332, in _prepare_scalar_function
+    sf = ScalarFunction(fun, x0, args, grad, hess,
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_differentiable_functions.py", line 158, in __init__
+    self._update_fun()
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_differentiable_functions.py", line 251, in _update_fun
+    self._update_fun_impl()
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_differentiable_functions.py", line 155, in update_fun
+    self.f = fun_wrapped(self.x)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_differentiable_functions.py", line 137, in fun_wrapped
+    fx = fun(np.copy(x), *args)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_optimize.py", line 76, in __call__
+    self._compute_if_needed(x, *args)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_optimize.py", line 70, in _compute_if_needed
+    fg = self.fun(x, *args)
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 667, in f_np_wrapper
+    loss = f(X_fix).sum()
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 707, in f
+    return -acquisition_function(x) if 'EIPU' not in acq_type else -acquisition_function(x, delta, curr_iter)
+TypeError: bad operand type for unary -: 'NoneType'

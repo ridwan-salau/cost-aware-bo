@@ -1,0 +1,12 @@
+Traceback (most recent call last):
+  File "/home/abdelmajid/workdir/cost-aware-bo/main.py", line 61, in <module>
+    bo_trial(trial_number=trial, acqf=args.acqf, wandb=wandb, params=params)
+  File "/home/abdelmajid/workdir/cost-aware-bo/single_trial.py", line 39, in bo_trial
+    X, Y, C = get_initial_data(params['n_init_data'], bounds=input_bounds, seed=trial_number, params=params)
+  File "/home/abdelmajid/workdir/cost-aware-bo/single_trial.py", line 12, in get_initial_data
+    c = Cost_F(X, params)
+  File "/home/abdelmajid/workdir/cost-aware-bo/functions.py", line 206, in Cost_F
+    stage_cost = cost2D(X[:, stage_idx], ctype)
+  File "/home/abdelmajid/workdir/cost-aware-bo/functions.py", line 102, in cost2D
+    assert cost.min() > 0
+AssertionError

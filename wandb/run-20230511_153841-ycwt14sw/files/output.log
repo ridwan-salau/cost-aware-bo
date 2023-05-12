@@ -1,0 +1,71 @@
+BEFORE NORMALIZATION:
+tensor([[[ 22.7951,  30.7481,  21.2135],
+         [ 53.7778,  42.5726,  42.3531],
+         [ 30.9437,  24.0875,  60.6641],
+         ...,
+         [118.8892,  43.0441,  21.6869],
+         [ 20.1651,  32.0021,  19.6979],
+         [ 36.1900, 229.3324,  81.0679]],
+        [[  8.3887,  12.1094,  16.1934],
+         [ 23.4298,  24.3043,  39.4116],
+         [ 14.0394,   7.6374,  52.8669],
+         ...,
+         [ 31.6587,  24.8634,  20.3180],
+         [ 10.7567,  15.4479,  18.0679],
+         [ 16.7820,  44.0778,  45.5245]],
+        [[  7.4123,  10.7902,  15.6610],
+         [ 21.1399,  22.6750,  39.0620],
+         [ 12.7310,   6.6251,  51.9742],
+         ...,
+         [ 26.8756,  23.2304,  20.1547],
+         [  9.9516,  14.1161,  17.8758],
+         [ 15.2592,  35.9383,  42.3861]],
+        ...,
+        [[  6.3570,   9.3508,  15.0245],
+         [ 18.6063,  20.8038,  38.6323],
+         [ 11.2753,   5.5532,  50.8871],
+         ...,
+         [ 21.9313,  21.3517,  19.9538],
+         [  9.0356,  12.6216,  17.6401],
+         [ 13.5597,  27.8938,  38.7899]],
+        [[  9.4040,  13.4702,  16.7009],
+         [ 25.7637,  25.9123,  39.7371],
+         [ 15.3665,   8.7087,  53.7047],
+         ...,
+         [ 36.8271,  26.4729,  20.4700],
+         [ 11.5576,  16.7888,  18.2471],
+         [ 18.3226,  53.2203,  48.6280]],
+        [[ 12.1005,  17.0387,  17.8779],
+         [ 31.7692,  29.8471,  40.4651],
+         [ 18.7557,  11.6348,  55.6007],
+         ...,
+         [ 51.4149,  30.4027,  20.8094],
+         [ 13.5425,  20.1739,  18.6490],
+         [ 22.2410,  80.6693,  56.2453]]], device='cuda:0',
+       dtype=torch.float64)
+Traceback (most recent call last):
+  File "/home/abdelmajid/workdir/cost-aware-bo/main.py", line 61, in <module>
+    bo_trial(trial_number=trial, acqf=args.acqf, wandb=wandb, params=params)
+  File "/home/abdelmajid/workdir/cost-aware-bo/single_trial.py", line 62, in bo_trial
+    new_x, n_memoised, E_c, E_inv_c, y_pred = bo_iteration(X, Y, C, bounds=bounds, acqf_str=acqf, decay=eta, iter=iteration, params=params)
+  File "/home/abdelmajid/workdir/cost-aware-bo/single_iteration.py", line 72, in bo_iteration
+    new_x, n_memoised = optimize_acqf_by_mem(acqf=acqf, acqf_str=acqf_str, bounds=norm_bounds, iter=iter, prefix_pool=prefix_pool, seed=params['rand_seed'])
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimize_mem_acqf.py", line 26, in optimize_acqf_by_mem
+    new_candidate, acqf_val = optimize_acqf(acq_function=acqf, acq_type=acqf_str, delta=pref_stages, curr_iter=iter, bounds=bounds, q=1, num_restarts=10, raw_samples=512, options={'seed': seed})
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 401, in optimize_acqf
+    return _optimize_acqf(opt_acqf_inputs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/optimize.py", line 554, in _optimize_acqf
+    return _optimize_acqf_batch(
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 414, in _optimize_acqf_batch
+    batch_initial_conditions = opt_inputs.get_ic_generator()(
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 221, in gen_batch_initial_conditions
+    ).cpu() if 'EIPU' not in acq_type else acq_function(
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/utils/transforms.py", line 287, in decorated
+    output = method(acqf, X, *args, **kwargs)
+  File "/home/abdelmajid/workdir/cost-aware-bo/EEIPU/EIPUVariants.py", line 153, in forward
+    inv_cost =  self.compute_expected_inverse_cost(X, delta=delta)
+  File "/home/abdelmajid/workdir/cost-aware-bo/EEIPU/EIPUVariants.py", line 100, in compute_expected_inverse_cost
+    cat_stages = self.cost_normalizer(cat_stages, bounds['c_cube'])
+NameError: name 'bounds' is not defined

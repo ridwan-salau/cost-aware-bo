@@ -1,0 +1,109 @@
+ACQF =  EIPU
+BEFORE NORMALIZATION:
+[tensor([[14.9597],
+        [10.7416],
+        [14.4434],
+        [17.3296],
+        [13.9466],
+        [16.3309],
+        [43.5386],
+        [43.1855],
+        [14.0432],
+        [14.4341]], device='cuda:0', dtype=torch.float64,
+       grad_fn=<UnsqueezeBackward0>), tensor([[13.3428],
+        [16.8510],
+        [21.7021],
+        [28.3696],
+        [10.5424],
+        [16.3735],
+        [14.1348],
+        [ 9.1334],
+        [20.1431],
+        [17.5250]], device='cuda:0', dtype=torch.float64,
+       grad_fn=<UnsqueezeBackward0>), tensor([[15.3759],
+        [10.2220],
+        [27.2185],
+        [11.1551],
+        [10.8238],
+        [10.6765],
+        [16.0360],
+        [12.5953],
+        [11.7265],
+        [ 9.9478]], device='cuda:0', dtype=torch.float64,
+       grad_fn=<UnsqueezeBackward0>)]
+AFTER NORMALIZATION:
+[tensor([[1.0524],
+        [0.9966],
+        [1.0456],
+        [1.0837],
+        [1.0390],
+        [1.0705],
+        [1.4301],
+        [1.4254],
+        [1.0403],
+        [1.0454]], device='cuda:0', dtype=torch.float64,
+       grad_fn=<AddBackward0>), tensor([[1.0782],
+        [1.1534],
+        [1.2574],
+        [1.4004],
+        [1.0181],
+        [1.1431],
+        [1.0951],
+        [0.9879],
+        [1.2240],
+        [1.1678]], device='cuda:0', dtype=torch.float64,
+       grad_fn=<AddBackward0>), tensor([[0.9867],
+        [0.9029],
+        [1.1793],
+        [0.9181],
+        [0.9127],
+        [0.9103],
+        [0.9974],
+        [0.9415],
+        [0.9273],
+        [0.8984]], device='cuda:0', dtype=torch.float64,
+       grad_fn=<AddBackward0>)]
+Traceback (most recent call last):
+  File "/home/abdelmajid/workdir/cost-aware-bo/main.py", line 61, in <module>
+    bo_trial(trial_number=trial, acqf=args.acqf, wandb=wandb, params=params)
+  File "/home/abdelmajid/workdir/cost-aware-bo/single_trial.py", line 62, in bo_trial
+    new_x, n_memoised, E_c, E_inv_c, y_pred = bo_iteration(X, Y, C, bounds=bounds, acqf_str=acqf, decay=eta, iter=iteration, params=params)
+  File "/home/abdelmajid/workdir/cost-aware-bo/single_iteration.py", line 72, in bo_iteration
+    new_x, n_memoised = optimize_acqf_by_mem(acqf=acqf, acqf_str=acqf_str, bounds=norm_bounds, iter=iter, prefix_pool=prefix_pool, seed=params['rand_seed'])
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimize_mem_acqf.py", line 26, in optimize_acqf_by_mem
+    new_candidate, acqf_val = optimize_acqf(acq_function=acqf, acq_type=acqf_str, delta=pref_stages, curr_iter=iter, bounds=bounds, q=1, num_restarts=10, raw_samples=512, options={'seed': seed})
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 401, in optimize_acqf
+    return _optimize_acqf(opt_acqf_inputs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/optimize.py", line 554, in _optimize_acqf
+    return _optimize_acqf_batch(
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 500, in _optimize_acqf_batch
+    batch_candidates, batch_acq_values, ws = _optimize_batch_candidates(timeout_sec)
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 483, in _optimize_batch_candidates
+    ) = opt_inputs.gen_candidates(
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 709, in gen_candidates_scipy
+    res = minimize_with_timeout(
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/utils/timeout.py", line 80, in minimize_with_timeout
+    return optimize.minimize(
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_minimize.py", line 696, in minimize
+    res = _minimize_lbfgsb(fun, x0, args, jac, bounds,
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_lbfgsb_py.py", line 305, in _minimize_lbfgsb
+    sf = _prepare_scalar_function(fun, x0, jac=jac, args=args, epsilon=eps,
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_optimize.py", line 332, in _prepare_scalar_function
+    sf = ScalarFunction(fun, x0, args, grad, hess,
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_differentiable_functions.py", line 158, in __init__
+    self._update_fun()
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_differentiable_functions.py", line 251, in _update_fun
+    self._update_fun_impl()
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_differentiable_functions.py", line 155, in update_fun
+    self.f = fun_wrapped(self.x)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_differentiable_functions.py", line 137, in fun_wrapped
+    fx = fun(np.copy(x), *args)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_optimize.py", line 76, in __call__
+    self._compute_if_needed(x, *args)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_optimize.py", line 70, in _compute_if_needed
+    fg = self.fun(x, *args)
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 669, in f_np_wrapper
+    gradf = _arrayify(torch.autograd.grad(loss, X)[0].contiguous().view(-1))
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/torch/autograd/__init__.py", line 303, in grad
+    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
+RuntimeError: one of the variables needed for gradient computation has been modified by an inplace operation: [torch.cuda.DoubleTensor [10, 1]], which is output 0 of AddBackward0, is at version 1; expected version 0 instead. Hint: enable anomaly detection to find the operation that failed to compute its gradient, with torch.autograd.set_detect_anomaly(True).

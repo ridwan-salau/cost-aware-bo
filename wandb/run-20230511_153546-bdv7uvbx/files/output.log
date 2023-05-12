@@ -1,0 +1,70 @@
+BEFORE NORMALIZATION:
+tensor([[[15.9536, 18.4897, 13.1183],
+         [40.4139, 44.6599, 53.0390],
+         [18.4157, 19.8960, 88.1970],
+         ...,
+         [36.2654, 25.5087, 16.1408],
+         [18.1927, 35.7096, 14.3445],
+         [33.1281, 73.4072, 83.8562]],
+        [[ 9.3268, 12.2917, 11.4013],
+         [25.3351, 23.4514, 39.2110],
+         [ 8.1571, 10.9144, 42.5047],
+         ...,
+         [23.5779, 21.5676, 13.0753],
+         [ 9.0396,  9.2428,  9.1649],
+         [26.0175, 56.7792, 59.1372]],
+        [[ 8.7272, 11.6859, 11.2050],
+         [23.9121, 21.6540, 37.7718],
+         [ 7.3750, 10.1326, 38.8324],
+         ...,
+         [22.3542, 21.1242, 12.7388],
+         [ 8.2899,  7.8188,  8.6704],
+         [25.2509, 55.0023, 56.6351]],
+        ...,
+        [[ 8.0363, 10.9753, 10.9661],
+         [22.2565, 19.6135, 36.0588],
+         [ 6.5076,  9.2396, 34.7125],
+         ...,
+         [20.9232, 20.5864, 12.3331],
+         [ 7.4453,  6.3526,  8.0937],
+         [24.3307, 52.8740, 53.6761]],
+        [[ 9.9169, 12.8788, 11.5856],
+         [26.7239, 25.2429, 40.5883],
+         [ 8.9527, 11.6896, 46.2028],
+         ...,
+         [24.7671, 21.9853, 13.3939],
+         [ 9.7918, 10.7866,  9.6463],
+         [26.7459, 58.4707, 61.5454]],
+        [[11.3545, 14.2756, 12.0028],
+         [30.0640, 29.6955, 43.8011],
+         [10.9937, 13.6008, 55.5414],
+         ...,
+         [27.6078, 22.9358, 14.1246],
+         [11.6807, 15.1676, 10.8001],
+         [28.4263, 62.3835, 67.2119]]], device='cuda:0', dtype=torch.float64)
+Traceback (most recent call last):
+  File "/home/abdelmajid/workdir/cost-aware-bo/main.py", line 61, in <module>
+    bo_trial(trial_number=trial, acqf=args.acqf, wandb=wandb, params=params)
+  File "/home/abdelmajid/workdir/cost-aware-bo/single_trial.py", line 62, in bo_trial
+    new_x, n_memoised, E_c, E_inv_c, y_pred = bo_iteration(X, Y, C, bounds=bounds, acqf_str=acqf, decay=eta, iter=iteration, params=params)
+  File "/home/abdelmajid/workdir/cost-aware-bo/single_iteration.py", line 72, in bo_iteration
+    new_x, n_memoised = optimize_acqf_by_mem(acqf=acqf, acqf_str=acqf_str, bounds=norm_bounds, iter=iter, prefix_pool=prefix_pool, seed=params['rand_seed'])
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimize_mem_acqf.py", line 26, in optimize_acqf_by_mem
+    new_candidate, acqf_val = optimize_acqf(acq_function=acqf, acq_type=acqf_str, delta=pref_stages, curr_iter=iter, bounds=bounds, q=1, num_restarts=10, raw_samples=512, options={'seed': seed})
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 401, in optimize_acqf
+    return _optimize_acqf(opt_acqf_inputs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/optimize.py", line 554, in _optimize_acqf
+    return _optimize_acqf_batch(
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 414, in _optimize_acqf_batch
+    batch_initial_conditions = opt_inputs.get_ic_generator()(
+  File "/home/abdelmajid/workdir/cost-aware-bo/optimizer/optimize_acqf_funcs.py", line 221, in gen_batch_initial_conditions
+    ).cpu() if 'EIPU' not in acq_type else acq_function(
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/torch/nn/modules/module.py", line 1501, in _call_impl
+    return forward_call(*args, **kwargs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/utils/transforms.py", line 287, in decorated
+    output = method(acqf, X, *args, **kwargs)
+  File "/home/abdelmajid/workdir/cost-aware-bo/EEIPU/EIPUVariants.py", line 153, in forward
+    inv_cost =  self.compute_expected_inverse_cost(X, delta=delta)
+  File "/home/abdelmajid/workdir/cost-aware-bo/EEIPU/EIPUVariants.py", line 100, in compute_expected_inverse_cost
+    cat_stages = cost_normalizer(cat_stages, bounds['c_cube'])
+NameError: name 'cost_normalizer' is not defined

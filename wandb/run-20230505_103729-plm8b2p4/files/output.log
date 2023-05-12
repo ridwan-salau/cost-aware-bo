@@ -1,0 +1,101 @@
+Traceback (most recent call last):
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/closures/core.py", line 150, in __call__
+    value_tensor, grad_tensors = self.closure(**kwargs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/closures/core.py", line 64, in __call__
+    values = self.forward(**kwargs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/closures/model_closures.py", line 176, in closure
+    log_likelihood = mll(
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/gpytorch/module.py", line 30, in __call__
+    outputs = self.forward(*inputs, **kwargs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/gpytorch/mlls/exact_marginal_log_likelihood.py", line 64, in forward
+    res = output.log_prob(target)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/gpytorch/distributions/multivariate_normal.py", line 171, in log_prob
+    return super().log_prob(value)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/torch/distributions/multivariate_normal.py", line 216, in log_prob
+    M = _batch_mahalanobis(self._unbroadcasted_scale_tril, diff)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/gpytorch/distributions/multivariate_normal.py", line 88, in _unbroadcasted_scale_tril
+    ust = to_dense(self.lazy_covariance_matrix.cholesky())
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/linear_operator/operators/_linear_operator.py", line 1229, in cholesky
+    chol = self._cholesky(upper=False)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/linear_operator/utils/memoize.py", line 59, in g
+    return _add_to_cache(self, cache_name, method(self, *args, **kwargs), *args, kwargs_pkl=kwargs_pkl)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/linear_operator/operators/_linear_operator.py", line 490, in _cholesky
+    cholesky = psd_safe_cholesky(evaluated_mat, upper=upper).contiguous()
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/linear_operator/utils/cholesky.py", line 65, in psd_safe_cholesky
+    L = _psd_safe_cholesky(A, out=out, jitter=jitter, max_tries=max_tries)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/linear_operator/utils/cholesky.py", line 20, in _psd_safe_cholesky
+    L, info = torch.linalg.cholesky_ex(A, out=out)
+RuntimeError: cusolver error: CUSOLVER_STATUS_INTERNAL_ERROR, when calling `cusolverDnCreate(handle)`
+During handling of the above exception, another exception occurred:
+Traceback (most recent call last):
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/utils/numpy_utils.py", line 103, in get_tensors_as_ndarray_1d
+    out[index : index + size] = as_array(tnsr.view(-1))
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/utils/numpy_utils.py", line 51, in as_ndarray
+    out = values.cpu()  # maybe transfer to cpu
+RuntimeError: CUDA error: out of memory
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1.
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.
+The above exception was the direct cause of the following exception:
+Traceback (most recent call last):
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/utils/context_managers.py", line 144, in module_rollback_ctx
+    yield checkpoint
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/fit.py", line 252, in _fit_fallback
+    optimizer(mll, closure=closure, **optimizer_kwargs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/fit.py", line 120, in fit_gpytorch_mll_scipy
+    result = scipy_minimize(
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/core.py", line 109, in scipy_minimize
+    raw = minimize_with_timeout(
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/utils/timeout.py", line 80, in minimize_with_timeout
+    return optimize.minimize(
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_minimize.py", line 696, in minimize
+    res = _minimize_lbfgsb(fun, x0, args, jac, bounds,
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_lbfgsb_py.py", line 305, in _minimize_lbfgsb
+    sf = _prepare_scalar_function(fun, x0, jac=jac, args=args, epsilon=eps,
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_optimize.py", line 332, in _prepare_scalar_function
+    sf = ScalarFunction(fun, x0, args, grad, hess,
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_differentiable_functions.py", line 158, in __init__
+    self._update_fun()
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_differentiable_functions.py", line 251, in _update_fun
+    self._update_fun_impl()
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_differentiable_functions.py", line 155, in update_fun
+    self.f = fun_wrapped(self.x)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_differentiable_functions.py", line 137, in fun_wrapped
+    fx = fun(np.copy(x), *args)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_optimize.py", line 76, in __call__
+    self._compute_if_needed(x, *args)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/scipy/optimize/_optimize.py", line 70, in _compute_if_needed
+    fg = self.fun(x, *args)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/closures/core.py", line 160, in __call__
+    value, grads = _handle_numerical_errors(e, x=self.state, dtype=np_float64)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/closures/core.py", line 166, in state
+    return self._get_state()
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/optim/utils/numpy_utils.py", line 106, in get_tensors_as_ndarray_1d
+    raise RuntimeError(
+RuntimeError: `get_tensors_as_ndarray_1d` failed while copying values from tensor likelihood.noise_covar.raw_noise; rethrowing original exception.
+During handling of the above exception, another exception occurred:
+Traceback (most recent call last):
+  File "/home/abdelmajid/workdir/cost-aware-bo/main.py", line 65, in <module>
+    trial_logs = bo_trial(trial_number=trial, acqf=args.acqf, wandb=wandb, params=params)
+  File "/home/abdelmajid/workdir/cost-aware-bo/single_trial.py", line 48, in bo_trial
+    new_x, n_memoised, E_c, E_inv_c, y_pred = bo_iteration(X, Y, C, bounds=bounds, acqf_str=acqf, decay=eta, iter=iteration, params=params)
+  File "/home/abdelmajid/workdir/cost-aware-bo/single_iteration.py", line 50, in bo_iteration
+    mll, gp_model = get_gp_models(train_x, train_y)
+  File "/home/abdelmajid/workdir/cost-aware-bo/single_iteration.py", line 13, in get_gp_models
+    fit_gpytorch_model(mll)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/fit.py", line 164, in fit_gpytorch_model
+    mll = fit_gpytorch_mll(
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/fit.py", line 105, in fit_gpytorch_mll
+    return FitGPyTorchMLL(
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/utils/dispatcher.py", line 93, in __call__
+    return func(*args, **kwargs)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/fit.py", line 237, in _fit_fallback
+    with module_rollback_ctx(mll, checkpoint=ckpt, device=device("cpu")) as ckpt:
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/contextlib.py", line 153, in __exit__
+    self.gen.throw(typ, value, traceback)
+  File "/home/abdelmajid/miniconda3/envs/tuun/lib/python3.10/site-packages/botorch/utils/context_managers.py", line 153, in module_rollback_ctx
+    tnsr[...] = values.to(device=device, dtype=dtype)
+RuntimeError: CUDA error: out of memory
+CUDA kernel errors might be asynchronously reported at some other API call, so the stacktrace below might be incorrect.
+For debugging consider passing CUDA_LAUNCH_BLOCKING=1.
+Compile with `TORCH_USE_CUDA_DSA` to enable device-side assertions.

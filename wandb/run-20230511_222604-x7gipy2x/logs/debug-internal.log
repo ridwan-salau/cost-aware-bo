@@ -1,0 +1,940 @@
+2023-05-11 22:26:04,125 INFO    StreamThr :1855524 [internal.py:wandb_internal():86] W&B internal server running at pid: 1855524, started at: 2023-05-11 22:26:04.124461
+2023-05-11 22:26:04,127 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status
+2023-05-11 22:26:04,136 INFO    WriterThread:1855524 [datastore.py:open_for_write():85] open: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/run-x7gipy2x.wandb
+2023-05-11 22:26:04,140 DEBUG   SenderThread:1855524 [sender.py:send():375] send: header
+2023-05-11 22:26:04,146 DEBUG   SenderThread:1855524 [sender.py:send():375] send: run
+2023-05-11 22:26:04,962 INFO    SenderThread:1855524 [dir_watcher.py:__init__():219] watching files in: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files
+2023-05-11 22:26:04,962 INFO    SenderThread:1855524 [sender.py:_start_run_threads():1124] run started: x7gipy2x with start time 1683829564.126999
+2023-05-11 22:26:04,962 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:26:04,964 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:26:04,964 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: check_version
+2023-05-11 22:26:04,965 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: check_version
+2023-05-11 22:26:05,253 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: run_start
+2023-05-11 22:26:05,280 DEBUG   HandlerThread:1855524 [system_info.py:__init__():31] System info init
+2023-05-11 22:26:05,280 DEBUG   HandlerThread:1855524 [system_info.py:__init__():46] System info init done
+2023-05-11 22:26:05,280 INFO    HandlerThread:1855524 [system_monitor.py:start():181] Starting system monitor
+2023-05-11 22:26:05,280 INFO    SystemMonitor:1855524 [system_monitor.py:_start():145] Starting system asset monitoring threads
+2023-05-11 22:26:05,280 INFO    HandlerThread:1855524 [system_monitor.py:probe():201] Collecting system info
+2023-05-11 22:26:05,281 INFO    SystemMonitor:1855524 [interfaces.py:start():190] Started cpu monitoring
+2023-05-11 22:26:05,282 INFO    SystemMonitor:1855524 [interfaces.py:start():190] Started disk monitoring
+2023-05-11 22:26:05,283 INFO    SystemMonitor:1855524 [interfaces.py:start():190] Started gpu monitoring
+2023-05-11 22:26:05,284 INFO    SystemMonitor:1855524 [interfaces.py:start():190] Started memory monitoring
+2023-05-11 22:26:05,284 INFO    SystemMonitor:1855524 [interfaces.py:start():190] Started network monitoring
+2023-05-11 22:26:05,459 DEBUG   HandlerThread:1855524 [system_info.py:probe():195] Probing system
+2023-05-11 22:26:05,462 DEBUG   HandlerThread:1855524 [system_info.py:_probe_git():180] Probing git
+2023-05-11 22:26:05,472 DEBUG   HandlerThread:1855524 [system_info.py:_probe_git():188] Probing git done
+2023-05-11 22:26:05,472 DEBUG   HandlerThread:1855524 [system_info.py:probe():240] Probing system done
+2023-05-11 22:26:05,472 DEBUG   HandlerThread:1855524 [system_monitor.py:probe():210] {'os': 'Linux-5.13.0-39-generic-x86_64-with-glibc2.31', 'python': '3.10.10', 'heartbeatAt': '2023-05-11T18:26:05.459229', 'startedAt': '2023-05-11T18:26:04.094691', 'docker': None, 'cuda': None, 'args': ('--trial-num', '2', '--exp-group', '20230511-2225', '--acqf', 'EIPU-MEMO', '--decay-factor', '4'), 'state': 'running', 'program': '/home/abdelmajid/workdir/cost-aware-bo/main.py', 'codePath': 'main.py', 'git': {'remote': 'https://github.com/ridwan-salau/cost-aware-bo.git', 'commit': 'ee385b56d47047168cf713dbd130ab44d66541cc'}, 'email': None, 'root': '/home/abdelmajid/workdir/cost-aware-bo', 'host': 'gpu-14', 'username': 'abdelmajid', 'executable': '/home/abdelmajid/miniconda3/envs/tuun/bin/python', 'cpu_count': 128, 'cpu_count_logical': 256, 'cpu_freq': {'current': 1589.4716171874998, 'min': 1500.0, 'max': 2250.0}, 'cpu_freq_per_core': [{'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1932.214, 'min': 1500.0, 'max': 2250.0}, {'current': 3378.669, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 2450.236, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 2000.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1991.596, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 2000.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 2250.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 3109.656, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1562.352, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 2521.367, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 2000.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 2250.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 2000.0, 'min': 1500.0, 'max': 2250.0}, {'current': 2625.134, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 3381.767, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 2250.0, 'min': 1500.0, 'max': 2250.0}, {'current': 3277.332, 'min': 1500.0, 'max': 2250.0}, {'current': 3001.632, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 2250.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 2000.0, 'min': 1500.0, 'max': 2250.0}, {'current': 3385.458, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 2000.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 2000.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 2250.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 2000.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 2250.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 2250.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 2000.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1990.347, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 2250.0, 'min': 1500.0, 'max': 2250.0}, {'current': 2346.487, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1500.0, 'min': 1500.0, 'max': 2250.0}, {'current': 1980.968, 'min': 1500.0, 'max': 2250.0}, {'current': 2250.0, 'min': 1500.0, 'max': 2250.0}], 'disk': {'total': 3724.1025772094727, 'used': 124.6298942565918}, 'gpu': 'NVIDIA A100-SXM4-40GB', 'gpu_count': 4, 'gpu_devices': [{'name': 'NVIDIA A100-SXM4-40GB', 'memory_total': 42949672960}, {'name': 'NVIDIA A100-SXM4-40GB', 'memory_total': 42949672960}, {'name': 'NVIDIA A100-SXM4-40GB', 'memory_total': 42949672960}, {'name': 'NVIDIA A100-SXM4-40GB', 'memory_total': 42949672960}], 'memory': {'total': 251.68415451049805}}
+2023-05-11 22:26:05,473 INFO    HandlerThread:1855524 [system_monitor.py:probe():211] Finished collecting system info
+2023-05-11 22:26:05,473 INFO    HandlerThread:1855524 [system_monitor.py:probe():214] Publishing system info
+2023-05-11 22:26:05,473 DEBUG   HandlerThread:1855524 [system_info.py:_save_pip():51] Saving list of pip packages installed into the current environment
+2023-05-11 22:26:05,475 DEBUG   HandlerThread:1855524 [system_info.py:_save_pip():67] Saving pip packages done
+2023-05-11 22:26:05,475 DEBUG   HandlerThread:1855524 [system_info.py:_save_conda():74] Saving list of conda packages installed into the current environment
+2023-05-11 22:26:05,966 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_created():278] file/dir created: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:26:05,966 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_created():278] file/dir created: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/conda-environment.yaml
+2023-05-11 22:26:05,966 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_created():278] file/dir created: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/requirements.txt
+2023-05-11 22:26:07,215 DEBUG   HandlerThread:1855524 [system_info.py:_save_conda():86] Saving conda packages done
+2023-05-11 22:26:07,220 INFO    HandlerThread:1855524 [system_monitor.py:probe():216] Finished publishing system info
+2023-05-11 22:26:07,223 DEBUG   SenderThread:1855524 [sender.py:send():375] send: files
+2023-05-11 22:26:07,223 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-metadata.json with policy now
+2023-05-11 22:26:07,232 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:26:07,232 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:26:07,525 DEBUG   SenderThread:1855524 [sender.py:send():375] send: telemetry
+2023-05-11 22:26:07,966 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/conda-environment.yaml
+2023-05-11 22:26:07,966 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_created():278] file/dir created: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-metadata.json
+2023-05-11 22:26:08,122 INFO    wandb-upload_0:1855524 [upload_job.py:push():137] Uploaded file /tmp/tmpfcn2hkf0wandb/39zwv29b-wandb-metadata.json
+2023-05-11 22:26:09,525 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:26:14,526 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:26:19,527 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:26:20,058 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:26:20,061 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:26:20,061 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:26:20,064 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:26:20,980 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:26:22,235 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:26:22,235 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:26:23,626 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:26:23,628 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:26:23,629 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:26:23,632 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:26:23,982 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:26:24,632 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:26:28,254 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:26:28,256 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:26:28,256 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:26:28,259 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:26:28,987 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:26:30,260 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:26:33,607 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:26:33,609 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:26:33,609 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:26:33,611 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:26:33,992 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:26:35,617 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:26:36,994 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/config.yaml
+2023-05-11 22:26:37,234 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:26:37,235 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:26:40,063 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:26:40,065 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:26:40,066 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:26:40,070 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:26:40,998 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:26:41,071 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:26:46,071 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:26:49,348 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:26:49,349 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:26:49,350 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:26:49,352 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:26:50,005 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:26:51,353 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:26:52,235 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:26:52,235 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:26:56,495 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:26:58,430 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:26:58,431 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:26:58,432 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:26:58,434 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:26:59,012 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:27:02,437 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:27:05,285 DEBUG   SystemMonitor:1855524 [system_monitor.py:_start():159] Starting system metrics aggregation loop
+2023-05-11 22:27:05,289 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:27:06,621 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:27:06,623 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:27:06,623 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:27:06,625 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:27:07,017 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:27:07,235 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:27:07,236 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:27:07,504 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:27:12,505 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:27:15,237 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:27:15,238 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:27:15,238 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:27:15,242 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:27:16,024 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:27:18,243 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:27:22,249 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:27:22,250 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:27:23,509 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:27:24,387 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:27:24,389 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:27:24,389 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:27:24,392 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:27:25,031 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:27:29,393 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:27:34,393 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:27:34,456 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:27:34,457 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:27:34,457 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:27:34,459 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:27:35,038 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:27:35,291 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:27:37,250 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:27:37,250 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:27:39,512 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:27:44,513 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:27:49,514 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:27:49,992 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:27:49,993 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:27:49,994 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:27:49,996 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:27:50,048 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:27:52,243 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:27:52,244 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:27:57,250 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: keepalive
+2023-05-11 22:27:58,512 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:28:03,512 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:28:05,295 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:28:07,243 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:28:07,244 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:28:09,500 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:28:12,011 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:28:12,013 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:28:12,013 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:28:12,015 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:28:12,064 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:28:15,016 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:28:20,016 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:28:22,243 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:28:22,244 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:28:25,504 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:28:30,505 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:28:34,459 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:28:34,460 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:28:34,460 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:28:34,463 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:28:35,081 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:28:35,298 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:28:36,300 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:28:37,243 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:28:37,244 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:28:41,509 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:28:46,509 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:28:51,510 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:28:52,264 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:28:52,265 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:28:56,520 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:28:58,364 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:28:58,365 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:28:58,366 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:28:58,368 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:28:59,097 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:29:02,369 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:29:05,300 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:29:07,252 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:29:07,253 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:29:07,522 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:29:12,523 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:29:17,523 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:29:22,252 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:29:22,253 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:29:22,539 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:29:23,946 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:29:23,947 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:29:23,947 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:29:23,949 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:29:24,116 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:29:27,949 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:29:32,950 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:29:35,304 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:29:37,252 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:29:37,253 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:29:38,512 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:29:43,513 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:29:48,514 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:29:52,263 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:29:52,263 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:29:53,538 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:29:58,539 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:30:03,540 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:30:04,513 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:30:04,515 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:30:04,515 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:30:04,518 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:30:05,149 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:30:05,309 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:30:07,260 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:30:07,261 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:30:08,548 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:30:13,549 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:30:18,551 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:30:22,264 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:30:22,265 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:30:24,524 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:30:29,525 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:30:34,526 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:30:35,313 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:30:37,261 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:30:37,262 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:30:40,510 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:30:45,511 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:30:50,512 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:30:52,261 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:30:52,262 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:30:55,532 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:30:57,432 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:30:57,433 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:30:57,433 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:30:57,435 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:30:58,185 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:31:01,436 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:31:05,315 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:31:07,262 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:31:07,263 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:31:07,263 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:31:12,533 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:31:17,533 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:31:22,262 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:31:22,262 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:31:23,506 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:31:28,507 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:31:30,451 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:31:30,453 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:31:30,453 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:31:30,457 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:31:31,208 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:31:34,458 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:31:35,318 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:31:37,262 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:31:37,263 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:31:39,517 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:31:44,518 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:31:49,518 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:31:52,262 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:31:52,263 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:31:54,520 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:31:59,520 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:32:04,521 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:32:05,322 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:32:07,274 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:32:07,275 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:32:09,527 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:32:13,284 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:32:13,287 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:32:13,287 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:32:13,289 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:32:14,239 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:32:15,290 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:32:20,291 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:32:22,265 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:32:22,266 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:32:25,525 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:32:30,526 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:32:35,322 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:32:36,324 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:32:37,275 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:32:37,276 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:32:41,528 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:32:46,529 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:32:51,530 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:32:52,271 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:32:52,271 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:32:55,626 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:32:55,628 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:32:55,628 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:32:55,630 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:32:56,268 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:32:56,630 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:33:01,631 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:33:05,325 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:33:07,271 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:33:07,272 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:33:07,549 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:33:12,549 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:33:17,550 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:33:22,282 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:33:22,283 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:33:23,534 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:33:28,535 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:33:32,064 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:33:32,066 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:33:32,067 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:33:32,069 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:33:32,292 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:33:34,070 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:33:35,331 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:33:37,273 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:33:37,274 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:33:39,541 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:33:44,542 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:33:49,543 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:33:52,274 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:33:52,274 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:33:55,532 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:34:00,532 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:34:04,279 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:34:04,281 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:34:04,281 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:34:04,283 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:34:04,328 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:34:05,335 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:34:06,338 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:34:07,273 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:34:07,275 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:34:11,534 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:34:16,534 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:34:21,535 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:34:22,274 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:34:22,275 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:34:26,542 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:34:31,543 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:34:33,660 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:34:33,663 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:34:33,664 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:34:33,666 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:34:34,350 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:34:35,337 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:34:37,274 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:34:37,275 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:34:37,275 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:34:42,521 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:34:47,521 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:34:52,290 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:34:52,290 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:34:52,537 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:34:57,538 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:35:02,538 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:35:05,340 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:35:07,283 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:35:07,283 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:35:07,608 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:35:09,614 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:35:09,615 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:35:09,615 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:35:09,617 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:35:10,375 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:35:12,617 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:35:17,618 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:35:22,284 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:35:22,285 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:35:23,550 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:35:28,551 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:35:33,553 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:35:34,863 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:35:34,864 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:35:34,864 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:35:34,866 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:35:35,344 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:35:35,393 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:35:37,284 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:35:37,284 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:35:39,542 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:35:44,543 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:35:49,544 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:35:52,284 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:35:52,284 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:35:55,530 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:36:00,531 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:36:03,303 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:36:03,305 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:36:03,305 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:36:03,306 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:36:03,413 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:36:05,345 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:36:06,347 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:36:07,284 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:36:07,284 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:36:11,597 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:36:16,597 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:36:21,598 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:36:22,284 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:36:22,284 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:36:27,553 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:36:31,076 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:36:31,077 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:36:31,078 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:36:31,080 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:36:31,431 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:36:33,081 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:36:35,348 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:36:37,285 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:36:37,286 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:36:38,554 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:36:43,555 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:36:48,556 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:36:52,285 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:36:52,285 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:36:54,549 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:36:56,446 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:36:56,448 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:36:56,448 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:36:56,450 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:36:56,523 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:37:00,450 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:37:05,352 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:37:06,354 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:37:07,289 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:37:07,290 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:37:11,623 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:37:16,624 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:37:21,624 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:37:22,286 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:37:22,286 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:37:22,298 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:37:22,556 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:37:22,556 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:37:22,558 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:37:22,641 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:37:27,559 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:37:32,560 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:37:35,353 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:37:37,287 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:37:37,287 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:37:38,553 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:37:43,553 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:37:48,554 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:37:49,575 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:37:49,577 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:37:49,577 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:37:49,579 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:37:49,731 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:37:52,286 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:37:52,287 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:37:53,566 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:37:58,567 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:38:03,567 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:38:05,356 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:38:07,286 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:38:07,287 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:38:08,672 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:38:13,673 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:38:18,674 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:38:21,056 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:38:21,058 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:38:21,058 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:38:21,061 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:38:21,745 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:38:22,286 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:38:22,287 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:38:24,539 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:38:29,540 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:38:34,541 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:38:35,358 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:38:37,287 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:38:37,287 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:38:39,551 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:38:44,552 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:38:49,552 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:38:52,308 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:38:52,309 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:38:54,579 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:38:58,759 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:38:58,760 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:38:58,760 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:38:58,762 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:38:58,770 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:38:59,763 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:39:04,764 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:39:05,365 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:39:07,310 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:39:07,311 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:39:10,567 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:39:15,568 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:39:20,570 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:39:22,299 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:39:22,300 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:39:25,615 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:39:30,615 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:39:35,368 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:39:36,371 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:39:37,296 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:39:37,296 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:39:41,553 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:39:44,230 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:39:44,232 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:39:44,232 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:39:44,234 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:39:44,803 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:39:47,235 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:39:52,235 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:39:52,296 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:39:52,297 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:39:57,544 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:40:02,545 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:40:05,372 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:40:07,296 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:40:07,297 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:40:07,554 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:40:12,555 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:40:17,555 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:40:22,297 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:40:22,298 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:40:23,546 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:40:28,546 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:40:33,547 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:40:35,375 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:40:35,892 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:40:35,894 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:40:35,894 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:40:35,896 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:40:36,839 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:40:37,296 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:40:37,297 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:40:38,550 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:40:43,551 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:40:48,551 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:40:52,297 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:40:52,297 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:40:53,575 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:40:58,576 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:41:03,576 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:41:05,377 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:41:07,314 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:41:07,314 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:41:08,590 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:41:12,036 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:41:12,038 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:41:12,038 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:41:12,041 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:41:12,864 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:41:14,042 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:41:19,043 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:41:22,303 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:41:22,304 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:41:24,556 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:41:29,557 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:41:34,557 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:41:35,379 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:41:37,304 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:41:37,305 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:41:40,552 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:41:45,553 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:41:45,859 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:41:45,860 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:41:45,861 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:41:45,862 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:41:45,888 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:41:50,863 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:41:52,304 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:41:52,305 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:41:56,551 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:42:01,552 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:42:05,382 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:42:07,320 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:42:07,323 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:42:07,323 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:42:12,564 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:42:17,564 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:42:20,947 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:42:20,948 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:42:20,949 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:42:20,950 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:42:21,910 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:42:22,309 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:42:22,309 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:42:22,600 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:42:27,601 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:42:32,602 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:42:35,385 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:42:37,309 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:42:37,310 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:42:38,556 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:42:43,561 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:42:48,562 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:42:52,309 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:42:52,310 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:42:53,565 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:42:57,228 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:42:57,229 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:42:57,230 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:42:57,231 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:42:57,935 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:42:59,232 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:43:04,233 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:43:05,386 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:43:07,322 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:43:07,323 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:43:09,583 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:43:14,584 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:43:19,585 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:43:22,314 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:43:22,315 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:43:27,319 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: keepalive
+2023-05-11 22:43:27,455 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:43:32,455 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:43:33,624 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:43:33,625 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:43:33,625 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:43:33,626 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:43:33,959 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:43:35,390 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:43:37,313 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:43:37,314 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:43:37,568 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:43:42,569 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:43:47,569 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:43:52,318 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:43:52,318 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:43:52,573 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:43:57,574 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:44:02,575 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:44:05,393 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:44:07,321 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:44:07,322 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:44:08,570 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:44:11,685 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:44:11,687 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:44:11,687 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:44:11,689 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:44:11,985 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:44:13,689 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:44:18,690 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:44:22,321 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:44:22,322 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:44:24,579 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:44:29,580 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:44:34,580 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:44:35,397 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:44:37,321 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:44:37,322 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:44:40,579 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:44:45,580 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:44:49,438 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:44:49,439 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:44:49,439 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:44:49,441 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:44:50,012 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:44:51,442 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:44:52,321 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:44:52,322 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:44:56,566 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:45:01,567 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:45:05,400 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:45:07,321 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:45:07,322 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:45:07,322 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:45:12,571 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:45:17,572 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:45:22,322 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:45:22,323 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:45:23,570 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:45:27,423 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:45:27,425 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:45:27,425 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:45:27,427 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:45:28,036 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:45:29,427 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:45:34,428 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:45:35,405 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:45:37,326 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:45:37,326 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:45:39,573 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:45:44,573 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:45:49,574 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:45:52,322 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:45:52,323 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:45:54,580 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:45:59,581 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:46:04,581 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:46:05,408 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:46:05,872 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:46:05,873 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:46:05,873 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:46:05,875 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:46:06,061 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:46:07,322 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:46:07,323 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:46:09,595 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:46:14,596 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:46:19,596 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:46:22,323 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:46:22,323 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:46:25,578 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:46:30,579 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:46:35,410 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:46:36,412 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:46:37,324 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:46:37,324 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:46:41,589 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:46:45,727 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:46:45,728 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:46:45,728 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:46:45,730 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:46:46,086 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:46:46,731 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:46:51,731 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:46:52,340 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:46:52,340 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:46:57,596 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:47:02,597 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:47:05,412 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:47:07,327 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:47:07,327 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:47:07,604 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:47:12,605 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:47:17,606 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:47:22,327 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:47:22,327 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:47:23,580 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:47:25,615 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:47:25,616 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:47:25,616 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:47:25,617 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:47:26,131 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:47:28,618 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:47:33,619 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:47:35,414 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:47:37,331 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:47:37,331 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:47:39,606 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:47:44,607 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:47:49,608 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:47:52,345 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:47:52,345 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:47:55,599 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:48:00,600 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:48:05,417 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:48:06,419 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:48:07,157 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:48:07,158 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:48:07,159 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:48:07,160 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:48:07,350 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:48:07,350 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:48:08,160 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:48:11,619 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:48:16,620 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:48:21,621 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:48:22,340 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:48:22,340 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:48:27,594 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:48:32,595 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:48:35,420 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:48:37,340 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:48:37,341 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:48:37,614 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:48:42,615 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:48:47,615 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:48:47,911 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:48:47,913 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:48:47,914 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:48:47,916 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:48:48,301 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:48:52,340 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:48:52,341 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:48:53,604 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:48:58,605 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:49:03,606 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:49:05,422 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:49:07,344 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:49:07,345 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:49:09,596 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:49:14,597 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:49:19,598 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:49:22,344 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:49:22,345 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:49:24,599 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:49:27,491 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:49:27,492 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:49:27,492 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:49:27,495 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:49:28,385 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:49:30,497 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:49:35,428 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:49:36,431 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:49:37,356 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:49:37,357 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:49:41,630 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:49:46,631 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:49:51,632 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:49:52,345 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:49:52,345 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:49:57,600 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:50:02,601 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:50:05,428 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:50:07,345 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: stop_status
+2023-05-11 22:50:07,345 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: stop_status
+2023-05-11 22:50:07,647 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:50:08,367 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: partial_history
+2023-05-11 22:50:08,368 DEBUG   SenderThread:1855524 [sender.py:send():375] send: history
+2023-05-11 22:50:08,369 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: summary_record
+2023-05-11 22:50:08,371 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:50:08,371 DEBUG   SenderThread:1855524 [sender.py:send():375] send: exit
+2023-05-11 22:50:08,371 INFO    SenderThread:1855524 [sender.py:send_exit():598] handling exit code: 0
+2023-05-11 22:50:08,371 INFO    SenderThread:1855524 [sender.py:send_exit():600] handling runtime: 1443
+2023-05-11 22:50:08,373 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:50:08,373 INFO    SenderThread:1855524 [sender.py:send_exit():606] send defer
+2023-05-11 22:50:08,373 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: defer
+2023-05-11 22:50:08,373 INFO    HandlerThread:1855524 [handler.py:handle_request_defer():170] handle defer: 0
+2023-05-11 22:50:08,373 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: defer
+2023-05-11 22:50:08,373 INFO    SenderThread:1855524 [sender.py:send_request_defer():622] handle sender defer: 0
+2023-05-11 22:50:08,373 INFO    SenderThread:1855524 [sender.py:transition_state():626] send defer: 1
+2023-05-11 22:50:08,373 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: defer
+2023-05-11 22:50:08,373 INFO    HandlerThread:1855524 [handler.py:handle_request_defer():170] handle defer: 1
+2023-05-11 22:50:08,374 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: defer
+2023-05-11 22:50:08,374 INFO    SenderThread:1855524 [sender.py:send_request_defer():622] handle sender defer: 1
+2023-05-11 22:50:08,374 INFO    SenderThread:1855524 [sender.py:transition_state():626] send defer: 2
+2023-05-11 22:50:08,374 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: defer
+2023-05-11 22:50:08,374 INFO    HandlerThread:1855524 [handler.py:handle_request_defer():170] handle defer: 2
+2023-05-11 22:50:08,374 INFO    HandlerThread:1855524 [system_monitor.py:finish():190] Stopping system monitor
+2023-05-11 22:50:08,376 DEBUG   SystemMonitor:1855524 [system_monitor.py:_start():166] Finished system metrics aggregation loop
+2023-05-11 22:50:08,376 DEBUG   SystemMonitor:1855524 [system_monitor.py:_start():170] Publishing last batch of metrics
+2023-05-11 22:50:08,380 INFO    HandlerThread:1855524 [interfaces.py:finish():202] Joined cpu monitor
+2023-05-11 22:50:08,380 INFO    HandlerThread:1855524 [interfaces.py:finish():202] Joined disk monitor
+2023-05-11 22:50:08,468 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:50:12,815 INFO    HandlerThread:1855524 [interfaces.py:finish():202] Joined gpu monitor
+2023-05-11 22:50:12,815 INFO    HandlerThread:1855524 [interfaces.py:finish():202] Joined memory monitor
+2023-05-11 22:50:12,815 INFO    HandlerThread:1855524 [interfaces.py:finish():202] Joined network monitor
+2023-05-11 22:50:12,815 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: poll_exit
+2023-05-11 22:50:12,816 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: defer
+2023-05-11 22:50:12,816 INFO    SenderThread:1855524 [sender.py:send_request_defer():622] handle sender defer: 2
+2023-05-11 22:50:12,816 INFO    SenderThread:1855524 [sender.py:transition_state():626] send defer: 3
+2023-05-11 22:50:12,816 DEBUG   SenderThread:1855524 [sender.py:send():375] send: stats
+2023-05-11 22:50:12,817 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: poll_exit
+2023-05-11 22:50:12,818 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: defer
+2023-05-11 22:50:12,818 INFO    HandlerThread:1855524 [handler.py:handle_request_defer():170] handle defer: 3
+2023-05-11 22:50:12,818 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:50:12,818 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: defer
+2023-05-11 22:50:12,818 INFO    SenderThread:1855524 [sender.py:send_request_defer():622] handle sender defer: 3
+2023-05-11 22:50:12,818 INFO    SenderThread:1855524 [sender.py:transition_state():626] send defer: 4
+2023-05-11 22:50:12,818 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: defer
+2023-05-11 22:50:12,818 INFO    HandlerThread:1855524 [handler.py:handle_request_defer():170] handle defer: 4
+2023-05-11 22:50:12,818 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: defer
+2023-05-11 22:50:12,818 INFO    SenderThread:1855524 [sender.py:send_request_defer():622] handle sender defer: 4
+2023-05-11 22:50:12,818 INFO    SenderThread:1855524 [sender.py:transition_state():626] send defer: 5
+2023-05-11 22:50:12,819 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: defer
+2023-05-11 22:50:12,819 INFO    HandlerThread:1855524 [handler.py:handle_request_defer():170] handle defer: 5
+2023-05-11 22:50:12,819 DEBUG   SenderThread:1855524 [sender.py:send():375] send: summary
+2023-05-11 22:50:12,821 INFO    SenderThread:1855524 [sender.py:_save_file():1378] saving file wandb-summary.json with policy end
+2023-05-11 22:50:12,821 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: defer
+2023-05-11 22:50:12,821 INFO    SenderThread:1855524 [sender.py:send_request_defer():622] handle sender defer: 5
+2023-05-11 22:50:12,821 INFO    SenderThread:1855524 [sender.py:transition_state():626] send defer: 6
+2023-05-11 22:50:12,821 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: defer
+2023-05-11 22:50:12,821 INFO    HandlerThread:1855524 [handler.py:handle_request_defer():170] handle defer: 6
+2023-05-11 22:50:12,821 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: defer
+2023-05-11 22:50:12,821 INFO    SenderThread:1855524 [sender.py:send_request_defer():622] handle sender defer: 6
+2023-05-11 22:50:12,822 INFO    SenderThread:1855524 [sender.py:transition_state():626] send defer: 7
+2023-05-11 22:50:12,822 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: status_report
+2023-05-11 22:50:12,822 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: defer
+2023-05-11 22:50:12,822 INFO    HandlerThread:1855524 [handler.py:handle_request_defer():170] handle defer: 7
+2023-05-11 22:50:12,822 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: defer
+2023-05-11 22:50:12,822 INFO    SenderThread:1855524 [sender.py:send_request_defer():622] handle sender defer: 7
+2023-05-11 22:50:12,822 INFO    SenderThread:1855524 [sender.py:transition_state():626] send defer: 8
+2023-05-11 22:50:12,822 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: defer
+2023-05-11 22:50:12,822 INFO    HandlerThread:1855524 [handler.py:handle_request_defer():170] handle defer: 8
+2023-05-11 22:50:12,822 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: defer
+2023-05-11 22:50:12,822 INFO    SenderThread:1855524 [sender.py:send_request_defer():622] handle sender defer: 8
+2023-05-11 22:50:12,836 INFO    SenderThread:1855524 [sender.py:transition_state():626] send defer: 9
+2023-05-11 22:50:12,836 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: defer
+2023-05-11 22:50:12,836 DEBUG   SenderThread:1855524 [sender.py:send():375] send: artifact
+2023-05-11 22:50:12,836 INFO    HandlerThread:1855524 [handler.py:handle_request_defer():170] handle defer: 9
+2023-05-11 22:50:13,471 INFO    Thread-12 :1855524 [dir_watcher.py:_on_file_modified():295] file/dir modified: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:50:14,199 INFO    SenderThread:1855524 [sender.py:send_artifact():1474] sent artifact job-https___github.com_ridwan-salau_cost-aware-bo.git_main.py - {'id': 'QXJ0aWZhY3Q6NDUwOTEwMjI0', 'digest': 'e1b379d4cf6eec14eef6667985fcd743', 'state': 'COMMITTED', 'aliases': [{'artifactCollectionName': 'job-https___github.com_ridwan-salau_cost-aware-bo.git_main.py', 'alias': 'latest'}, {'artifactCollectionName': 'job-https___github.com_ridwan-salau_cost-aware-bo.git_main.py', 'alias': 'v30'}], 'artifactSequence': {'id': 'QXJ0aWZhY3RDb2xsZWN0aW9uOjY4NDY4MDg1', 'latestArtifact': {'id': 'QXJ0aWZhY3Q6NDUxMDI3NDIw', 'versionIndex': 35}}, 'version': 'v30'}
+2023-05-11 22:50:14,199 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: defer
+2023-05-11 22:50:14,199 INFO    SenderThread:1855524 [sender.py:send_request_defer():622] handle sender defer: 9
+2023-05-11 22:50:14,199 INFO    SenderThread:1855524 [dir_watcher.py:finish():365] shutting down directory watcher
+2023-05-11 22:50:14,373 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: keepalive
+2023-05-11 22:50:14,472 INFO    SenderThread:1855524 [dir_watcher.py:finish():395] scan: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files
+2023-05-11 22:50:14,473 INFO    SenderThread:1855524 [dir_watcher.py:finish():409] scan save: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/config.yaml config.yaml
+2023-05-11 22:50:14,473 INFO    SenderThread:1855524 [dir_watcher.py:finish():409] scan save: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json wandb-summary.json
+2023-05-11 22:50:14,473 INFO    SenderThread:1855524 [dir_watcher.py:finish():409] scan save: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/requirements.txt requirements.txt
+2023-05-11 22:50:14,473 INFO    SenderThread:1855524 [dir_watcher.py:finish():409] scan save: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/conda-environment.yaml conda-environment.yaml
+2023-05-11 22:50:14,473 INFO    SenderThread:1855524 [dir_watcher.py:finish():409] scan save: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-metadata.json wandb-metadata.json
+2023-05-11 22:50:14,473 INFO    SenderThread:1855524 [sender.py:transition_state():626] send defer: 10
+2023-05-11 22:50:14,474 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: defer
+2023-05-11 22:50:14,474 INFO    HandlerThread:1855524 [handler.py:handle_request_defer():170] handle defer: 10
+2023-05-11 22:50:14,478 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: defer
+2023-05-11 22:50:14,478 INFO    SenderThread:1855524 [sender.py:send_request_defer():622] handle sender defer: 10
+2023-05-11 22:50:14,478 INFO    SenderThread:1855524 [file_pusher.py:finish():167] shutting down file pusher
+2023-05-11 22:50:15,314 INFO    wandb-upload_1:1855524 [upload_job.py:push():137] Uploaded file /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/wandb-summary.json
+2023-05-11 22:50:15,345 INFO    wandb-upload_2:1855524 [upload_job.py:push():137] Uploaded file /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/requirements.txt
+2023-05-11 22:50:15,397 INFO    wandb-upload_3:1855524 [upload_job.py:push():137] Uploaded file /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/conda-environment.yaml
+2023-05-11 22:50:15,414 INFO    wandb-upload_0:1855524 [upload_job.py:push():137] Uploaded file /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/files/config.yaml
+2023-05-11 22:50:15,614 INFO    Thread-11 (_thread_body):1855524 [sender.py:transition_state():626] send defer: 11
+2023-05-11 22:50:15,614 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: defer
+2023-05-11 22:50:15,615 INFO    HandlerThread:1855524 [handler.py:handle_request_defer():170] handle defer: 11
+2023-05-11 22:50:15,615 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: defer
+2023-05-11 22:50:15,615 INFO    SenderThread:1855524 [sender.py:send_request_defer():622] handle sender defer: 11
+2023-05-11 22:50:15,615 INFO    SenderThread:1855524 [file_pusher.py:join():172] waiting for file pusher
+2023-05-11 22:50:15,615 INFO    SenderThread:1855524 [sender.py:transition_state():626] send defer: 12
+2023-05-11 22:50:15,615 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: defer
+2023-05-11 22:50:15,615 INFO    HandlerThread:1855524 [handler.py:handle_request_defer():170] handle defer: 12
+2023-05-11 22:50:15,616 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: defer
+2023-05-11 22:50:15,616 INFO    SenderThread:1855524 [sender.py:send_request_defer():622] handle sender defer: 12
+2023-05-11 22:50:16,477 INFO    SenderThread:1855524 [sender.py:transition_state():626] send defer: 13
+2023-05-11 22:50:16,477 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: defer
+2023-05-11 22:50:16,477 INFO    HandlerThread:1855524 [handler.py:handle_request_defer():170] handle defer: 13
+2023-05-11 22:50:16,478 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: defer
+2023-05-11 22:50:16,478 INFO    SenderThread:1855524 [sender.py:send_request_defer():622] handle sender defer: 13
+2023-05-11 22:50:16,478 INFO    SenderThread:1855524 [sender.py:transition_state():626] send defer: 14
+2023-05-11 22:50:16,478 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: defer
+2023-05-11 22:50:16,479 INFO    HandlerThread:1855524 [handler.py:handle_request_defer():170] handle defer: 14
+2023-05-11 22:50:16,479 DEBUG   SenderThread:1855524 [sender.py:send():375] send: final
+2023-05-11 22:50:16,479 DEBUG   SenderThread:1855524 [sender.py:send():375] send: footer
+2023-05-11 22:50:16,479 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: defer
+2023-05-11 22:50:16,479 INFO    SenderThread:1855524 [sender.py:send_request_defer():622] handle sender defer: 14
+2023-05-11 22:50:16,480 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: poll_exit
+2023-05-11 22:50:16,480 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: server_info
+2023-05-11 22:50:16,480 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: poll_exit
+2023-05-11 22:50:16,480 DEBUG   SenderThread:1855524 [sender.py:send_request():402] send_request: server_info
+2023-05-11 22:50:16,483 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: get_summary
+2023-05-11 22:50:16,484 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: sampled_history
+2023-05-11 22:50:16,726 INFO    MainThread:1855524 [wandb_run.py:_footer_history_summary_info():3469] rendering history
+2023-05-11 22:50:16,728 INFO    MainThread:1855524 [wandb_run.py:_footer_history_summary_info():3501] rendering summary
+2023-05-11 22:50:16,728 INFO    MainThread:1855524 [wandb_run.py:_footer_sync_info():3428] logging synced files
+2023-05-11 22:50:16,728 DEBUG   HandlerThread:1855524 [handler.py:handle_request():144] handle_request: shutdown
+2023-05-11 22:50:16,728 INFO    HandlerThread:1855524 [handler.py:finish():845] shutting down handler
+2023-05-11 22:50:17,480 INFO    WriterThread:1855524 [datastore.py:close():298] close: /home/abdelmajid/workdir/cost-aware-bo/wandb/run-20230511_222604-x7gipy2x/run-x7gipy2x.wandb
+2023-05-11 22:50:17,726 INFO    SenderThread:1855524 [sender.py:finish():1550] shutting down sender
+2023-05-11 22:50:17,727 INFO    SenderThread:1855524 [file_pusher.py:finish():167] shutting down file pusher
+2023-05-11 22:50:17,727 INFO    SenderThread:1855524 [file_pusher.py:join():172] waiting for file pusher
