@@ -1,8 +1,8 @@
 # kill -9 $(nvidia-smi --query-compute-apps=pid --format=csv,noheader)
 exp_group=$(date '+%Y%m%d-%H%M')
-ACQF_ARRAY=("EIPU" "EEIPU" "EIPU-MEMO")
-DEC_FACS=(2)
-INIT_ETAS=(0.95)
+ACQF_ARRAY=("EEIPU")
+INIT_ETAS=(1 2 3 4)
+DEC_FACS=(0.95)
 
 for eta in ${INIT_ETAS[@]}; do
     for dec in ${DEC_FACS[@]}; do
