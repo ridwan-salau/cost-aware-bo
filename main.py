@@ -51,7 +51,7 @@ if __name__=="__main__":
     
     
     torch.manual_seed(seed=params['rand_seed'])
-    np.random.seed(params['rand_seed'])
+    # np.random.seed(params['rand_seed'])
     random.seed(params['rand_seed'])
     botorch.utils.sampling.manual_seed(seed=params['rand_seed'])
     

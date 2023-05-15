@@ -16,6 +16,7 @@ rm -rf /home/ridwan/workdir/pirlib/examples/stacking/cache_dir/*
 
 LOG_DIR=$(date +%Y%m%d_%H%M%S)
 trial=0
+EXP_GROUP=$(date +%Y%m%d_%H%M%S)
 
 STAGE_COSTS=("$OUTPUT_DIR/build_basemodels1/return/$COST_FILE" \
             "$OUTPUT_DIR/build_basemodels2/return/$COST_FILE" \
@@ -27,14 +28,22 @@ rm -f ${STAGE_COSTS[*]} $OBJ_OUT
 
 echo Running optimizer
 # sleep 2; # Otherwise, 
+ACQF_ARRAY=("EEIPU" "EI")
 
-# ssh gpu-14 "$TUUN_CONDA_ENV"
-python $TUUN_DIR/param_gen_v2.py \
-    --trial 1 \
-    --stage_costs_outputs ${STAGE_COSTS[*]} \
-    --obj-output  $OBJ_OUT \
-    --config-file $CONFIG_FILE \
-    --base-dir $TUUN_DIR;
+for trial in {1..5}; do
+    for acqf in ${ACQF_ARRAY[@]}; do
+        rm -f ${STAGE_COSTS[*]} $OBJ_OUT;
+        rm -rf /home/ridwan/workdir/pirlib/examples/stacking/cache_dir/*
+        python $TUUN_DIR/param_gen_v2.py \
+            --trial $trial \
+            --stage_costs_outputs ${STAGE_COSTS[*]} \
+            --obj-output  $OBJ_OUT \
+            --config-file $CONFIG_FILE \
+            --exp-group $EXP_GROUP \
+            --acqf $acqf \
+            --base-dir $TUUN_DIR;
+    done;
+done;
 
 #     if [ $i -ne -1 ];
 #     then

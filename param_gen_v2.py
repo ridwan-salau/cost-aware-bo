@@ -171,7 +171,7 @@ def generate_hps(
     dataset = read_hp_dataset(HP_DATASET)
     dataset = {key:torch.tensor(val, device=device, dtype=dtype) for key, val in dataset.items()}
     
-    new_x = None        
+    new_x, y_pred, n_memoised, E_c, E_inv_c = None, None, None, None, None
     if iteration >= bo_params['n_init_data']:
         bounds = {key.replace("_bounds", ""):val for key,val in dataset.items() if key.endswith("_bounds")}
         new_x, n_memoised, E_c, E_inv_c, y_pred = bo_iteration(X=dataset["x"], y=dataset["y"].unsqueeze(-1), c=dataset["c"], bounds=bounds, acqf_str=acq_type, decay=bo_params['init_eta'], iter=iteration, params=bo_params)
@@ -220,39 +220,41 @@ def generate_hps(
     sum_stages = sum(stage_cost_list)
     cum_cost = dataset["c"].sum()
     inv_cost = 1/sum_stages
-
+    dataset_x = dataset["x"]
+    hp_table = wandb.Table(columns=list(range(len(dataset_x[0]))), data=dataset_x.tolist())
     
-    print(f"Iteration-{iteration} [{acq_type}] Trial No. #{trial_number} Runtime: {time.time()-tic}")
-    if bo_params['verbose'] and iteration >= bo_params['n_init_data']:
+    print(f"[{time.strftime('%Y-%m-%d-%H%M')}] Iteration-{iteration} [{acq_type}] Trial No. #{trial_number} Runtime: {time.time()-tic}")
+    if bo_params['verbose']: # and iteration >= bo_params['n_init_data']:
         print(f"f(x^)={y_pred}", end="   ")
         print(f"f(x)={new_y:>4.3f}", end="   ")
         print(f"c(x)=[" + ', '.join('{:.3f}'.format(val) for val in stage_cost_list) + "]", end="   ")
         print(f"s(c(x)) = [{sum_stages:>4.3f}]", end="   ")
         print(f"c(c) = {cum_cost:>4.3f}", end="   ")
-        print(f"num_memoise = {n_memoised}")
+        print(f"num_memoise = {n_memoised}", end="\n\n")
     
   
     # with (log_dir/f"trial_{trial_number}_log.jsonl").open("a") as f:
     #     f.write(json.dumps(log_vals)+"\n")
     
-    if iteration >= bo_params['n_init_data']:    
-        log = dict(
-                best_f=best_f,
-                f_hat_x=y_pred,
-                f_x=new_y,
-                f_res=abs(y_pred - new_y),
-                sum_c_x=sum_stages,
-                cum_costs=cum_cost,
-                E_inv_c=E_inv_c,
-                sum_Ec=sum(E_c),
-                inv_cost=inv_cost,
-                E_c=dict(zip(map(str,range(len(E_c))) ,E_c)),
-                c_x=dict(zip(map(str,range(len(stage_cost_list))) ,stage_cost_list)),
-                c_res=dict(zip(map(str,range(len(stage_cost_list))) ,[abs(act-est) for act, est in zip(E_c,stage_cost_list)])),
-                inv_c_res=abs(E_inv_c-inv_cost),
-                eta = bo_params['init_eta']
-            )
-        wandb.log(log)
+    # if iteration >= bo_params['n_init_data']:    
+    log = dict(
+            best_f=best_f,
+            f_hat_x=y_pred,
+            f_x=new_y,
+            f_res=abs(y_pred - new_y) if y_pred else None,
+            sum_c_x=sum_stages,
+            cum_costs=cum_cost,
+            E_inv_c=E_inv_c,
+            sum_Ec=sum(E_c) if E_c else None,
+            inv_cost=inv_cost,
+            E_c=dict(zip(map(str,range(len(E_c))) ,E_c)) if E_c else None,
+            c_x=dict(zip(map(str,range(len(stage_cost_list))) ,stage_cost_list)),
+            c_res=dict(zip(map(str,range(len(stage_cost_list))) ,[abs(act-est) for act, est in zip(E_c,stage_cost_list)])) if E_c else None,
+            inv_c_res=abs(E_inv_c-inv_cost) if E_inv_c else None,
+            eta=bo_params['init_eta'],
+            hp_table=hp_table,
+        )
+    wandb.log(log)
     return new_x
 
 if __name__ == "__main__":
@@ -264,9 +266,11 @@ if __name__ == "__main__":
     parser.add_argument("--obj-output", help="The output directory of the objective.", required=True)
     parser.add_argument("--config-file", type=Path, help="Argo config file path.")
     parser.add_argument("--base-dir", type=Path, help="Base tuun directory.", default=Path("."))
-    parser.add_argument("--init-eta", type=float, help="Initial ETA", default=1)
-    parser.add_argument("--decay-factor", type=float, help="Decay factor", default=1)
-    
+    parser.add_argument("--init-eta", type=float, help="Initial ETA", default=2)
+    parser.add_argument("--decay-factor", type=float, help="Decay factor", default=0.95)
+    parser.add_argument("--exp-group", type=str, help="Group ID")
+    parser.add_argument("--acqf", type=str, help="Acquisition function", choices=["EEIPU", "EIPU", "EIPU-MEMO", "EI", "RAND"], default="EEIPU")
+
     args = parser.parse_args()
     
     BASE_DIR = args.base_dir
@@ -294,7 +298,7 @@ if __name__ == "__main__":
     wandb.init(
         entity="cost-bo",
         project="memoised-realworld-exp",
-        group=f"Stacking|-dec-fac_{args.decay_factor}"
+        group=f"Stacking-{args.exp_group}|-acqf_{args.acqf}|-dec-fac_{args.decay_factor}"
                 f"|init-eta_{args.init_eta}",
         name=f"{time.strftime('%Y-%m-%d-%H%M')}-trial-number_{trial}",
         config=params
@@ -306,8 +310,8 @@ if __name__ == "__main__":
     
     
     torch.manual_seed(seed=params['rand_seed'])
-    np.random.seed(params['rand_seed'])
-    random.seed(params['rand_seed'])
+    # np.random.seed(params['rand_seed'])
+    # random.seed(params['rand_seed'])
     botorch.utils.sampling.manual_seed(seed=params['rand_seed'])
     
     for iter in range(1, params["n_iters"]+1):
@@ -318,6 +322,7 @@ if __name__ == "__main__":
             stage_costs_outputs=stage_costs_outputs,
             obj_output=args.obj_output,
             config_file=args.config_file,
-            hp_stg_paths=hp_stg_paths
+            hp_stg_paths=hp_stg_paths,
+            acq_type=args.acqf,
         )        
     print("Done!!!")
