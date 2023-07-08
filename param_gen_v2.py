@@ -223,7 +223,7 @@ def generate_hps(
     dataset_x = dataset["x"]
     hp_table = wandb.Table(columns=list(range(len(dataset_x[0]))), data=dataset_x.tolist())
     
-    print(f"[{time.strftime('%Y-%m-%d-%H%M')}] Iteration-{iteration} [{acq_type}] Trial No. #{trial_number} Runtime: {time.time()-tic}")
+    print(f"\n[{time.strftime('%Y-%m-%d-%H%M')}] Iteration-{iteration} [{acq_type}] Trial No. #{trial_number} Runtime: {time.time()-tic}")
     if bo_params['verbose']: # and iteration >= bo_params['n_init_data']:
         print(f"f(x^)={y_pred}", end="   ")
         print(f"f(x)={new_y:>4.3f}", end="   ")
@@ -231,6 +231,8 @@ def generate_hps(
         print(f"s(c(x)) = [{sum_stages:>4.3f}]", end="   ")
         print(f"c(c) = {cum_cost:>4.3f}", end="   ")
         print(f"num_memoise = {n_memoised}", end="\n\n")
+        print("==="*20)
+        print("\n")
     
   
     # with (log_dir/f"trial_{trial_number}_log.jsonl").open("a") as f:
@@ -277,6 +279,7 @@ if __name__ == "__main__":
     HP_DATASET = BASE_DIR / "hp_dataset.json"
     
     hp_stg_paths = [BASE_DIR / "hparams/stage1.json", BASE_DIR / "hparams/stage2.json", BASE_DIR / "hparams/stage3.json"]
+    # hp_stg_paths_ = [BASE_DIR / "hparams/stage_1.json", BASE_DIR / "hparams/stage_2.json"]
     
     # args.log_dir.mkdir(parents=True, exist_ok=True)
     stage_costs_outputs = {ind:file for ind,file in enumerate(args.stage_costs_outputs)}

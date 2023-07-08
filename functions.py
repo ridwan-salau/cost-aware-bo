@@ -162,6 +162,7 @@ def get_dataset_bounds(X, Y, C, gen_bounds):
 
     std_c_bounds = [[], []]
     for stage_costs in C:
+        # print("Stage costs:", stage_costs)
         log_sc = torch.log(stage_costs)
         std_c_bounds[0].append(log_sc.mean().item())
         std_c_bounds[1].append(log_sc.std().item())
@@ -242,7 +243,7 @@ def generate_prefix_pool(X, acqf, params):
     prefix_pool = []
     first_idx = params['n_init_data']
 
-    if acqf not in ['EEIPU', 'EIPU-MEMO']:
+    if acqf !='EEIPU':
         prefix_pool.append([])
         return prefix_pool
         
@@ -251,8 +252,10 @@ def generate_prefix_pool(X, acqf, params):
         n_stages = len(params['h_ind'])
         for j in range(n_stages - 1):
             stage_params = params['h_ind'][j]
+            # print(j, "Stage params:", stage_params, param_config[stage_params])
             prefix.append(list(param_config[stage_params].cpu().detach().numpy()))
             prefix_pool.append(copy.deepcopy(prefix))
+            # print(j, "Prefix: ", prefix)
     
     random.shuffle(prefix_pool)
     

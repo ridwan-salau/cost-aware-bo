@@ -28,7 +28,8 @@ rm -f ${STAGE_COSTS[*]} $OBJ_OUT
 
 echo Running optimizer
 # sleep 2; # Otherwise, 
-ACQF_ARRAY=("EEIPU" "EI")
+ACQF_ARRAY=("EI" "EEIPU")
+EXP_GROUP="20230515_172337"
 
 for trial in {1..5}; do
     for acqf in ${ACQF_ARRAY[@]}; do

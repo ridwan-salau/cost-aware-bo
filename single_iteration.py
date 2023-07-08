@@ -43,7 +43,9 @@ def get_expected_y(X, gp_model, n_samples, bounds, seed):
     return obj
 
 def bo_iteration(X, y, c, bounds=None, acqf_str='', decay=None, iter=None, params=None):
-    
+    # print(f"Shapes: {X.shape}, {y.shape}, {c.shape}")
+    # print("Bounds:", bounds)
+    # exit()
     train_x = normalize(X, bounds=bounds['x_cube'])
     train_y = standardize(y, bounds['y'])
     
