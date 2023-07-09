@@ -96,7 +96,7 @@ def generate_update_stage_hparams(hp: List, hp_path, stage_idx):
         hparams[stg_idx] = stage_params_filtered
         
     hparams[stage_idx] = hparams_out
-    hp_out_path = Path("/home/ridwan/workdir/pirlib/examples/stacking/inputs") / hp_path.name
+    hp_out_path = Path("/home/ridwan/workdir/cost_aware_bo/inputs") / hp_path.name
     write_hparams(hparams, hp_out_path)
     return stg_hp, stg_bounds, hp
 
@@ -122,12 +122,12 @@ def read_stg_costs(stage_costs_outputs):
     for i in range(len(stage_costs_outputs)):
         if not os.path.exists(stage_costs_outputs[i]):
             print(f"Cannot find {stage_costs_outputs[i]}")
-            if i>0:
+            if i>1:
                 raise FileNotFoundError(f"Cannot find {stage_costs_outputs[i]}")
             break 
         with open(stage_costs_outputs[i]) as stg:
             stg = stg.read().strip()
-            print("param_gen_v2 125", stg, stage_costs_outputs[i], end="\n\n")
+            print("param_gen 125", stg, stage_costs_outputs[i], end="\n\n")
             stg_json = json.loads(stg[:stg.find("}")+1] if "}" in stg else f"{stg}{'}'}")
             new_stg_costs.append(stg_json["wall_time"])
             
@@ -136,7 +136,7 @@ def read_stg_costs(stage_costs_outputs):
 def read_objective(obj_output):
     if not Path(obj_output).exists():
         print(obj_output)
-        raise
+        raise FileNotFoundError(f"File {obj_output} not found.")
     with open(obj_output) as f:
         obj = f.read()
         print(obj, obj_output)
@@ -157,7 +157,7 @@ def generate_hps(
     },
     obj_output: str = "./score.json",
     hp_stg_paths = [], # The number of paths provided should match the number of stages
-    config_file:Path = Path("")
+    # config_file:Path = Path("")
 ):
     tic = time.time()
     bo_params = read_json(BASE_DIR/"params")
@@ -171,7 +171,7 @@ def generate_hps(
     dataset = read_hp_dataset(HP_DATASET)
     dataset = {key:torch.tensor(val, device=device, dtype=dtype) for key, val in dataset.items()}
     
-    new_x, y_pred, n_memoised, E_c, E_inv_c = None, None, None, None, None
+    new_x, y_pred, n_memoised, E_c, E_inv_c = None, None, 0, None, None
     if iteration >= bo_params['n_init_data']:
         bounds = {key.replace("_bounds", ""):val for key,val in dataset.items() if key.endswith("_bounds")}
         new_x, n_memoised, E_c, E_inv_c, y_pred = bo_iteration(X=dataset["x"], y=dataset["y"].unsqueeze(-1), c=dataset["c"], bounds=bounds, acqf_str=acq_type, decay=bo_params['init_eta'], iter=iteration, params=bo_params)
@@ -184,13 +184,20 @@ def generate_hps(
     ## Execute model (PIRLib)
     
     # resp = subprocess.run(["python", "stacking_algo.py"], capture_output=True, text=True) # For testing
-    resp = subprocess.run(
-        ["argo", "submit", "-n", "gpu-14", "--wait", config_file],
-        capture_output=True,
-        text=True
-    )
+    keys = stage_costs_outputs.keys()
+    stage_costs_outputs_list = [stage_costs_outputs[i] for i in keys]
+    print("stage_costs_outputs_list", stage_costs_outputs_list)
+    python = "/home/ridwan/miniconda3/envs/tuun/bin/python"
+    cmd = [python, "modelling.py", "--stage-costs-outputs", *stage_costs_outputs_list, "--obj-output", str(obj_output)]
+    # cmd = ["argo", "submit", "-n", "gpu-14", "--wait", config_file],
+    cmd.append("--disable-cache") if acq_type=="EI" else None
+    resp = subprocess.run(cmd, capture_output=True, text=True)
     if resp.stderr:
         raise Exception(resp.stderr)
+    # print(resp.stdout)
+    while not Path(obj_output).exists():
+        print("Sleeping for 1 sec...")
+        time.sleep(1)
     
     def update_dataset_new_run(dataset, new_x, stage_costs_outputs, obj_output, x_bounds, dtype=torch.float64, device="cuda"):
         # Check PIRLIB output directory for new objective and cost values
@@ -266,10 +273,9 @@ if __name__ == "__main__":
     # parser.add_argument("--iter", type=int, help="The iteration count, starting from 0. Pass -1 to only read the final objective and cost values.", required=True)
     parser.add_argument("--stage_costs_outputs", nargs='+', help="The output directories of the stages with tunable hps in order.", required=True)
     parser.add_argument("--obj-output", help="The output directory of the objective.", required=True)
-    parser.add_argument("--config-file", type=Path, help="Argo config file path.")
     parser.add_argument("--base-dir", type=Path, help="Base tuun directory.", default=Path("."))
-    parser.add_argument("--init-eta", type=float, help="Initial ETA", default=2)
-    parser.add_argument("--decay-factor", type=float, help="Decay factor", default=0.95)
+    parser.add_argument("--init-eta", type=float, help="Initial ETA", default=3)
+    parser.add_argument("--decay-factor", type=float, help="Decay factor", default=1)
     parser.add_argument("--exp-group", type=str, help="Group ID")
     parser.add_argument("--acqf", type=str, help="Acquisition function", choices=["EEIPU", "EIPU", "EIPU-MEMO", "EI", "RAND"], default="EEIPU")
 
@@ -324,7 +330,7 @@ if __name__ == "__main__":
             trial_number=args.trial,
             stage_costs_outputs=stage_costs_outputs,
             obj_output=args.obj_output,
-            config_file=args.config_file,
+            # config_file=args.config_file,
             hp_stg_paths=hp_stg_paths,
             acq_type=args.acqf,
         )        
