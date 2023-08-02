@@ -66,7 +66,7 @@ def generate_update_stage_hparams(hp: List, hp_path):
             for key2, value2 in value1.items():
                 lower, upper = value2
         else:
-            lower, upper = value2
+            lower, upper = value1
         
         dtype = type(lower)
         if hp:
@@ -223,7 +223,7 @@ def generate_hps(
         return dataset
     
     dataset = update_dataset_new_run(dataset, new_x, stage_costs_outputs, obj_output, x_bounds, dtype, device)
-    best_f = dataset["y"].max().item()
+    best_f = dataset["y"].min().item()
     new_y = dataset["y"][-1].item()
     stage_cost_list = dataset["c"][:, -1].squeeze()
     sum_stages = sum(stage_cost_list)
