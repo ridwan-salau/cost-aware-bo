@@ -9,11 +9,11 @@ MODE="${1:-online}"
 run_python_script() {
     local GPU_IP=$1
     local EXP_NAME=$(date +%Y%m%d_%H%M%S)_$RANDOM
-    local DIR=/home/ridwan.salahuddeen/Documents/research # Modify this to point to your experiment dir
+    local DIR=/home/ridwan.salahuddeen/Documents/research/cost-aware-bo # Modify this to point to your experiment dir
     ssh "$GPU_IP" "cd $DIR \
         && conda activate melanoma \
         && WANDB_MODE=$MODE \
-        $PYTHON cost-aware-bo/melanoma_hparams.py \
+        python3 ./melanoma_hparams.py \
             --trial $trial \
             --exp-group $EXP_GROUP \
             --acqf $acqf \

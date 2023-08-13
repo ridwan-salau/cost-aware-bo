@@ -179,7 +179,7 @@ def generate_hps(
     
     # resp = subprocess.run(["python", "stacking_algo.py"], capture_output=True, text=True) # For testing
     keys = stage_costs_outputs.keys()
-    cmd = ["python3", "./melanoma/melanoma.py", "--hps", *[str(i) for i in new_x], "--metrics-path", str(METRICS_PATH)]
+    cmd = ["python3", "./models/melanoma/melanoma.py", "--hps", *[str(i) for i in new_x], "--metrics-path", str(METRICS_PATH)]
     print("Executing...", " ".join(cmd))
     cmd.append("--disable-cache") if acq_type=="EI" else None
     resp = subprocess.run(cmd, )
@@ -274,7 +274,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     
-    TUUN_DIR = "cost-aware-bo"
+    TUUN_DIR = "."
         
     BASE_DIR = args.base_dir
     EXP_NAME = args.exp_name
