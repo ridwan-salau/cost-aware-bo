@@ -149,8 +149,8 @@ if use_meta:
     # for i, img_path in enumerate(tqdm(test_images)):
     #     test_sizes[i] = os.path.getsize(img_path)
     # df_test['image_size'] = np.log(test_sizes)
-    # df_train.to_csv("./input/preprocessed_train.csv", index=False)
-    df_train = pd.read_csv("./input/preprocessed_train.csv")
+    # df_train.to_csv("../input/preprocessed_train.csv", index=False)
+    df_train = pd.read_csv("../input/preprocessed_train.csv")
     df_train["filepath"] = df_train.filepath.str.replace("../", "./")
     meta_features = ['sex', 'age_approx', 'n_images', 'image_size'] + [col for col in df_train.columns if col.startswith('site_')]
     n_meta_features = len(meta_features)
@@ -165,7 +165,7 @@ print(time.ctime(), "Done pre-processing metadata")
 # # Define Dataset
 
 class SIIMISICDataset(Dataset):
-    def __init__(self, csv, split, mode, transform=None, pre_proc_path="./input/preprocessed"):
+    def __init__(self, csv, split, mode, transform=None, pre_proc_path="../input/preprocessed"):
 
         self.csv = csv.reset_index(drop=True)
         self.split = split
