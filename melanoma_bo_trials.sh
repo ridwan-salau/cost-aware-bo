@@ -9,8 +9,7 @@ MODE="${1:-online}"
 run_python_script() {
     local GPU_IP=$1
     local EXP_NAME=$(date +%Y%m%d_%H%M%S)_$RANDOM
-    local DIR=/home/ridwan.salahuddeen/Documents/research
-    local PYTHON=/home/ridwan.salahuddeen/.conda/envs/melanoma/bin/python3
+    local DIR=/home/ridwan.salahuddeen/Documents/research # Modify this to point to your experiment dir
     ssh "$GPU_IP" "cd $DIR \
         && conda activate melanoma \
         && WANDB_MODE=$MODE \
@@ -112,7 +111,7 @@ trial=1
 gpu_ip="${2:-gpu-14}"
 while [ "$trial" -le 10 ]; do
     for acqf in "${ACQF_ARRAY[@]}"; do
-        echo Before getting the gpu_ip ...
+        # echo Before getting the gpu_ip ...
         for element in "${IN_USE_MACHINES[@]}"; do
             echo - "$element" 
         done
