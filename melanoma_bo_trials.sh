@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e 
 
 EXP_GROUP=HPCLAB
 ACQF_ARRAY=("EEIPU" "EI")
@@ -107,7 +108,7 @@ update_in_use_machines() {
 
 min_required_memory=20000
 
-# trial=$2
+trial=1
 gpu_ip="${2:-gpu-14}"
 while [ "$trial" -le 10 ]; do
     for acqf in "${ACQF_ARRAY[@]}"; do
@@ -130,7 +131,7 @@ while [ "$trial" -le 10 ]; do
     done
 
     ((trial++))
-# done
+done
 
 wait  # Wait for all remaining background processes to finish
 # find ~/Documents/research/input/preprocessed/ -type f -print0 | xargs -0 -n1 -P20 rm
