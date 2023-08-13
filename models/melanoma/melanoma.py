@@ -151,7 +151,7 @@ if use_meta:
     # df_test['image_size'] = np.log(test_sizes)
     # df_train.to_csv("../input/preprocessed_train.csv", index=False)
     df_train = pd.read_csv("../input/preprocessed_train.csv")
-    df_train["filepath"] = df_train.filepath.str.replace("../", "./")
+    # df_train["filepath"] = df_train.filepath.str.replace("../", "./")
     meta_features = ['sex', 'age_approx', 'n_images', 'image_size'] + [col for col in df_train.columns if col.startswith('site_')]
     n_meta_features = len(meta_features)
     diagnosis2idx = {d: idx for idx, d in enumerate(sorted(df_train.diagnosis.unique()))}
