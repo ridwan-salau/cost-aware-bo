@@ -1,7 +1,7 @@
 #!/bin/bash
 
 EXP_GROUP=HPCLAB
-ACQF_ARRAY=("EI")
+ACQF_ARRAY=("EEIPU" "EI")
 MODE="${1:-online}"
 
 # Function to execute the Python script
@@ -9,9 +9,9 @@ run_python_script() {
     local GPU_IP=$1
     local EXP_NAME=$(date +%Y%m%d_%H%M%S)_$RANDOM
     local DIR=/home/ridwan.salahuddeen/Documents/research
-    local PYTHON=/home/ridwan.salahuddeen/.conda/envs/codeformer/bin/python3
+    local PYTHON=/home/ridwan.salahuddeen/.conda/envs/melanoma/bin/python3
     ssh "$GPU_IP" "cd $DIR \
-        && conda activate codeformer \
+        && conda activate melanoma \
         && WANDB_MODE=$MODE \
         $PYTHON cost-aware-bo/melanoma_hparams.py \
             --trial $trial \
@@ -107,9 +107,9 @@ update_in_use_machines() {
 
 min_required_memory=20000
 
-trial=$2
-gpu_ip=$3
-# while [ "$trial" -le 10 ]; do
+# trial=$2
+gpu_ip="${2:-gpu-14}"
+while [ "$trial" -le 10 ]; do
     for acqf in "${ACQF_ARRAY[@]}"; do
         echo Before getting the gpu_ip ...
         for element in "${IN_USE_MACHINES[@]}"; do
@@ -129,7 +129,7 @@ gpu_ip=$3
         fi
     done
 
-    # ((trial++))
+    ((trial++))
 # done
 
 wait  # Wait for all remaining background processes to finish
