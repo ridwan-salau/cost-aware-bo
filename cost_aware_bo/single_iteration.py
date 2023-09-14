@@ -1,12 +1,12 @@
-from optimize_mem_acqf import optimize_acqf_by_mem
-from EEIPU.EIPUVariants import EIPUVariants
-from functions import normalize, unnormalize, normalize_cost, standardize, unstandardize, initialize_GP_model, get_gen_bounds, generate_prefix_pool, Cost_F
-from json_reader import read_json
 from botorch import fit_gpytorch_model
 from botorch.acquisition import ExpectedImprovement
 from botorch.sampling import SobolQMCNormalSampler
 from botorch.acquisition.objective import IdentityMCObjective
 import torch
+
+from .optimize_mem_acqf import optimize_acqf_by_mem
+from .EEIPU.EIPUVariants import EIPUVariants
+from .functions import normalize, unnormalize, normalize_cost, standardize, unstandardize, initialize_GP_model, get_gen_bounds, generate_prefix_pool, Cost_F
 
 def get_gp_models(X, y, params=None):
     mll, gp_model = initialize_GP_model(X, y, params=params)

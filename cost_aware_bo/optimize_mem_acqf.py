@@ -1,7 +1,9 @@
-from optimizer.optimize_acqf_funcs import optimize_acqf
-from functions import get_random_observations
 from itertools import chain
 import torch
+
+from .optimizer.optimize_acqf_funcs import optimize_acqf
+from .functions import get_random_observations
+
 
 def update_candidate(candidate, acqf_val, best_candidate, best_acqf_val, num_memoised, delta):
     if acqf_val > best_acqf_val:
