@@ -19,6 +19,11 @@ from .single_iteration import bo_iteration
 from .optimizer.optimize_acqf_funcs import optimize_acqf, _optimize_acqf_batch, gen_candidates_scipy, gen_batch_initial_conditions
 from .functions import get_dataset_bounds
 
+botorch.optim.optimize.optimize_acqf = optimize_acqf
+botorch.optim.optimize._optimize_acqf_batch = _optimize_acqf_batch
+botorch.generation.gen.gen_candidates_scipy = gen_candidates_scipy
+botorch.optim.initializers.gen_batch_initial_conditions = gen_batch_initial_conditions
+
 # TODO: Define bounds for hyperparameter values that are bounded
 
 def read_json(filename):
@@ -30,11 +35,12 @@ def read_json(filename):
 def sample_value(
     lower, upper, dtype=float, choice_list=[]
 ):
+    assert lower < upper, "hyperparameter lower bound must be less than upper bound"
     assert not(dtype and choice_list), "Only one of dtype and choice_list should be set to a value"
     if dtype==float:
         val = np.random.random()
         val = val * (upper - lower) + lower
-    elif dtype==int:
+    elif dtype==round:
         val = np.random.randint(lower, upper)
     elif dtype==str:
         val = choice_list[np.random.randint(0, len(choice_list))]
@@ -77,7 +83,7 @@ def generate_hparams(hp: List[List[int|float]], x_bounds: List[Tuple[int|float]]
     dtypes: similar to x_bounds. But it contains strings of either `float` or `int` which stages the data type the corresponding hyperparameter
         takes
     '''
-    new_hp, bounds = [], []
+    new_hp = []
     hp = hp[:] if hp else hp
     for stg_bounds, stg_dtypes in zip(x_bounds, dtypes):
         stg_hps = []
@@ -89,11 +95,11 @@ def generate_hparams(hp: List[List[int|float]], x_bounds: List[Tuple[int|float]]
             if hp:
                 val = clip(eval(dtype)(hp.pop(0)), lower, upper)
             else:
-                val = sample_value(lower, upper, dtype=dtype)
+                val = sample_value(lower, upper, dtype=eval(dtype))
             stg_hps.append(val)
         
         new_hp.extend(stg_hps)
-        
+
     return new_hp
     
 def read_stg_costs(stage_costs_outputs):
@@ -101,13 +107,11 @@ def read_stg_costs(stage_costs_outputs):
     stg_json = {}
     for i in range(len(stage_costs_outputs)):
         if not os.path.exists(stage_costs_outputs[i]):
-            print(f"Cannot find {stage_costs_outputs[i]}")
             if i>1:
                 raise FileNotFoundError(f"Cannot find {stage_costs_outputs[i]}")
             break 
         with open(stage_costs_outputs[i]) as stg:
             stg = stg.read().strip()
-            print("param_gen 125", stg, stage_costs_outputs[i], end="\n\n")
             stg_json = json.loads(stg[:stg.find("}")+1] if "}" in stg else f"{stg}{'}'}")
             new_stg_costs.append(stg_json["wall_time"])
             
@@ -115,42 +119,50 @@ def read_stg_costs(stage_costs_outputs):
 
 def read_objective(obj_output):
     if not Path(obj_output).exists():
-        print(obj_output)
         raise FileNotFoundError(f"File {obj_output} not found.")
     with open(obj_output) as f:
         obj = f.read()
-        print(obj, obj_output)
         return json.loads(obj).get("AU_ROC",float("inf"))
 
-def read_hp_dataset(HP_DATASET):
-    if not os.path.exists(HP_DATASET):
-        return {"x":[], "y":[], "c":[]}
-    with open(HP_DATASET) as f:
-        return json.load(f)
+# def read_hp_dataset(HP_DATASET):
+#     if not os.path.exists(HP_DATASET):
+#         return {"x":[], "y":[], "c":[]}
+#     with open(HP_DATASET) as f:
+#         return json.load(f)
 
 
-def update_dataset_new_run(dataset, new_hp, stage_costs_outputs, obj_output, x_bounds, dtype=torch.float64, device="cuda"):
+def update_dataset_new_run(dataset, new_hp_dict, new_stg_costs, new_obj, x_bounds, dtype=torch.float64, device="cuda"):
     # Check PIRLIB output directory for new objective and cost values
-    new_stg_costs = read_stg_costs(stage_costs_outputs)
     new_stg_costs = torch.tensor(new_stg_costs, dtype=dtype, device=device).unsqueeze(-1).unsqueeze(-1)
-    new_obj = read_objective(obj_output)
     new_obj = torch.tensor([new_obj],dtype=dtype, device=device)
     
-    new_hp = torch.tensor([new_hp], device=device, dtype=dtype)
+    if dataset.get("y") is not None and dataset.get("c") is not None:
+        dataset["y"] = torch.cat([dataset['y'], new_obj])
+        dataset["c"] = torch.cat([dataset['c'], new_stg_costs], axis=1)
+    else:
+        dataset["y"] = new_obj
+        dataset["c"] = new_stg_costs
     
-    dataset["x"] = torch.cat([dataset["x"], new_hp])
-    dataset["y"] = torch.cat([dataset['y'], new_obj])
-    dataset["c"] = torch.cat([dataset['c'], new_stg_costs], axis=1)
-
-    bounds = get_dataset_bounds(dataset["x"], dataset["y"], dataset["c"], torch.tensor(x_bounds, device=device, dtype=dtype))
+    # new_hp = torch.tensor([new_hp], device=device, dtype=dtype)
+    for hp_name, hp in new_hp_dict.items():
+        if dataset.get("x") is None:
+            dataset["x"] = {}
+        if dataset["x"].get(hp_name) is None:
+            dataset["x"][hp_name] = torch.tensor([hp], device=device, dtype=dtype)
+        else:
+            dataset["x"][hp_name] = torch.cat([dataset["x"][hp_name], torch.tensor([hp], device=device, dtype=dtype)])
+    
+    # dataset["x"] = torch.cat([dataset["x"], new_hp_dict])
+    x_bounds = torch.cat([torch.tensor(stage_bounds, device=device, dtype=dtype) for stage_bounds in x_bounds])
+    bounds = get_dataset_bounds(dataset["x"], dataset["y"], dataset["c"], x_bounds)
     bounds = {f"{key}_bounds":val for key, val in bounds.items()}
     dataset.update(bounds)
     
-    write_dataset(dataset)
+    # write_dataset(dataset)
     
     return dataset
 
-def log_metrics(dataset, logging_metadata: Dict):
+def log_metrics(dataset, logging_metadata: Dict, verbose: bool=False):
     y_pred = logging_metadata.pop("y_pred")
     n_memoised = logging_metadata.pop("n_memoised")
     E_inv_c = logging_metadata.pop("E_inv_c")
@@ -163,11 +175,12 @@ def log_metrics(dataset, logging_metadata: Dict):
     sum_stages = sum(stage_cost_list)
     cum_cost = dataset["c"].sum()
     inv_cost = 1/sum_stages
-    dataset_x = dataset["x"]
-    hp_table = wandb.Table(columns=list(range(len(dataset_x[0]))), data=dataset_x.tolist())
+    dataset_x = [hp_tensor.tolist() for hp_tensor in dataset["x"].values()]
+    columns = list(dataset["x"].keys())
     
-    # print(f"\n[{time.strftime('%Y-%m-%d-%H%M')}] Iteration-{iteration} [{acq_type}] Trial No. #{trial_number} Runtime: {time.time()-tic}")
-    if params['verbose']: # and iteration >= bo_params['n_init_data']:
+    hp_table = wandb.Table(columns=list(range(len(dataset_x[0]))), data=dataset_x)
+    
+    if verbose: # and iteration >= bo_params['n_init_data']:
         print(f"f(x^)={y_pred}", end="   ")
         print(f"f(x)={new_y:>4.3f}", end="   ")
         print(f"c(x)=[" + ', '.join('{:.3f}'.format(val) for val in stage_cost_list) + "]", end="   ")
@@ -191,65 +204,50 @@ def log_metrics(dataset, logging_metadata: Dict):
             c_x=dict(zip(map(str,range(len(stage_cost_list))) ,stage_cost_list)),
             c_res=dict(zip(map(str,range(len(stage_cost_list))) ,[abs(act-est) for act, est in zip(E_c,stage_cost_list)])) if E_c else None,
             inv_c_res=abs(E_inv_c-inv_cost) if E_inv_c else None,
-            eta=params['init_eta'],
             hp_table=hp_table,
         )
     wandb.log(log)
     return
 
-params = {
-    "decay_factor": 0.95,
-    "init_eta": 0.05,
-    "n_trials": 10,
-    "n_iters": 40,
-    "alpha": 9,
-    "norm_eps": 1,
-    "epsilon": 0.1,
-    "batch_size": 1,
-    "normalization_bounds": [0, 1],
-    "cost_samples": 1000,
-    "n_init_data": 10,
-    "prefix_thresh": 10000000,
-    "warmup_iters": 10,
-    "use_pref_pool": 1,
-    "verbose": 1,
-    "rand_seed": 42,
-}
+
 def generate_hps(
     dataset,
     hp_sampling_range,
     iteration,
-    params=params,
+    params,
     acq_type="EEIPU", 
 ):
     dtype = torch.double
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cuda" if torch.cuda.is_available() else "cpu"    
     
-    # Convert to tensors
-    dataset["x"] = torch.Tensor(list(dataset.pop("hps").values()), device=device, dtype=dtype)
-    dataset["y"] = torch.Tensor(list(dataset.pop("obj").values()), dtype=dtype, device=device) \
-        .unsqueeze(-1).unsqueeze(-1)
-    dataset["c"] = torch.Tensor(list(dataset.pop("cost").values()), dtype=dtype, device=device)
+    h_ind = {}      # {0: [0,1], 1: [2,3,4], }
+    hp_names = {}    # {0: ["mean", "std"], 1: ["lr", "batch_size", "decay"], }
+    stage_ids = sorted([(key.split("__")) for key in hp_sampling_range], key=lambda item: item[0])
     
-    
-    h_ind = {}
-    stage_ids = sorted([int(key.split("__")) for key in hp_sampling_range])
-    for i, stg_id in enumerate(stage_ids):
+    for i, (stg_id, hp_name) in enumerate(stage_ids):
+        stg_id = int(stg_id)
         if h_ind.get(stg_id) is None:
             h_ind[stg_id] = [i]
+            hp_names[stg_id] = [hp_name]
         else:
-            h_ind[stg_id].append([i])
+            h_ind[stg_id].append(i)
+            hp_names[stg_id].append(hp_name)
+    
     params["h_ind"] = list(dict(sorted(h_ind.items())).values())
     
     x_bounds = {}
+    hp_dtypes = {}
     for key, value in hp_sampling_range.items():
         bounds = (value["lower"], value["upper"])
         id = int(key.split("__")[0])
         if x_bounds.get(id) is None:
             x_bounds[id] = [bounds]
+            hp_dtypes[id] = [value["dtype"]]
         else:
             x_bounds[id].append(bounds)
+            hp_dtypes[id].append(value["dtype"])
     x_bounds = list(dict(sorted(x_bounds.items())).values())
+    hp_dtypes = list(dict(sorted(hp_dtypes.items())).values())
     
     rand_seed = params["rand_seed"]
     torch.manual_seed(seed=rand_seed)
@@ -258,23 +256,32 @@ def generate_hps(
     
     new_hp, y_pred, n_memoised, E_c, E_inv_c = None, None, 0, None, None
     if iteration >= params["n_init_data"]:
+        # Convert to tensors
+        # print(dataset)
+        x = torch.stack(list(dataset["x"].values()), axis=1)
+        y = dataset["y"].unsqueeze(-1)
+        c = dataset["c"]
+        
         bounds = {key.replace("_bounds", ""):val for key,val in dataset.items() if key.endswith("_bounds")}
-        new_hp, n_memoised, E_c, E_inv_c, y_pred = \
-            bo_iteration(
-                X=dataset["x"], y=dataset["y"].unsqueeze(-1), c=dataset["c"],
-                bounds=bounds, acqf_str=acq_type, decay=params["init_eta"], iter=iteration,
-                params=params)
+        new_hp, n_memoised, E_c, E_inv_c, y_pred = bo_iteration(
+            X=x, y=y, c=c, bounds=bounds, acqf_str=acq_type, decay=params["init_eta"], iter=iteration, params=params)
         new_hp = new_hp.squeeze().tolist()
     
     # When new_hp is None, `generate_hparams` will generate random samples.
     # It also saves the new_hp to the respective files where the main function can read them 
-    new_hp = generate_hparams(new_hp, hp_stg_paths, x_bounds)
+    new_hp = generate_hparams(new_hp, x_bounds, hp_dtypes)
     
     logging_metadata = {"n_memoised": n_memoised, "y_pred": y_pred, "E_c": E_c, "E_inv_c": E_inv_c, "x_bounds": x_bounds}
     
     # log_metrics(dataset, logging_metadata)
-    
-    return new_hp, logging_metadata
+
+    # Convert new_hp into a dictionary of key representing the stage id and name in this format, "0__mean"
+    new_hp_out = {}
+    # print("hp_names", hp_names)
+    for stage, stg_hps_dict in hp_names.items():
+        for hp_name in stg_hps_dict:
+            new_hp_out[f"{stage}__{hp_name}"] = new_hp.pop(0)
+    return new_hp_out, logging_metadata
 
 if __name__ == "__main__":
     t = time.localtime()
@@ -322,10 +329,7 @@ if __name__ == "__main__":
         name=f"{time.strftime('%Y-%m-%d-%H%M')}-trial-number_{trial}",
         config=params
     )
-    botorch.optim.optimize.optimize_acqf = optimize_acqf
-    botorch.optim.optimize._optimize_acqf_batch = _optimize_acqf_batch
-    botorch.generation.gen.gen_candidates_scipy = gen_candidates_scipy
-    botorch.optim.initializers.gen_batch_initial_conditions = gen_batch_initial_conditions
+    
     
     
     torch.manual_seed(seed=params['rand_seed'])

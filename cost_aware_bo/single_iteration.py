@@ -43,12 +43,14 @@ def get_expected_y(X, gp_model, n_samples, bounds, seed):
     return obj
 
 def bo_iteration(X, y, c, bounds=None, acqf_str='', decay=None, iter=None, params=None):
-    # print(f"Shapes: {X.shape}, {y.shape}, {c.shape}")
+    # print(f"{__file__} Shapes: {X.shape}, {y.shape}, {c.shape}")
     # print("Bounds:", bounds)
     # exit()
+    # print(__file__, "train_x, train_y", X, y)
     train_x = normalize(X, bounds=bounds['x_cube'])
     train_y = standardize(y, bounds['y'])
-    
+    # print(__file__, "train_x, train_y", train_x.shape, train_y.shape)
+    # print(__file__, "train_x, train_y", train_x, train_y)
     mll, gp_model = get_gp_models(train_x, train_y, params=params)
     
     norm_bounds = get_gen_bounds(params['h_ind'], params['normalization_bounds'], bound_type='norm')

@@ -1,3 +1,4 @@
+from typing import Dict, List
 import torch
 import copy
 import random
@@ -148,14 +149,17 @@ def get_gen_bounds(param_idx, func_bounds, funcs=None, bound_type=''):
     bounds = torch.tensor([lo_bounds, hi_bounds], device=DEVICE, dtype=torch.double)
     return bounds
 
-def get_dataset_bounds(X, Y, C, gen_bounds):
+def get_dataset_bounds(X: Dict[str, List], Y, C, gen_bounds):
     bounds = {}
     bounds['x'] = gen_bounds + 0.
 
-    x_cube_bounds = [[], []]
-    for i in range(X.shape[1]):
-        x_cube_bounds[0].append(X[:,i].min().item())
-        x_cube_bounds[1].append(X[:,i].max().item())
+    x_cube_bounds = [
+        [min(hp_values) for hp_values in X.values()],
+        [max(hp_values) for hp_values in X.values()]
+    ]
+    # for i in range(X.shape[1]):
+    #     x_cube_bounds[0].append(X[:,i].min().item())
+    #     x_cube_bounds[1].append(X[:,i].max().item())
     bounds['x_cube'] = torch.tensor(x_cube_bounds, device=DEVICE)
 
     bounds['y'] = torch.tensor([[Y.mean().item()], [Y.std().item()]], device=DEVICE, dtype=torch.double)
