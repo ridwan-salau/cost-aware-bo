@@ -4,8 +4,8 @@ import random
 import os
 from argparse import ArgumentParser
 import time
-from typing import List, Union, Dict, Tuple
 from pathlib import Path
+from typing import List, Union, Dict, Tuple
 import subprocess
 from copy import deepcopy
 
@@ -14,6 +14,7 @@ import torch
 import numpy as np
 import wandb
 from einops import rearrange
+import csv
 
 from .single_iteration import bo_iteration
 from .optimizer.optimize_acqf_funcs import optimize_acqf, _optimize_acqf_batch, gen_candidates_scipy, gen_batch_initial_conditions
@@ -157,12 +158,11 @@ def update_dataset_new_run(dataset, new_hp_dict, new_stg_costs, new_obj, x_bound
     bounds = get_dataset_bounds(dataset["x"], dataset["y"], dataset["c"], x_bounds)
     bounds = {f"{key}_bounds":val for key, val in bounds.items()}
     dataset.update(bounds)
-    
     # write_dataset(dataset)
     
     return dataset
 
-def log_metrics(dataset, logging_metadata: Dict, verbose: bool=False):
+def log_metrics(dataset, logging_metadata: Dict, verbose: bool=False, iteration=None, trial=None, acqf=None, eta=None):
     y_pred = logging_metadata.pop("y_pred")
     n_memoised = logging_metadata.pop("n_memoised")
     E_inv_c = logging_metadata.pop("E_inv_c")
@@ -206,7 +206,37 @@ def log_metrics(dataset, logging_metadata: Dict, verbose: bool=False):
             inv_c_res=abs(E_inv_c-inv_cost) if E_inv_c else None,
             hp_table=hp_table,
         )
-    wandb.log(log)
+    csv_log = dict(
+        acqf=acqf,
+        trial=trial,
+        iteration=iteration,
+        best_f=best_f,
+        sum_c_x=sum_stages,
+        cum_costs=cum_cost,
+        eta=eta
+    )
+    
+    dir_name = f"experiment_logs"
+    csv_file_name = Path(".") / f"{dir_name}/{acqf}_trial_{trial}.csv"
+    # Check if the file exists
+    try:
+        with open(csv_file_name, 'r') as csvfile:
+            reader = csv.reader(csvfile)
+            fieldnames = next(reader)  # Read the headers in the first row
+
+    except FileNotFoundError:
+        # If file does not exist, create it and write headers
+        fieldnames = ['acqf', 'trial', 'iteration', 'best_f', 'sum_c_x', 'cum_costs', 'eta']
+        with open(csv_file_name, 'w', newline='') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+
+    # Append data
+    with open(csv_file_name, 'a', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writerow(csv_log)
+
+    # wandb.log(log)
     return
 
 
@@ -215,10 +245,11 @@ def generate_hps(
     hp_sampling_range,
     iteration,
     params,
+    consumed_budget=None,
     acq_type="EEIPU", 
 ):
     dtype = torch.double
-    device = "cuda" if torch.cuda.is_available() else "cpu"    
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     
     h_ind = {}      # {0: [0,1], 1: [2,3,4], }
     hp_names = {}    # {0: ["mean", "std"], 1: ["lr", "batch_size", "decay"], }
@@ -255,7 +286,7 @@ def generate_hps(
     botorch.utils.sampling.manual_seed(seed=rand_seed)
     
     new_hp, y_pred, n_memoised, E_c, E_inv_c = None, None, 0, None, None
-    if iteration >= params["n_init_data"]:
+    if consumed_budget > params['budget_0']:
         # Convert to tensors
         # print(dataset)
         x = torch.stack(list(dataset["x"].values()), axis=1)
@@ -263,8 +294,9 @@ def generate_hps(
         c = dataset["c"]
         
         bounds = {key.replace("_bounds", ""):val for key,val in dataset.items() if key.endswith("_bounds")}
+
         new_hp, n_memoised, E_c, E_inv_c, y_pred = bo_iteration(
-            X=x, y=y, c=c, bounds=bounds, acqf_str=acq_type, decay=params["init_eta"], iter=iteration, params=params)
+            X=x, y=y, c=c, bounds=bounds, acqf_str=acq_type, decay=params["init_eta"], iter=iteration, consumed_budget=consumed_budget, params=params)
         new_hp = new_hp.squeeze().tolist()
     
     # When new_hp is None, `generate_hparams` will generate random samples.
@@ -337,7 +369,7 @@ if __name__ == "__main__":
     # random.seed(params['rand_seed'])
     botorch.utils.sampling.manual_seed(seed=params['rand_seed'])
     
-    for iter in range(1, params["n_iters"]+1):
+    for iter in range(1, 2):
     # for iter in range(20):
         hp = generate_hps(
             iteration=iter,
@@ -348,4 +380,5 @@ if __name__ == "__main__":
             hp_stg_paths=hp_stg_paths,
             acq_type=args.acqf,
         )        
+        
     print("Done!!!")

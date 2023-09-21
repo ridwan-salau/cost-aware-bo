@@ -42,7 +42,7 @@ def get_expected_y(X, gp_model, n_samples, bounds, seed):
     
     return obj
 
-def bo_iteration(X, y, c, bounds=None, acqf_str='', decay=None, iter=None, params=None):
+def bo_iteration(X, y, c, bounds=None, acqf_str='', decay=None, iter=None, consumed_budget=None, params=None):
     # print(f"{__file__} Shapes: {X.shape}, {y.shape}, {c.shape}")
     # print("Bounds:", bounds)
     # exit()
@@ -71,7 +71,7 @@ def bo_iteration(X, y, c, bounds=None, acqf_str='', decay=None, iter=None, param
         cost_sampler = SobolQMCNormalSampler(sample_shape=params['cost_samples'], seed=params['rand_seed'])
         acqf = EIPUVariants(acq_type=acqf_str, model=gp_model, cost_gp=cost_gp, best_f=train_y.max(), cost_sampler=cost_sampler,
             acq_objective=IdentityMCObjective(), cost_func=Cost_F, unstandardizer=unstandardize,
-            unnormalizer=unnormalize, cost_normalizer=normalize_cost, bounds=bounds, eta=decay, params=params)
+            unnormalizer=unnormalize, cost_normalizer=normalize_cost, bounds=bounds, eta=decay, consumed_budget=consumed_budget, iter=iter, params=params)
     
     new_x, n_memoised = optimize_acqf_by_mem(acqf=acqf, acqf_str=acqf_str, bounds=norm_bounds, iter=iter, prefix_pool=prefix_pool, seed=params['rand_seed'])
     

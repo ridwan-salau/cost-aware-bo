@@ -30,8 +30,10 @@ class EIPUVariants(AnalyticAcquisitionFunction):
         unnormalizer = None,
         cost_normalizer=None,
         bounds: Tensor = None,
+        iter: int =None,
         params: Dict = None,
         eta = None,
+        consumed_budget = None,
         warmup_iters = None,
         **kwargs: Any,
     ) -> None:
@@ -67,7 +69,9 @@ class EIPUVariants(AnalyticAcquisitionFunction):
         self.cost_normalizer = cost_normalizer
         self.bounds = bounds
         self.params = params
+        self.iter = iter
         self.eta = eta
+        self.consumed_budget = consumed_budget
         self.warmup = True
 
     def compute_expected_inverse_cost(self, X: Tensor, delta: int = 0, alpha_epsilon=False) -> Tensor:
@@ -99,7 +103,9 @@ class EIPUVariants(AnalyticAcquisitionFunction):
                 cat_stages = reshaped_samples if (not torch.is_tensor(cat_stages)) else torch.cat([cat_stages, reshaped_samples], axis=2)
         
         n_mem, n_stages = delta, cat_stages.shape[2]
-        cat_stages[:,:,n_mem:n_stages] = self.cost_normalizer(cat_stages[:,:,n_mem:n_stages], self.params)
+        norm_stages = self.cost_normalizer(cat_stages[:,:,n_mem:n_stages], self.params)
+
+        cat_stages = torch.cat([cat_stages[:,:,:n_mem],  norm_stages], axis=-1).to(DEVICE)
         
         cat_stages = cat_stages.sum(dim=-1)
         
@@ -128,12 +134,10 @@ class EIPUVariants(AnalyticAcquisitionFunction):
         return all_cost_obj
 
     @t_batch_mode_transform(expected_q=1, assert_output_shape=False)
-    def forward(self, X: Tensor, delta: int = 0, curr_iter: int = -1) -> Tensor:
+    def forward(self, X: Tensor, delta: int = 0) -> Tensor:
 
         r"""Evaluate qExpectedImprovement on the candidate set `X`.
         """
-        if curr_iter == -1:
-            raise Exception("ERROR: Current Iteration not passed correctly")
         self.best_f = self.best_f.to(X)
         posterior = self.model.posterior(
           X=X, posterior_transform=self.posterior_transform
@@ -149,10 +153,19 @@ class EIPUVariants(AnalyticAcquisitionFunction):
         ucdf = normal.cdf(u)
         updf = torch.exp(normal.log_prob(u))
         ei = sigma * (updf + u * ucdf)
+
+        total_budget = self.params['total_budget'] + 0
+        warmup_cost = self.params['budget_0']
+
+        remaining = total_budget - self.consumed_budget
+        init_budget = total_budget - warmup_cost
+
+        cost_cool = remaining / init_budget
      
         if self.acq_type == "EEIPU":
             inv_cost =  self.compute_expected_inverse_cost(X, delta=delta)
-            return ei * (inv_cost**self.eta)
+
+            return ei * (inv_cost**cost_cool)
       
         elif "EIPU" in self.acq_type:
             X_new = self.unnormalizer(X.squeeze(1) + 0, bounds=self.bounds['x_cube'])
@@ -168,7 +181,7 @@ class EIPUVariants(AnalyticAcquisitionFunction):
 
             costs = torch.sum(costs, dim=0)
 
-            return ei / (costs.squeeze()**self.eta)
+            return ei / (costs.squeeze()**cost_cool)
        
         else:
             raise Exception("ERROR: Only EIPU, EEIPU, EEIPU-INV are supported!")
