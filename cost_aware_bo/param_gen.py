@@ -224,7 +224,8 @@ def log_metrics(dataset, logging_metadata: Dict, verbose: bool=False, iteration=
         eta=eta
     )
     
-    dir_name = f"/home/abdelmajid/workdir/cost-aware-bo/cost_aware_bo/experiment_logs"
+    dir_name = "./segmentation/experiment_logs"
+    Path(dir_name).mkdir(exist_ok=True) # Create if it doesn't exist
     csv_file_name = f"{dir_name}/{acqf}_trial_{trial}.csv"
 
     # Check if the file exists
@@ -309,7 +310,7 @@ def generate_hps(
     x_bounds = list(dict(sorted(x_bounds.items())).values())
     hp_dtypes = list(dict(sorted(hp_dtypes.items())).values())
     
-    print(f"FOR ACQF == {acq_type} THE RESULTS ARE:\n\nH_IND = {h_ind}\n\nHP_NAMES = {hp_names}\n\nX_BOUNDS = {x_bounds}\n\nHP_DTYPES = {hp_dtypes}")
+    # print(f"FOR ACQF == {acq_type} THE RESULTS ARE:\n\nH_IND = {h_ind}\n\nHP_NAMES = {hp_names}\n\nX_BOUNDS = {x_bounds}\n\nHP_DTYPES = {hp_dtypes}")
     
     rand_seed = params["rand_seed"]
     torch.manual_seed(seed=rand_seed)
