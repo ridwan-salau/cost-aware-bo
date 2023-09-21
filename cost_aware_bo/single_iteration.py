@@ -63,10 +63,8 @@ def bo_iteration(X, y, c, bounds=None, acqf_str='', decay=None, iter=None, consu
         norm_bounds = bounds['x'] + 0
     elif acqf_str == 'EI':
         acqf = ExpectedImprovement(model=gp_model, best_f=train_y.max())
-    elif 'EIPU' in acqf_str:
-        cost_mll, cost_gp = None, None
-        if acqf_str == 'EEIPU':
-            cost_mll, cost_gp = get_cost_models(train_x, c, params['h_ind'], bounds)
+    else:
+        cost_mll, cost_gp = get_cost_models(train_x, c, params['h_ind'], bounds)
         
         cost_sampler = SobolQMCNormalSampler(sample_shape=params['cost_samples'], seed=params['rand_seed'])
         acqf = EIPUVariants(acq_type=acqf_str, model=gp_model, cost_gp=cost_gp, best_f=train_y.max(), cost_sampler=cost_sampler,

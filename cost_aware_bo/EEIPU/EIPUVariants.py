@@ -162,26 +162,9 @@ class EIPUVariants(AnalyticAcquisitionFunction):
 
         cost_cool = remaining / init_budget
      
-        if self.acq_type == "EEIPU":
-            inv_cost =  self.compute_expected_inverse_cost(X, delta=delta)
+        inv_cost =  self.compute_expected_inverse_cost(X, delta=delta)
 
-            return ei * (inv_cost**cost_cool)
-      
-        elif "EIPU" in self.acq_type:
-            X_new = self.unnormalizer(X.squeeze(1) + 0, bounds=self.bounds['x_cube'])
-            costs = self.cost_func(X_new, self.params)
-            for stage in range(len(costs)):
-                costs[stage] = self.cost_normalizer(costs[stage], self.params)
-            if "MEMO" in self.acq_type:
-                for i in range(delta):
-                    eps = torch.full((costs[i].shape[0],1), 1e-2, device=DEVICE)
-                    costs[i] = eps
-
-            costs = torch.stack(costs)
-
-            costs = torch.sum(costs, dim=0)
-
-            return ei / (costs.squeeze()**cost_cool)
+        return ei * inv_cost if self.acq_type == 'EIPS' else ei * (inv_cost**cost_cool)
        
         else:
             raise Exception("ERROR: Only EIPU, EEIPU, EEIPU-INV are supported!")

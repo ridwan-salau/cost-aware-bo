@@ -15,6 +15,7 @@ import numpy as np
 import wandb
 from einops import rearrange
 import csv
+import os
 
 from .single_iteration import bo_iteration
 from .optimizer.optimize_acqf_funcs import optimize_acqf, _optimize_acqf_batch, gen_candidates_scipy, gen_batch_initial_conditions
@@ -211,13 +212,14 @@ def log_metrics(dataset, logging_metadata: Dict, verbose: bool=False, iteration=
         trial=trial,
         iteration=iteration,
         best_f=best_f,
-        sum_c_x=sum_stages,
-        cum_costs=cum_cost,
+        sum_c_x=sum_stages.item(),
+        cum_costs=cum_cost.item(),
         eta=eta
     )
     
-    dir_name = f"experiment_logs"
-    csv_file_name = Path(".") / f"{dir_name}/{acqf}_trial_{trial}.csv"
+    dir_name = f"/home/abdelmajid/workdir/cost-aware-bo/cost_aware_bo/experiment_logs"
+    csv_file_name = f"{dir_name}/{acqf}_trial_{trial}.csv"
+
     # Check if the file exists
     try:
         with open(csv_file_name, 'r') as csvfile:
@@ -255,14 +257,23 @@ def generate_hps(
     hp_names = {}    # {0: ["mean", "std"], 1: ["lr", "batch_size", "decay"], }
     stage_ids = sorted([(key.split("__")) for key in hp_sampling_range], key=lambda item: item[0])
     
-    for i, (stg_id, hp_name) in enumerate(stage_ids):
-        stg_id = int(stg_id)
-        if h_ind.get(stg_id) is None:
-            h_ind[stg_id] = [i]
-            hp_names[stg_id] = [hp_name]
-        else:
-            h_ind[stg_id].append(i)
-            hp_names[stg_id].append(hp_name)
+    if acq_type == 'EEIPU':
+        for i, (stg_id, hp_name) in enumerate(stage_ids):
+            stg_id = int(stg_id)
+            if h_ind.get(stg_id) is None:
+                h_ind[stg_id] = [i]
+                hp_names[stg_id] = [hp_name]
+            else:
+                h_ind[stg_id].append(i)
+                hp_names[stg_id].append(hp_name)
+    else:
+        for i, (stg_id, hp_name) in enumerate(stage_ids):
+            if h_ind.get(0) is None:
+                h_ind[0] = [i]
+                hp_names[0] = [hp_name]
+            else:
+                h_ind[0].append(i)
+                hp_names[0].append(hp_name)
     
     params["h_ind"] = list(dict(sorted(h_ind.items())).values())
     
