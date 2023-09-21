@@ -246,7 +246,7 @@ def log_metrics(dataset, logging_metadata: Dict, verbose: bool=False, iteration=
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writerow(csv_log)
 
-    # wandb.log(log)
+    wandb.log(log)
     return
 
 
