@@ -133,11 +133,16 @@ def read_objective(obj_output):
 #         return json.load(f)
 
 
-def update_dataset_new_run(dataset, new_hp_dict, new_stg_costs, new_obj, x_bounds, dtype=torch.float64, device="cuda"):
+def update_dataset_new_run(dataset, new_hp_dict, new_stg_costs, new_obj, x_bounds, acqf, dtype=torch.float64, device="cuda"):
     # Check PIRLIB output directory for new objective and cost values
-    new_stg_costs = torch.tensor(new_stg_costs, dtype=dtype, device=device).unsqueeze(-1).unsqueeze(-1)
+    new_stg_costs = torch.tensor(new_stg_costs, dtype=dtype, device=device)
     new_obj = torch.tensor([new_obj],dtype=dtype, device=device)
     
+    if acqf == 'EEIPU':
+        new_stg_costs = new_stg_costs.unsqueeze(-1).unsqueeze(-1)
+    else:
+        new_stg_costs = new_stg_costs.sum().unsqueeze(-1).unsqueeze(-1)
+
     if dataset.get("y") is not None and dataset.get("c") is not None:
         dataset["y"] = torch.cat([dataset['y'], new_obj])
         dataset["c"] = torch.cat([dataset['c'], new_stg_costs], axis=1)
@@ -160,6 +165,7 @@ def update_dataset_new_run(dataset, new_hp_dict, new_stg_costs, new_obj, x_bound
     bounds = {f"{key}_bounds":val for key, val in bounds.items()}
     dataset.update(bounds)
     # write_dataset(dataset)
+    # print(f"FOR ACQF = {acqf} THE DATASET SO FAR IS:\n{dataset}")
     
     return dataset
 
@@ -168,11 +174,12 @@ def log_metrics(dataset, logging_metadata: Dict, verbose: bool=False, iteration=
     n_memoised = logging_metadata.pop("n_memoised")
     E_inv_c = logging_metadata.pop("E_inv_c")
     E_c = logging_metadata.pop("E_c")
-    
     # dataset = update_dataset_new_run(dataset, new_hp, stage_costs_outputs, obj_output, x_bounds, dtype, device)
     best_f = dataset["y"].max().item()
     new_y = dataset["y"][-1].item()
-    stage_cost_list = dataset["c"][:, -1].squeeze()
+    stage_cost_list = dataset["c"][:, -1]
+    if acqf == 'EEIPU':
+        stage_cost_list = stage_cost_list.squeeze()
     sum_stages = sum(stage_cost_list)
     cum_cost = dataset["c"].sum()
     inv_cost = 1/sum_stages
@@ -253,7 +260,7 @@ def generate_hps(
     dtype = torch.double
     device = "cuda" if torch.cuda.is_available() else "cpu"
     
-    h_ind = {}      # {0: [0,1], 1: [2,3,4], }
+    h_ind = {}      # {0: [0,1], 1: [2,3,4], } [[0,1], [2,3,4]...] [0,1,2,3,4...]
     hp_names = {}    # {0: ["mean", "std"], 1: ["lr", "batch_size", "decay"], }
     stage_ids = sorted([(key.split("__")) for key in hp_sampling_range], key=lambda item: item[0])
     
@@ -279,17 +286,30 @@ def generate_hps(
     
     x_bounds = {}
     hp_dtypes = {}
-    for key, value in hp_sampling_range.items():
-        bounds = (value["lower"], value["upper"])
-        id = int(key.split("__")[0])
-        if x_bounds.get(id) is None:
-            x_bounds[id] = [bounds]
-            hp_dtypes[id] = [value["dtype"]]
-        else:
-            x_bounds[id].append(bounds)
-            hp_dtypes[id].append(value["dtype"])
+    if acq_type == 'EEIPU':
+        for key, value in hp_sampling_range.items():
+            bounds = (value["lower"], value["upper"])
+            id = int(key.split("__")[0])
+            if x_bounds.get(id) is None:
+                x_bounds[id] = [bounds]
+                hp_dtypes[id] = [value["dtype"]]
+            else:
+                x_bounds[id].append(bounds)
+                hp_dtypes[id].append(value["dtype"])
+    else:
+        for key, value in hp_sampling_range.items():
+            bounds = (value["lower"], value["upper"])
+            if x_bounds.get(0) is None:
+                x_bounds[0] = [bounds]
+                hp_dtypes[0] = [value["dtype"]]
+            else:
+                x_bounds[0].append(bounds)
+                hp_dtypes[0].append(value["dtype"])
+
     x_bounds = list(dict(sorted(x_bounds.items())).values())
     hp_dtypes = list(dict(sorted(hp_dtypes.items())).values())
+    
+    print(f"FOR ACQF == {acq_type} THE RESULTS ARE:\n\nH_IND = {h_ind}\n\nHP_NAMES = {hp_names}\n\nX_BOUNDS = {x_bounds}\n\nHP_DTYPES = {hp_dtypes}")
     
     rand_seed = params["rand_seed"]
     torch.manual_seed(seed=rand_seed)
@@ -316,6 +336,31 @@ def generate_hps(
     
     logging_metadata = {"n_memoised": n_memoised, "y_pred": y_pred, "E_c": E_c, "E_inv_c": E_inv_c, "x_bounds": x_bounds}
     
+    h_ind = {}      # {0: [0,1], 1: [2,3,4], } [[0,1], [2,3,4]...] [0,1,2,3,4...]
+    hp_names = {}
+    for i, (stg_id, hp_name) in enumerate(stage_ids):
+        stg_id = int(stg_id)
+        if h_ind.get(stg_id) is None:
+            h_ind[stg_id] = [i]
+            hp_names[stg_id] = [hp_name]
+        else:
+            h_ind[stg_id].append(i)
+            hp_names[stg_id].append(hp_name)
+    
+    params["h_ind"] = list(dict(sorted(h_ind.items())).values())
+    
+    x_bounds = {}
+    hp_dtypes = {}
+    for key, value in hp_sampling_range.items():
+        bounds = (value["lower"], value["upper"])
+        id = int(key.split("__")[0])
+        if x_bounds.get(id) is None:
+            x_bounds[id] = [bounds]
+            hp_dtypes[id] = [value["dtype"]]
+        else:
+            x_bounds[id].append(bounds)
+            hp_dtypes[id].append(value["dtype"])
+
     # log_metrics(dataset, logging_metadata)
 
     # Convert new_hp into a dictionary of key representing the stage id and name in this format, "0__mean"

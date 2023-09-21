@@ -166,8 +166,3 @@ class EIPUVariants(AnalyticAcquisitionFunction):
 
         return ei * inv_cost if self.acq_type == 'EIPS' else ei * (inv_cost**cost_cool)
        
-        else:
-            raise Exception("ERROR: Only EIPU, EEIPU, EEIPU-INV are supported!")
-
-
-
