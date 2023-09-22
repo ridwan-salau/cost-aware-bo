@@ -139,13 +139,13 @@ def update_dataset_new_run(dataset, new_hp_dict, new_stg_costs, new_obj, x_bound
     new_obj = torch.tensor([new_obj],dtype=dtype, device=device)
     
     if acqf == 'EEIPU':
-        new_stg_costs = new_stg_costs.unsqueeze(-1).unsqueeze(-1)
+        new_stg_costs = new_stg_costs.unsqueeze(0)
     else:
-        new_stg_costs = new_stg_costs.sum().unsqueeze(-1).unsqueeze(-1)
+        new_stg_costs = new_stg_costs.sum().unsqueeze(0).unsqueeze(0)
 
     if dataset.get("y") is not None and dataset.get("c") is not None:
         dataset["y"] = torch.cat([dataset['y'], new_obj])
-        dataset["c"] = torch.cat([dataset['c'], new_stg_costs], axis=1)
+        dataset["c"] = torch.cat([dataset['c'], new_stg_costs])
     else:
         dataset["y"] = new_obj
         dataset["c"] = new_stg_costs
@@ -177,9 +177,7 @@ def log_metrics(dataset, logging_metadata: Dict, verbose: bool=False, iteration=
     # dataset = update_dataset_new_run(dataset, new_hp, stage_costs_outputs, obj_output, x_bounds, dtype, device)
     best_f = dataset["y"].max().item()
     new_y = dataset["y"][-1].item()
-    stage_cost_list = dataset["c"][:, -1]
-    if acqf == 'EEIPU':
-        stage_cost_list = stage_cost_list.squeeze()
+    stage_cost_list = dataset["c"][-1, :].tolist()
     sum_stages = sum(stage_cost_list)
     cum_cost = dataset["c"].sum()
     inv_cost = 1/sum_stages
@@ -219,8 +217,8 @@ def log_metrics(dataset, logging_metadata: Dict, verbose: bool=False, iteration=
         trial=trial,
         iteration=iteration,
         best_f=best_f,
-        sum_c_x=sum_stages.item(),
-        cum_costs=cum_cost.item(),
+        sum_c_x=sum_stages,
+        cum_costs=cum_cost,
         eta=eta
     )
     
@@ -264,52 +262,31 @@ def generate_hps(
     hp_names = {}    # {0: ["mean", "std"], 1: ["lr", "batch_size", "decay"], }
     stage_ids = sorted([(key.split("__")) for key in hp_sampling_range], key=lambda item: item[0])
     
-    if acq_type == 'EEIPU':
-        for i, (stg_id, hp_name) in enumerate(stage_ids):
-            stg_id = int(stg_id)
-            if h_ind.get(stg_id) is None:
-                h_ind[stg_id] = [i]
-                hp_names[stg_id] = [hp_name]
-            else:
-                h_ind[stg_id].append(i)
-                hp_names[stg_id].append(hp_name)
-    else:
-        for i, (stg_id, hp_name) in enumerate(stage_ids):
-            if h_ind.get(0) is None:
-                h_ind[0] = [i]
-                hp_names[0] = [hp_name]
-            else:
-                h_ind[0].append(i)
-                hp_names[0].append(hp_name)
+    for i, (stg_id, hp_name) in enumerate(stage_ids):
+        stg_id = int(stg_id)
+        if h_ind.get(stg_id) is None:
+            h_ind[stg_id] = [i]
+            hp_names[stg_id] = [hp_name]
+        else:
+            h_ind[stg_id].append(i)
+            hp_names[stg_id].append(hp_name)
     
     params["h_ind"] = list(dict(sorted(h_ind.items())).values())
     
     x_bounds = {}
     hp_dtypes = {}
-    if acq_type == 'EEIPU':
-        for key, value in hp_sampling_range.items():
-            bounds = (value["lower"], value["upper"])
-            id = int(key.split("__")[0])
-            if x_bounds.get(id) is None:
-                x_bounds[id] = [bounds]
-                hp_dtypes[id] = [value["dtype"]]
-            else:
-                x_bounds[id].append(bounds)
-                hp_dtypes[id].append(value["dtype"])
-    else:
-        for key, value in hp_sampling_range.items():
-            bounds = (value["lower"], value["upper"])
-            if x_bounds.get(0) is None:
-                x_bounds[0] = [bounds]
-                hp_dtypes[0] = [value["dtype"]]
-            else:
-                x_bounds[0].append(bounds)
-                hp_dtypes[0].append(value["dtype"])
+    for key, value in hp_sampling_range.items():
+        bounds = (value["lower"], value["upper"])
+        id = int(key.split("__")[0])
+        if x_bounds.get(id) is None:
+            x_bounds[id] = [bounds]
+            hp_dtypes[id] = [value["dtype"]]
+        else:
+            x_bounds[id].append(bounds)
+            hp_dtypes[id].append(value["dtype"])
 
     x_bounds = list(dict(sorted(x_bounds.items())).values())
     hp_dtypes = list(dict(sorted(hp_dtypes.items())).values())
-    
-    print(f"FOR ACQF == {acq_type} THE RESULTS ARE:\n\nH_IND = {h_ind}\n\nHP_NAMES = {hp_names}\n\nX_BOUNDS = {x_bounds}\n\nHP_DTYPES = {hp_dtypes}")
     
     rand_seed = params["rand_seed"]
     torch.manual_seed(seed=rand_seed)
@@ -335,31 +312,6 @@ def generate_hps(
     new_hp = generate_hparams(new_hp, x_bounds, hp_dtypes)
     
     logging_metadata = {"n_memoised": n_memoised, "y_pred": y_pred, "E_c": E_c, "E_inv_c": E_inv_c, "x_bounds": x_bounds}
-    
-    h_ind = {}      # {0: [0,1], 1: [2,3,4], } [[0,1], [2,3,4]...] [0,1,2,3,4...]
-    hp_names = {}
-    for i, (stg_id, hp_name) in enumerate(stage_ids):
-        stg_id = int(stg_id)
-        if h_ind.get(stg_id) is None:
-            h_ind[stg_id] = [i]
-            hp_names[stg_id] = [hp_name]
-        else:
-            h_ind[stg_id].append(i)
-            hp_names[stg_id].append(hp_name)
-    
-    params["h_ind"] = list(dict(sorted(h_ind.items())).values())
-    
-    x_bounds = {}
-    hp_dtypes = {}
-    for key, value in hp_sampling_range.items():
-        bounds = (value["lower"], value["upper"])
-        id = int(key.split("__")[0])
-        if x_bounds.get(id) is None:
-            x_bounds[id] = [bounds]
-            hp_dtypes[id] = [value["dtype"]]
-        else:
-            x_bounds[id].append(bounds)
-            hp_dtypes[id].append(value["dtype"])
 
     # log_metrics(dataset, logging_metadata)
 
