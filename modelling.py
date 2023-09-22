@@ -1,9 +1,15 @@
+import json
+import sys
+import time
+from argparse import ArgumentParser
 from math import sqrt
+from pathlib import Path
 from typing import Any, Dict
 
 import numpy as np
 import pandas as pd
 import xgboost as xgb
+from cachestore import Cache, Formatter
 from catboost import CatBoostClassifier
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
@@ -145,101 +151,95 @@ def train_metamodel(
     test_preds = logistic_regression.predict_proba(test)[:, 1]
     au_roc = roc_auc_score(y_test, test_preds)
 
-    return {"AU_ROC": au_roc}
+    return {"AUROC": au_roc}
 
-if __name__=="__main__":
-    from pathlib import Path
-    import json
-    import sys
-    import time
-    from cachestore import Cache, Formatter  
-    from argparse import ArgumentParser
-    
-    sys.path.append("./")
-    from data_processing import prepare_data
-    
-    parser = ArgumentParser()
-    parser.add_argument("--stage-costs-outputs", nargs='+', type=Path, help="Stage costs outputs directory")
-    parser.add_argument("--obj-output", type=Path, help="The output directory of the objective.", required=True)
-    parser.add_argument("--disable-cache", action="store_true", help="Disable cache")
-    
-    args = parser.parse_args()
-    
-    cache = Cache(disable=args.disable_cache)
-    
-    data_dir = Path("/home/ridwan/workdir/cost_aware_bo/inputs/")
-    
-    @cache()
-    def preprocess():        
-        train = pd.read_csv(data_dir/"train.csv")
-        test = pd.read_csv(data_dir/"test.csv")
-        prev = pd.read_csv(data_dir/"previous_application.csv")
-        print(f"Train shape: {train.shape} ::: Test shape: {test.shape} ::: Prev shape: {prev.shape}")
-        print(f"Class dist train: {train['TARGET'].value_counts()}; test: {test['TARGET'].value_counts()}")
-        
-        train = prepare_data(train, prev).sample(frac=0.01, ignore_index=True, random_state=SEED)
-        test = prepare_data(test, prev).sample(frac=0.01, ignore_index=True, random_state=SEED)
 
-        print(f"Shape after prep: train-{train.shape} :: test-{test.shape}")
 
-        return train, test
-    
-    st = time.time()
-    train, test = preprocess()
-    prep_time = time.time()
-    
-    print(f"Prep duration: {prep_time-st}")
+sys.path.append("./")
+from data_processing import prepare_data
 
-    hp1 = json.load((data_dir/"stage1.json").open("r"))[0]
-    # Train base models.
-    @cache(ignore={"train", "test"})
-    def stage_1(train, test, hp1):
-        base_model_op1 = train_basemodels1(train, test, hp1)
-        return base_model_op1
+parser = ArgumentParser()
+parser.add_argument("--stage-costs-outputs", nargs='+', type=Path, help="Stage costs outputs directory")
+parser.add_argument("--obj-output", type=Path, help="The output directory of the objective.", required=True)
+parser.add_argument("--disable-cache", action="store_true", help="Disable cache")
+
+args = parser.parse_args()
+
+cache = Cache(disable=args.disable_cache)
+
+data_dir = Path("/home/ridwan/workdir/cost_aware_bo/inputs/")
+
+def preprocess():        
+    train = pd.read_csv(data_dir/"train.csv")
+    test = pd.read_csv(data_dir/"test.csv")
+    prev = pd.read_csv(data_dir/"previous_application.csv")
+    print(f"Train shape: {train.shape} ::: Test shape: {test.shape} ::: Prev shape: {prev.shape}")
+    print(f"Class dist train: {train['TARGET'].value_counts()}; test: {test['TARGET'].value_counts()}")
     
-    base_model_op1 = stage_1(train, test, hp1)
+    train = prepare_data(train, prev).sample(frac=0.01, ignore_index=True, random_state=SEED)
+    test = prepare_data(test, prev).sample(frac=0.01, ignore_index=True, random_state=SEED)
+
+    print(f"Shape after prep: train-{train.shape} :: test-{test.shape}")
+
+    return train, test
+
+st = time.time()
+train, test = preprocess()
+prep_time = time.time()
+
+print(f"Prep duration: {prep_time-st}")
+
+# Train base models.
+@cache(ignore={"train", "test"})
+def stage_1(train, test, hp1_params):
+    base_model_op1 = train_basemodels1(train, test, hp1_params)
+    base_model_op2 = train_basemodels2(train, test, hp1_params)
+    train = pd.concat([base_model_op1["train"], base_model_op2["train"], train["TARGET"]], axis=1)
+    test = pd.concat([base_model_op1["test"], base_model_op2["test"], test["TARGET"]], axis=1)
+    return train, test
+
+# Train the meta model and generate test AU-ROC score.
+# @cache(ignore={"train", "test"})
+def stage_2(train, test, hp2_params):
+    meta_model_op = train_metamodel(train, test, hp2_params)
+    with args.obj_output.open("w") as f:
+        json.dump(meta_model_op, f)
+    return meta_model_op
+
+def main(new_hps_dict):
+    hp1_params={
+        "et_params": {
+            "n_estimators": new_hps_dict["0__n_estimators0"],
+        },
+        "xgb_params": {
+            "learning_rate": new_hps_dict["0__learning_rate0"],
+            "max_depth": new_hps_dict["0__max_depth0"],
+        },
+        "rf_params": {
+            "n_estimators": new_hps_dict["0__n_estimators1"],
+            "max_depth": new_hps_dict["0__max_depth1"],
+        },
+        "catboost_params": {
+            "learning_rate": new_hps_dict["0__learning_rate1"],
+        }
+    }
+    
+    hp2_params = {
+        "C": new_hps_dict["1__C"],
+        "tol": new_hps_dict["1__tol"],
+        "max_iter": new_hps_dict["1__max_iter"]
+    }
+    train, test = stage_1(train, test, hp1_params)
     base1_time = time.time()
-    
+
     print(f"Base1 duration: {base1_time-prep_time}")
-    
-    hp2 = json.load((data_dir/"stage2.json").open("r"))[1]
-    
-    @cache(ignore={"train", "test"})
-    def stage_2(train, test, hp2):
-        base_model_op2 = train_basemodels2(train, test, hp2)
-        train = pd.concat([base_model_op1["train"], base_model_op2["train"], train["TARGET"]], axis=1)
-        test = pd.concat([base_model_op1["test"], base_model_op2["test"], test["TARGET"]], axis=1)
-        return train, test
-    
-    train, test = stage_2(train, test, hp2)
-    base2_time = time.time()
-    
-    print(f"Base2 duration: {base2_time-base1_time}")
-    
-    hp3 = json.load((data_dir/"stage3.json").open("r"))[2]
-    # Train the meta model and generate test AU-ROC score.
-    @cache(ignore={"train", "test"})
-    def stage_3(train, test, hp3):
-        meta_model_op = train_metamodel(train, test, hp3)
-        with args.obj_output.open("w") as f:
-            json.dump(meta_model_op, f)
-        return meta_model_op
-    
-    meta_model_op = stage_3(train, test, hp3)
+
+    auroc_dict = stage_2(train, test, hp2_params)
+    obj = auroc_dict["AUROC"]
     meta_time = time.time()
+
+    cost_per_stage = [base1_time, meta_time]
+    print(f"Meta duration: {meta_time-base1_time}")
     
-    print(f"Meta duration: {meta_time-base2_time}")
-    
-    print(meta_model_op)
-    
-    print(f"Base1 duration: {base1_time-prep_time}")
-    print(f"Base2 duration: {base2_time-base1_time}")
-    print(f"Meta duration: {meta_time-base2_time}")
-    print(f"Total duration: {meta_time-st}")
-    
-    per_stg_dur = [base1_time-prep_time, base2_time-base1_time, meta_time-base2_time]
-    for stage, wall_time in zip(args.stage_costs_outputs, per_stg_dur):
-        print(f"Saving {stage}, {wall_time}")
-        with stage.open("w") as f:
-            json.dump({"wall_time":wall_time}, f)
-        
+    return obj, 
+
