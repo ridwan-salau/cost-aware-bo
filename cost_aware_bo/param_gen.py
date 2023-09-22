@@ -289,7 +289,7 @@ def generate_hps(
     x_bounds = list(dict(sorted(x_bounds.items())).values())
     hp_dtypes = list(dict(sorted(hp_dtypes.items())).values())
     
-    print(f"FOR ACQF == {acq_type} THE RESULTS ARE:\n\nH_IND = {h_ind}\n\nHP_NAMES = {hp_names}\n\nX_BOUNDS = {x_bounds}\n\nHP_DTYPES = {hp_dtypes}")
+    # print(f"FOR ACQF == {acq_type} THE RESULTS ARE:\n\nH_IND = {h_ind}\n\nHP_NAMES = {hp_names}\n\nX_BOUNDS = {x_bounds}\n\nHP_DTYPES = {hp_dtypes}")
     
     rand_seed = params["rand_seed"]
     torch.manual_seed(seed=rand_seed)
