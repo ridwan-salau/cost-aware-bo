@@ -136,7 +136,7 @@ class EIPUVariants(AnalyticAcquisitionFunction):
         return all_cost_obj
 
     @t_batch_mode_transform(expected_q=1, assert_output_shape=False)
-    def forward(self, X: Tensor, delta: int = 0) -> Tensor:
+    def forward(self, X: Tensor, delta: int = 0, curr_iter: int = -1) -> Tensor:
 
         r"""Evaluate qExpectedImprovement on the candidate set `X`.
         """
