@@ -25,10 +25,8 @@ class EIPUVariants(AnalyticAcquisitionFunction):
         posterior_transform: Optional[PosteriorTransform] = None,
         maximize: bool = True,
         acq_type: str = "",
-        cost_func = None,
         unstandardizer = None,
         unnormalizer = None,
-        cost_normalizer=None,
         bounds: Tensor = None,
         iter: int =None,
         params: Dict = None,
@@ -63,10 +61,8 @@ class EIPUVariants(AnalyticAcquisitionFunction):
         self.cost_sampler = cost_sampler
         self.acq_obj = acq_objective
         self.acq_type = acq_type
-        self.cost_func = cost_func
         self.unstandardizer = unstandardizer
         self.unnormalizer = unnormalizer
-        self.cost_normalizer = cost_normalizer
         self.bounds = bounds
         self.params = params
         self.iter = iter
@@ -80,13 +76,16 @@ class EIPUVariants(AnalyticAcquisitionFunction):
         total_cost = None
         cat_stages = None
         for i, cost_model in enumerate(self.cost_gp):
-            if i in range(delta):
+            if i < delta:
                 cost_samples = torch.full((self.params['cost_samples'], X.shape[0]), self.params['epsilon'], device=DEVICE) # generate a tensor of epsilons
                 reshaped_samples = cost_samples[:,:,None]
                 cat_stages = reshaped_samples if (not torch.is_tensor(cat_stages)) else torch.cat([cat_stages, reshaped_samples], axis=2)
             else:
                 hyp_indexes = self.params['h_ind'][i]
-                cost_posterior = cost_model.posterior(X[:,:,hyp_indexes])
+                if self.acq_type == 'EEIPU':
+                    cost_posterior = cost_model.posterior(X[:,:,hyp_indexes])
+                else:
+                    cost_posterior = cost_model.posterior(X)
                 cost_samples = self.cost_sampler(cost_posterior)
                 cost_samples = cost_samples.to(DEVICE)
                 cost_samples = cost_samples.max(dim=2)[0]
@@ -103,9 +102,9 @@ class EIPUVariants(AnalyticAcquisitionFunction):
                 cat_stages = reshaped_samples if (not torch.is_tensor(cat_stages)) else torch.cat([cat_stages, reshaped_samples], axis=2)
         
         n_mem, n_stages = delta, cat_stages.shape[2]
-        norm_stages = self.cost_normalizer(cat_stages[:,:,n_mem:n_stages], self.params)
+        # norm_stages = self.cost_normalizer(cat_stages[:,:,n_mem:n_stages], self.params)
 
-        cat_stages = torch.cat([cat_stages[:,:,:n_mem],  norm_stages], axis=-1).to(DEVICE)
+        # cat_stages = torch.cat([cat_stages[:,:,:n_mem],  norm_stages], axis=-1).to(DEVICE)
         
         cat_stages = cat_stages.sum(dim=-1)
         
@@ -122,7 +121,10 @@ class EIPUVariants(AnalyticAcquisitionFunction):
         all_cost_obj = []
         for i, cost_model in enumerate(self.cost_gp):
             hyp_indexes = self.params['h_ind'][i]
-            cost_posterior = cost_model.posterior(X[:,hyp_indexes])
+            if self.acq_type == 'EEIPU':
+                cost_posterior = cost_model.posterior(X[:,hyp_indexes])
+            else:
+                cost_posterior = cost_model.posterior(X)
             cost_samples = self.cost_sampler(cost_posterior)
             cost_samples = cost_samples.to(DEVICE)
             cost_samples = cost_samples.max(dim=2)[0]
@@ -155,14 +157,19 @@ class EIPUVariants(AnalyticAcquisitionFunction):
         ei = sigma * (updf + u * ucdf)
 
         total_budget = self.params['total_budget'] + 0
-        warmup_cost = self.params['budget_0']
 
         remaining = total_budget - self.consumed_budget
-        init_budget = total_budget - warmup_cost
+        init_budget = total_budget
 
         cost_cool = remaining / init_budget
      
-        inv_cost =  self.compute_expected_inverse_cost(X, delta=delta)
+        if self.acq_type in ['EEIPU', 'CArBO', 'EIPS']:
+            inv_cost =  self.compute_expected_inverse_cost(X, delta=delta)
 
-        return ei * inv_cost if self.acq_type == 'EIPS' else ei * (inv_cost**cost_cool)
+            return ei * (inv_cost**cost_cool) if self.acq_type != 'EIPS' else ei * inv_cost
        
+        else:
+            raise Exception("ERROR: Only EEIPU, CArBO, and EIPS are supported!")
+
+
+
