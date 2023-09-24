@@ -169,7 +169,7 @@ def update_dataset_new_run(dataset, new_hp_dict, new_stg_costs, new_obj, x_bound
     
     return dataset
 
-def log_metrics(dataset, logging_metadata: Dict, verbose: bool=False, iteration=None, trial=None, acqf=None, eta=None):
+def log_metrics(dataset, logging_metadata: Dict, exp_name, verbose: bool=False, iteration=None, trial=None, acqf=None, eta=None):
     y_pred = logging_metadata.pop("y_pred")
     n_memoised = logging_metadata.pop("n_memoised")
     E_inv_c = logging_metadata.pop("E_inv_c")
@@ -222,7 +222,7 @@ def log_metrics(dataset, logging_metadata: Dict, verbose: bool=False, iteration=
         eta=eta
     )
     
-    dir_name = "./segmentation/experiment_logs"
+    dir_name = f"./segmentation/experiment_logs/{exp_name}"
     Path(dir_name).mkdir(exist_ok=True) # Create if it doesn't exist
     csv_file_name = f"{dir_name}/{acqf}_trial_{trial}.csv"
 
