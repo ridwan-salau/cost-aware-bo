@@ -223,7 +223,7 @@ def log_metrics(dataset, logging_metadata: Dict, exp_name, verbose: bool=False, 
     )
     
     dir_name = f"./segmentation/experiment_logs/{exp_name}"
-    Path(dir_name).mkdir(exist_ok=True) # Create if it doesn't exist
+    Path(dir_name).mkdir(exist_ok=True, parents=True) # Create if it doesn't exist
     csv_file_name = f"{dir_name}/{acqf}_trial_{trial}.csv"
 
     # Check if the file exists
