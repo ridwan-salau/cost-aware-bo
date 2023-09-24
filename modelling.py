@@ -2,6 +2,7 @@ import json
 import sys
 import time
 from argparse import ArgumentParser
+from copy import deepcopy
 from math import sqrt
 from pathlib import Path
 from typing import Any, Dict
@@ -18,7 +19,6 @@ from sklearn.model_selection import KFold
 
 NFOLDS = 3
 SEED = 0
-NROWS = None
 
 
 class SklearnWrapper(object):
@@ -159,15 +159,19 @@ sys.path.append("./")
 from data_processing import prepare_data
 
 parser = ArgumentParser()
-parser.add_argument("--stage-costs-outputs", nargs='+', type=Path, help="Stage costs outputs directory")
-parser.add_argument("--obj-output", type=Path, help="The output directory of the objective.", required=True)
+parser.add_argument("--exp-name", type=str, required=True, help="Specifies a unique experiment name")
+parser.add_argument("--trial", type=int, help="The trial number", default=1)
+parser.add_argument("--init-eta", type=float, help="Initial ETA", default=1)
+parser.add_argument("--decay-factor", type=float, help="Decay factor", default=0.95)
+parser.add_argument("--acqf", type=str, help="Acquisition function", choices=["EEIPU", "EIPS", "CArBO", "EI", "RAND"], default="EI")
+parser.add_argument("--cache-root", type=Path, default=".cachestore", help="Cache directory")
 parser.add_argument("--disable-cache", action="store_true", help="Disable cache")
-
+parser.add_argument("--data-dir", type=Path, help="Directory with the data", default="/home/ridwan/workdir/cost_aware_bo/inputs/")
 args = parser.parse_args()
 
 cache = Cache(disable=args.disable_cache)
 
-data_dir = Path("/home/ridwan/workdir/cost_aware_bo/inputs/")
+data_dir = args.data_dir
 
 def preprocess():        
     train = pd.read_csv(data_dir/"train.csv")
@@ -183,11 +187,7 @@ def preprocess():
 
     return train, test
 
-st = time.time()
 train, test = preprocess()
-prep_time = time.time()
-
-print(f"Prep duration: {prep_time-st}")
 
 # Train base models.
 @cache(ignore={"train", "test"})
@@ -198,7 +198,7 @@ def stage_1(train, test, hp1_params):
     test = pd.concat([base_model_op1["test"], base_model_op2["test"], test["TARGET"]], axis=1)
     return train, test
 
-# Train the meta model and generate test AU-ROC score.
+# Train the meta model and generate test AUROC score.
 # @cache(ignore={"train", "test"})
 def stage_2(train, test, hp2_params):
     meta_model_op = train_metamodel(train, test, hp2_params)
@@ -229,10 +229,11 @@ def main(new_hps_dict):
         "tol": new_hps_dict["1__tol"],
         "max_iter": new_hps_dict["1__max_iter"]
     }
+    base0_time = time.time()
     train, test = stage_1(train, test, hp1_params)
     base1_time = time.time()
 
-    print(f"Base1 duration: {base1_time-prep_time}")
+    print(f"Base1 duration: {base1_time-base0_time}")
 
     auroc_dict = stage_2(train, test, hp2_params)
     obj = auroc_dict["AUROC"]
@@ -241,5 +242,32 @@ def main(new_hps_dict):
     cost_per_stage = [base1_time, meta_time]
     print(f"Meta duration: {meta_time-base1_time}")
     
-    return obj, 
+    return obj, cost_per_stage
 
+dataset = {}
+with open("segmentation/sampling-range.json") as f:
+    hp_sampling_range = json.load(f)
+
+params = {
+    # "decay_factor": 0.95,
+    # "init_eta": 0.05,
+    "n_trials": 10,
+    "n_iters": 40,
+    "alpha": 9,
+    "norm_eps": 1,
+    "epsilon": 0.1,
+    "batch_size": 1,
+    "normalization_bounds": [0, 1],
+    "cost_samples": 1000,
+    "n_init_data": 10,
+    "prefix_thresh": 10000000,
+    "warmup_iters": 10,
+    "use_pref_pool": 1,
+    "verbose": 1,
+    "rand_seed": 42,
+    "total_budget": 15000,
+    "budget_0": 7000
+}
+
+args_dict = deepcopy(vars(args))
+params.update(args_dict)
