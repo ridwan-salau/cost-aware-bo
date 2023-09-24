@@ -21,7 +21,7 @@ for trial in {1..10}; do
         # CUDA_VISIBLE_DEVICES=1 python segmentation/experiments.py \
         #     --exp-name segmentation --trial $(($trial+1)) --cache-root \
         #     $cache_root --acqf $acqf && rm -rf $cache_root
-        if [ $(($c%1)) -eq 0 ]; then
+        if [ $(($c%10)) -eq 0 ]; then
             wait # Wait for the inner loop to complete before continuing
         fi
     done
