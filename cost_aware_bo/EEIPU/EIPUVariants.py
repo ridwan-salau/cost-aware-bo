@@ -159,7 +159,7 @@ class EIPUVariants(AnalyticAcquisitionFunction):
         total_budget = self.params['total_budget'] + 0
 
         remaining = total_budget - self.consumed_budget
-        init_budget = total_budget
+        init_budget = total_budget - self.params['budget_0']
 
         cost_cool = remaining / init_budget
      
