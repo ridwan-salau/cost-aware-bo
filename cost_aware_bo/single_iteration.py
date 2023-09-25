@@ -27,7 +27,7 @@ def get_cost_models(X, C, iter, param_idx, bounds, acqf):
     for i in range(C.shape[1]):
         stage_cost = C[:,i].unsqueeze(-1)
         try:
-            assert stage_cost.min() > 1
+            assert stage_cost.min() > 0
         except:
             print(f"BEFORE LOGGING THE COSTS, EXCEPTION RAISED BECAUSE THE MINIMUM DATAPOINT IS = {stage_cost.min().item()}, MAXIMUM FOR SOME REASON IS = {stage_cost.max().item()}, SHAPE IS = {stage_cost.shape}, AND NUMBER OF NANS IS {torch.isnan(stage_cost.view(-1)).sum().item()}")
     

@@ -272,14 +272,14 @@ params = {
     "use_pref_pool": 1,
     "verbose": 1,
     "rand_seed": 42,
-    "total_budget": 15000,
-    "budget_0": 7000
+    "total_budget": 1000,
+    "budget_0": 400
 }
 
 args_dict = deepcopy(vars(args))
 params.update(args_dict)
 
-date_now=f"{time.strftime('%Y-%m-%d-%H%M')}",
+date_now=f"{time.strftime('%Y-%m-%d-%H%M')}"
 
 wandb.init(
         entity="cost-bo",
