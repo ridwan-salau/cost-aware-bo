@@ -88,7 +88,7 @@ def bo_iteration(X, y, c, bounds=None, acqf_str='', decay=None, iter=None, consu
             unnormalizer=unnormalize, bounds=bounds, eta=decay,
             consumed_budget=consumed_budget, iter=iter, params=params)
     
-    new_x, n_memoised = optimize_acqf_by_mem(acqf=acqf, acqf_str=acqf_str, bounds=norm_bounds, iter=iter, prefix_pool=prefix_pool, seed=params['rand_seed'])
+    new_x, n_memoised = optimize_acqf_by_mem(acqf=acqf, acqf_str=acqf_str, bounds=norm_bounds, iter=iter, prefix_pool=prefix_pool, params=params, seed=params['rand_seed'])
     
     E_c, E_inv_c, E_y = [0], torch.tensor([0]), 0
     if acqf_str in ['EEIPU', 'CArBO', 'EIPS']:

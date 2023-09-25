@@ -7,7 +7,7 @@ def update_candidate(candidate, acqf_val, best_candidate, best_acqf_val, num_mem
         return candidate.detach(), acqf_val, delta
     return best_candidate, best_acqf_val, num_memoised
 
-def optimize_acqf_by_mem(acqf=None, acqf_str=None, bounds=None, iter=None, prefix_pool=None, seed=0):
+def optimize_acqf_by_mem(acqf=None, acqf_str=None, bounds=None, iter=None, prefix_pool=None, params=None, seed=0):
     n_memoised = 0
     
     best_candidate, best_acqf_val = -torch.inf, -torch.inf
@@ -23,9 +23,8 @@ def optimize_acqf_by_mem(acqf=None, acqf_str=None, bounds=None, iter=None, prefi
         for i in range(new_candidate.shape[1]):
             if params['hp_dtypes'][i] == 'int':
                 new_candidate[:, i] = torch.round(new_candidate[:, i])
+                
         best_candidate, best_acqf_val, n_memoised = update_candidate(new_candidate, acqf_val.item(), best_candidate, best_acqf_val, n_memoised, pref_stages)
-    
-    print('Proposed candidate is: ', best_candidate)
     
     return best_candidate, n_memoised
         
