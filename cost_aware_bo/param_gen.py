@@ -75,7 +75,7 @@ def write_dataset(dataset):
         json.dump(dataset, f, sort_keys=True)
     
 
-def generate_hparams(hp: List[List[int|float]], x_bounds: List[Tuple[int|float]], dtypes: List[str], seed):
+def generate_hparams(hp: List[List[int|float]], x_bounds: List[Tuple[int|float]], dtypes: List[str], sampling_seed):
     '''When a new set of hyperparaters, hp, is provided from the bayesian optimizer, this function saves the hyperparameter values for
     each stage in the respective files. When hp is none (i.e. when generating the warm up values before running BO), the function for 
     generating the hps for each stage will randomly sample from a range of values
@@ -98,7 +98,7 @@ def generate_hparams(hp: List[List[int|float]], x_bounds: List[Tuple[int|float]]
             if hp:
                 val = clip(eval(dtype)(hp.pop(0)), lower, upper)
             else:
-                val = sample_value(lower, upper, seed, dtype=eval(dtype))
+                val = sample_value(lower, upper, sampling_seed, dtype=eval(dtype))
             stg_hps.append(val)
         
         new_hp.extend(stg_hps)
