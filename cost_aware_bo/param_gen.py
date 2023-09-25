@@ -39,7 +39,6 @@ def sample_value(
 ):
     np.random.seed(seed)
     
-    print("called")
     assert lower < upper, "hyperparameter lower bound must be less than upper bound"
     assert not(dtype and choice_list), "Only one of dtype and choice_list should be set to a value"
     if dtype==float:
