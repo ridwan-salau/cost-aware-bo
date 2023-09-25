@@ -140,6 +140,11 @@ class EIPUVariants(AnalyticAcquisitionFunction):
 
         r"""Evaluate qExpectedImprovement on the candidate set `X`.
         """
+        
+        for i in range(X.shape[2]):
+            if self.params['hp_dtypes'][i] == 'int':
+                X[:,:,i] = torch.round(X[:,:,i])
+
         self.best_f = self.best_f.to(X)
         posterior = self.model.posterior(
           X=X, posterior_transform=self.posterior_transform
