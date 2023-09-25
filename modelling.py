@@ -1,25 +1,50 @@
 import json
+import os
+import shutil
 import sys
 import time
 from argparse import ArgumentParser
+from copy import deepcopy
 from math import sqrt
 from pathlib import Path
 from typing import Any, Dict
 
 import numpy as np
 import pandas as pd
+import torch
 import xgboost as xgb
-from cachestore import Cache, Formatter
 from catboost import CatBoostClassifier
+from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import KFold
 
+import wandb
+from cachestore import Cache, Formatter, LocalStorage
+
+sys.path.append("./")
+from data_processing import prepare_data
+
+parser = ArgumentParser()
+parser.add_argument("--exp-name", type=str, required=True, help="Specifies a unique experiment name")
+parser.add_argument("--trial", type=int, help="The trial number", default=1)
+parser.add_argument("--init-eta", type=float, help="Initial ETA", default=1)
+parser.add_argument("--decay-factor", type=float, help="Decay factor", default=0.95)
+parser.add_argument("--acqf", type=str, help="Acquisition function", choices=["EEIPU", "EIPS", "CArBO", "EI", "RAND"], default="EI")
+parser.add_argument("--cache-root", type=Path, default=".cachestore", help="Cache directory")
+parser.add_argument("--disable-cache", action="store_true", help="Disable cache")
+parser.add_argument("--data-dir", type=Path, help="Directory with the data", default="/home/ridwan/workdir/cost_aware_bo/inputs/")
+args = parser.parse_args()
+disable_cache = args.acqf!="EEIPU"
+cache = Cache(f"stacking_{args.exp_name}_{args.trial}_cache", storage=LocalStorage(args.cache_root))
+
+data_dir = args.data_dir
+
 NFOLDS = 3
 SEED = 0
-NROWS = None
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 class SklearnWrapper(object):
     def __init__(self, clf, seed=0, params=None):
@@ -36,10 +61,10 @@ class SklearnWrapper(object):
 class CatboostWrapper(object):
     def __init__(self, clf, seed=0, params=None):
         params["random_seed"] = seed
-        self.clf = clf(**params)
+        self.clf:CatBoostClassifier = clf(**params)
 
     def train(self, x_train, y_train):
-        self.clf.fit(x_train, y_train)
+        self.clf.fit(x_train, y_train, silent=True)
 
     def predict(self, x):
         return self.clf.predict_proba(x)[:, 1]
@@ -65,11 +90,11 @@ class XgbWrapper(object):
         self.nrounds = params.pop("nrounds", 250)
 
     def train(self, x_train, y_train):
-        dtrain = xgb.DMatrix(x_train, label=y_train)
+        dtrain = xgb.DMatrix(x_train, label=y_train, silent=True)
         self.gbdt = xgb.train(self.param, dtrain, self.nrounds)
 
     def predict(self, x):
-        return self.gbdt.predict(xgb.DMatrix(x))
+        return self.gbdt.predict(xgb.DMatrix(x, silent=True))
 
 
 def get_oof(clf, x_train, y_train, x_test, n_folds=3):
@@ -143,7 +168,7 @@ def train_metamodel(
     # test_targets: np.ndarray,
     params: Dict[str, Any],
 ) -> Dict[str, Any]:
-    logistic_regression = LogisticRegression(**params["lr_params"], random_state=SEED)
+    logistic_regression = LogisticRegression(**params, random_state=SEED)
     y_train = train.pop("TARGET")
     y_test = test.pop("TARGET")
     logistic_regression.fit(train, y_train)
@@ -153,22 +178,7 @@ def train_metamodel(
 
     return {"AUROC": au_roc}
 
-
-
-sys.path.append("./")
-from data_processing import prepare_data
-
-parser = ArgumentParser()
-parser.add_argument("--stage-costs-outputs", nargs='+', type=Path, help="Stage costs outputs directory")
-parser.add_argument("--obj-output", type=Path, help="The output directory of the objective.", required=True)
-parser.add_argument("--disable-cache", action="store_true", help="Disable cache")
-
-args = parser.parse_args()
-
-cache = Cache(disable=args.disable_cache)
-
-data_dir = Path("/home/ridwan/workdir/cost_aware_bo/inputs/")
-
+@cache()
 def preprocess():        
     train = pd.read_csv(data_dir/"train.csv")
     test = pd.read_csv(data_dir/"test.csv")
@@ -183,27 +193,24 @@ def preprocess():
 
     return train, test
 
-st = time.time()
 train, test = preprocess()
-prep_time = time.time()
-
-print(f"Prep duration: {prep_time-st}")
 
 # Train base models.
-@cache(ignore={"train", "test"})
+@cache(ignore={"train", "test"}, disable=disable_cache)
 def stage_1(train, test, hp1_params):
     base_model_op1 = train_basemodels1(train, test, hp1_params)
+    print("Done with basemodel 1")
     base_model_op2 = train_basemodels2(train, test, hp1_params)
     train = pd.concat([base_model_op1["train"], base_model_op2["train"], train["TARGET"]], axis=1)
     test = pd.concat([base_model_op1["test"], base_model_op2["test"], test["TARGET"]], axis=1)
     return train, test
 
-# Train the meta model and generate test AU-ROC score.
+# Train the meta model and generate test AUROC score.
 # @cache(ignore={"train", "test"})
 def stage_2(train, test, hp2_params):
     meta_model_op = train_metamodel(train, test, hp2_params)
-    with args.obj_output.open("w") as f:
-        json.dump(meta_model_op, f)
+    # with args.obj_output.open("w") as f:
+    #     json.dump(meta_model_op, f)
     return meta_model_op
 
 def main(new_hps_dict):
@@ -229,17 +236,91 @@ def main(new_hps_dict):
         "tol": new_hps_dict["1__tol"],
         "max_iter": new_hps_dict["1__max_iter"]
     }
-    train, test = stage_1(train, test, hp1_params)
+    base0_time = time.time()
+    train_stg1, test_stg1 = stage_1(train, test, hp1_params)
     base1_time = time.time()
 
-    print(f"Base1 duration: {base1_time-prep_time}")
+    print(f"Base1 duration: {base1_time-base0_time}")
 
-    auroc_dict = stage_2(train, test, hp2_params)
+    auroc_dict = stage_2(train_stg1, test_stg1, hp2_params)
     obj = auroc_dict["AUROC"]
     meta_time = time.time()
 
-    cost_per_stage = [base1_time, meta_time]
+    cost_per_stage = [base1_time-base0_time, meta_time-base1_time]
     print(f"Meta duration: {meta_time-base1_time}")
     
-    return obj, 
+    return obj, cost_per_stage
 
+dataset = {}
+with open("cost-aware-bo/sampling-range-stacking.json") as f:
+    hp_sampling_range = json.load(f)
+
+params = {
+    # "decay_factor": 0.95,
+    # "init_eta": 0.05,
+    "n_trials": 10,
+    "n_iters": 40,
+    "alpha": 9,
+    "norm_eps": 1,
+    "epsilon": 0.1,
+    "batch_size": 1,
+    "normalization_bounds": [0, 1],
+    "cost_samples": 1000,
+    "n_init_data": 10,
+    "prefix_thresh": 10000000,
+    "warmup_iters": 10,
+    "use_pref_pool": 1,
+    "verbose": 1,
+    "rand_seed": 42,
+    "total_budget": 1000,
+    "budget_0": 400
+}
+
+args_dict = deepcopy(vars(args))
+params.update(args_dict)
+
+date_now=f"{time.strftime('%Y-%m-%d-%H%M')}"
+
+wandb.init(
+        entity="cost-bo",
+        project="memoised-realworld-exp",
+        group=f"{args.exp_name}|-acqf_{args.acqf}|-dec-fac_{args.decay_factor}"
+                f"|init-eta_{args.init_eta}",
+        name=f"{date_now}-trial-number_{args.trial}",
+        config=params,
+    )
+
+consumed_budget, total_budget, init_budget = 0, params['total_budget'], params['budget_0']
+i=0
+warmup = True
+try:
+    while consumed_budget < total_budget:
+        tic = time.time()
+        
+        if consumed_budget > init_budget and warmup:
+            warmup = False
+            params['n_init_data'] = i + 0
+
+        new_hp_dict, logging_metadata = generate_hps(
+            dataset,
+            hp_sampling_range,
+            iteration=i,
+            params=params,
+            consumed_budget=consumed_budget,
+            acq_type=args.acqf, 
+        )
+        
+        obj, cost_per_stage = main(new_hp_dict)
+        
+        consumed_budget += sum(cost_per_stage)
+
+        dataset = update_dataset_new_run(dataset, new_hp_dict, cost_per_stage, obj, logging_metadata["x_bounds"], args.acqf, device=device)
+        print("Stage costs:", cost_per_stage)
+        print(f"\n\n[{time.strftime('%Y-%m-%d-%H%M')}]    Iteration-{i} [acq_type: {args.acqf}] Trial No. #{args.trial} Runtime: {time.time()-tic} Consumed Budget: {consumed_budget}")
+        eta = (total_budget - consumed_budget) / (total_budget - params['budget_0'])
+        log_metrics(dataset, logging_metadata, args.exp_name, verbose=params["verbose"], iteration=i, trial=args.trial, acqf=args.acqf, eta=eta)
+        i += 1
+finally:
+    # Clean up cache
+    if os.path.exists(args.cache_root):
+        shutil.rmtree(args.cache_root)

@@ -35,13 +35,15 @@ def read_json(filename):
 
 
 def sample_value(
-    lower, upper, dtype=float, choice_list=[]
+    lower, upper, seed, dtype=float, choice_list=[]
 ):
+    np.random.seed(seed)
+    
+    print("called")
     assert lower < upper, "hyperparameter lower bound must be less than upper bound"
     assert not(dtype and choice_list), "Only one of dtype and choice_list should be set to a value"
     if dtype==float:
-        val = np.random.random()
-        val = val * (upper - lower) + lower
+        val = np.random.uniform(lower, upper)
     elif dtype==round:
         val = np.random.randint(lower, upper)
     elif dtype==str:
@@ -74,7 +76,7 @@ def write_dataset(dataset):
         json.dump(dataset, f, sort_keys=True)
     
 
-def generate_hparams(hp: List[List[int|float]], x_bounds: List[Tuple[int|float]], dtypes: List[str]):
+def generate_hparams(hp: List[List[int|float]], x_bounds: List[Tuple[int|float]], dtypes: List[str], seed):
     '''When a new set of hyperparaters, hp, is provided from the bayesian optimizer, this function saves the hyperparameter values for
     each stage in the respective files. When hp is none (i.e. when generating the warm up values before running BO), the function for 
     generating the hps for each stage will randomly sample from a range of values
@@ -97,7 +99,7 @@ def generate_hparams(hp: List[List[int|float]], x_bounds: List[Tuple[int|float]]
             if hp:
                 val = clip(eval(dtype)(hp.pop(0)), lower, upper)
             else:
-                val = sample_value(lower, upper, dtype=eval(dtype))
+                val = sample_value(lower, upper, seed, dtype=eval(dtype))
             stg_hps.append(val)
         
         new_hp.extend(stg_hps)
@@ -223,7 +225,7 @@ def log_metrics(dataset, logging_metadata: Dict, exp_name, verbose: bool=False, 
     )
     
     dir_name = f"./segmentation/experiment_logs/{exp_name}"
-    Path(dir_name).mkdir(exist_ok=True) # Create if it doesn't exist
+    Path(dir_name).mkdir(exist_ok=True, parents=True) # Create if it doesn't exist
     csv_file_name = f"{dir_name}/{acqf}_trial_{trial}.csv"
 
     # Check if the file exists
@@ -312,7 +314,7 @@ def generate_hps(
     
     # When new_hp is None, `generate_hparams` will generate random samples.
     # It also saves the new_hp to the respective files where the main function can read them 
-    new_hp = generate_hparams(new_hp, x_bounds, hp_dtypes)
+    new_hp = generate_hparams(new_hp, x_bounds, hp_dtypes, sampling_seed=iteration)
     
     logging_metadata = {"n_memoised": n_memoised, "y_pred": y_pred, "E_c": E_c, "E_inv_c": E_inv_c, "x_bounds": x_bounds}
 
