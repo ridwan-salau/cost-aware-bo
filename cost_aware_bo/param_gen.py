@@ -298,6 +298,8 @@ def generate_hps(
     botorch.utils.sampling.manual_seed(seed=rand_seed)
 
     params['hp_dtypes'] = list(chain(*hp_dtypes))
+
+    print('We are passing the following list of dtypes', params['hp_dtypes'])
     
     new_hp, y_pred, n_memoised, E_c, E_inv_c = None, None, 0, None, None
     if consumed_budget > params['budget_0']:
@@ -313,10 +315,9 @@ def generate_hps(
             X=x, y=y, c=c, bounds=bounds, acqf_str=acq_type, decay=params["init_eta"], iter=iteration, consumed_budget=consumed_budget, params=params)
         new_hp = new_hp.squeeze().tolist()
     
-    else:
-        # When new_hp is None, `generate_hparams` will generate random samples.
-        # It also saves the new_hp to the respective files where the main function can read them 
-        new_hp = generate_hparams(new_hp, x_bounds, hp_dtypes, sampling_seed=iteration)
+    # When new_hp is None, `generate_hparams` will generate random samples.
+    # It also saves the new_hp to the respective files where the main function can read them 
+    new_hp = generate_hparams(new_hp, x_bounds, hp_dtypes, sampling_seed=iteration)
     
     logging_metadata = {"n_memoised": n_memoised, "y_pred": y_pred, "E_c": E_c, "E_inv_c": E_inv_c, "x_bounds": x_bounds}
 
