@@ -298,8 +298,6 @@ def generate_hps(
     botorch.utils.sampling.manual_seed(seed=rand_seed)
 
     params['hp_dtypes'] = list(chain(*hp_dtypes))
-
-    print('We are passing the following list of dtypes', params['hp_dtypes'])
     
     new_hp, y_pred, n_memoised, E_c, E_inv_c = None, None, 0, None, None
     if consumed_budget > params['budget_0']:
