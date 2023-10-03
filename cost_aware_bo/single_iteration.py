@@ -1,28 +1,46 @@
+from .optimize_mem_acqf import optimize_acqf_by_mem
+from .EEIPU.EIPUVariants import EIPUVariants
+from .functions import normalize, unnormalize, standardize, unstandardize, initialize_GP_model, get_gen_bounds, generate_prefix_pool
 from botorch import fit_gpytorch_model
 from botorch.acquisition import ExpectedImprovement
 from botorch.sampling import SobolQMCNormalSampler
 from botorch.acquisition.objective import IdentityMCObjective
 import torch
 
-from .optimize_mem_acqf import optimize_acqf_by_mem
-from .EEIPU.EIPUVariants import EIPUVariants
-from .functions import normalize, unnormalize, normalize_cost, standardize, unstandardize, initialize_GP_model, get_gen_bounds, generate_prefix_pool, Cost_F
-
-def get_gp_models(X, y, params=None):
+def get_gp_models(X, y, iter, params=None, type_='y'):
+    # if type_=='y':
+    #     print(f"The data being passed to the objective stuff on iter {iter} are {X.min()}, {X.max()}, {X.isnan().any()}.\nAs for objectives: {y.min()}, {y.max()}, {y.isnan().any()}")
+    
     mll, gp_model = initialize_GP_model(X, y, params=params)
     fit_gpytorch_model(mll)
     return mll, gp_model
 
-def get_cost_models(X, C, param_idx, bounds):
+def get_cost_models(X, C, iter, param_idx, bounds, acqf):
+
+    # if acqf != 'EEIPU':
+    #     log_c = torch.log(C)
+    #     norm_stage_cost = standardize(log_c, bounds['c'])
+    #     cost_mll, cost_gp = get_gp_models(X, norm_stage_cost, iter, type_='c')
+    #     return cost_mll, cost_gp
+
     cost_mll, cost_gp = [], []
-    for i, stage_cost in enumerate(C):
+    for i in range(C.shape[1]):
+        stage_cost = C[:,i].unsqueeze(-1)
+        try:
+            assert stage_cost.min() > 0
+        except:
+            print(f"BEFORE LOGGING THE COSTS, EXCEPTION RAISED BECAUSE THE MINIMUM DATAPOINT IS = {stage_cost.min().item()}, MAXIMUM FOR SOME REASON IS = {stage_cost.max().item()}, SHAPE IS = {stage_cost.shape}, AND NUMBER OF NANS IS {torch.isnan(stage_cost.view(-1)).sum().item()}")
+    
         log_sc = torch.log(stage_cost)
+        
         norm_stage_cost = standardize(log_sc, bounds['c'][:,i])
-        
         stage_idx = param_idx[i]
-        stage_c = X[:, stage_idx] + 0
-        
-        stage_mll, stage_gp = get_gp_models(stage_c, norm_stage_cost)
+        if acqf == 'EEIPU':
+            stage_x = X[:, stage_idx] + 0
+        else:
+            stage_x = X + 0
+
+        stage_mll, stage_gp = get_gp_models(stage_x, norm_stage_cost, iter, type_='c')
         
         cost_mll.append(stage_mll)
         cost_gp.append(stage_gp)
@@ -42,16 +60,12 @@ def get_expected_y(X, gp_model, n_samples, bounds, seed):
     
     return obj
 
-def bo_iteration(X, y, c, bounds=None, acqf_str='', decay=None, iter=None, params=None):
-    # print(f"{__file__} Shapes: {X.shape}, {y.shape}, {c.shape}")
-    # print("Bounds:", bounds)
-    # exit()
-    # print(__file__, "train_x, train_y", X, y)
+def bo_iteration(X, y, c, bounds=None, acqf_str='', decay=None, iter=None, consumed_budget=None, params=None):
+    
     train_x = normalize(X, bounds=bounds['x_cube'])
     train_y = standardize(y, bounds['y'])
-    # print(__file__, "train_x, train_y", train_x.shape, train_y.shape)
-    # print(__file__, "train_x, train_y", train_x, train_y)
-    mll, gp_model = get_gp_models(train_x, train_y, params=params)
+    
+    mll, gp_model = get_gp_models(train_x, train_y, iter, params=params)
     
     norm_bounds = get_gen_bounds(params['h_ind'], params['normalization_bounds'], bound_type='norm')
     prefix_pool = None
@@ -63,23 +77,24 @@ def bo_iteration(X, y, c, bounds=None, acqf_str='', decay=None, iter=None, param
         norm_bounds = bounds['x'] + 0
     elif acqf_str == 'EI':
         acqf = ExpectedImprovement(model=gp_model, best_f=train_y.max())
-    elif 'EIPU' in acqf_str:
+    else:
         cost_mll, cost_gp = None, None
-        if acqf_str == 'EEIPU':
-            cost_mll, cost_gp = get_cost_models(train_x, c, params['h_ind'], bounds)
+        if acqf_str in ['EEIPU', 'CArBO', 'EIPS']:
+            cost_mll, cost_gp = get_cost_models(train_x, c, iter, params['h_ind'], bounds, acqf_str)
         
         cost_sampler = SobolQMCNormalSampler(sample_shape=params['cost_samples'], seed=params['rand_seed'])
         acqf = EIPUVariants(acq_type=acqf_str, model=gp_model, cost_gp=cost_gp, best_f=train_y.max(), cost_sampler=cost_sampler,
-            acq_objective=IdentityMCObjective(), cost_func=Cost_F, unstandardizer=unstandardize,
-            unnormalizer=unnormalize, cost_normalizer=normalize_cost, bounds=bounds, eta=decay, params=params)
+            acq_objective=IdentityMCObjective(), unstandardizer=unstandardize,
+            unnormalizer=unnormalize, bounds=bounds, eta=decay,
+            consumed_budget=consumed_budget, iter=iter, params=params)
     
     new_x, n_memoised = optimize_acqf_by_mem(acqf=acqf, acqf_str=acqf_str, bounds=norm_bounds, iter=iter, prefix_pool=prefix_pool, seed=params['rand_seed'])
     
-    E_c, E_inv_c = [0], torch.tensor([0])
-    if acqf_str == 'EEIPU':
+    E_c, E_inv_c, E_y = [0], torch.tensor([0]), 0
+    if acqf_str in ['EEIPU', 'CArBO', 'EIPS']:
         E_c = acqf.compute_expected_cost(new_x)
         E_inv_c = acqf.compute_expected_inverse_cost(new_x[:, None, :])
-    E_y = get_expected_y(new_x, gp_model, params['cost_samples'], bounds['x_cube'], params['rand_seed'])
+    # E_y = get_expected_y(new_x, gp_model, params['cost_samples'], bounds['x_cube'], params['rand_seed'])
 
     if acqf_str != 'RAND':
         new_x = unnormalize(new_x, bounds=bounds['x_cube'])

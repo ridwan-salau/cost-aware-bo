@@ -4,8 +4,8 @@ import random
 import os
 from argparse import ArgumentParser
 import time
-from typing import List, Union, Dict, Tuple
 from pathlib import Path
+from typing import List, Union, Dict, Tuple
 import subprocess
 from copy import deepcopy
 
@@ -14,7 +14,9 @@ import torch
 import numpy as np
 import wandb
 from einops import rearrange
-
+import csv
+import os
+from itertools import chain
 from .single_iteration import bo_iteration
 from .optimizer.optimize_acqf_funcs import optimize_acqf, _optimize_acqf_batch, gen_candidates_scipy, gen_batch_initial_conditions
 from .functions import get_dataset_bounds
@@ -33,13 +35,14 @@ def read_json(filename):
 
 
 def sample_value(
-    lower, upper, dtype=float, choice_list=[]
+    lower, upper, seed, dtype=float, choice_list=[]
 ):
+    np.random.seed(seed)
+    
     assert lower < upper, "hyperparameter lower bound must be less than upper bound"
     assert not(dtype and choice_list), "Only one of dtype and choice_list should be set to a value"
     if dtype==float:
-        val = np.random.random()
-        val = val * (upper - lower) + lower
+        val = np.random.uniform(lower, upper)
     elif dtype==round:
         val = np.random.randint(lower, upper)
     elif dtype==str:
@@ -72,7 +75,7 @@ def write_dataset(dataset):
         json.dump(dataset, f, sort_keys=True)
     
 
-def generate_hparams(hp: List[List[int|float]], x_bounds: List[Tuple[int|float]], dtypes: List[str]):
+def generate_hparams(hp: List[List[int|float]], x_bounds: List[Tuple[int|float]], dtypes: List[str], sampling_seed):
     '''When a new set of hyperparaters, hp, is provided from the bayesian optimizer, this function saves the hyperparameter values for
     each stage in the respective files. When hp is none (i.e. when generating the warm up values before running BO), the function for 
     generating the hps for each stage will randomly sample from a range of values
@@ -95,7 +98,7 @@ def generate_hparams(hp: List[List[int|float]], x_bounds: List[Tuple[int|float]]
             if hp:
                 val = clip(eval(dtype)(hp.pop(0)), lower, upper)
             else:
-                val = sample_value(lower, upper, dtype=eval(dtype))
+                val = sample_value(lower, upper, sampling_seed, dtype=eval(dtype))
             stg_hps.append(val)
         
         new_hp.extend(stg_hps)
@@ -131,14 +134,19 @@ def read_objective(obj_output):
 #         return json.load(f)
 
 
-def update_dataset_new_run(dataset, new_hp_dict, new_stg_costs, new_obj, x_bounds, dtype=torch.float64, device="cuda"):
+def update_dataset_new_run(dataset, new_hp_dict, new_stg_costs, new_obj, x_bounds, acqf, dtype=torch.float64, device="cuda"):
     # Check PIRLIB output directory for new objective and cost values
-    new_stg_costs = torch.tensor(new_stg_costs, dtype=dtype, device=device).unsqueeze(-1).unsqueeze(-1)
+    new_stg_costs = torch.tensor(new_stg_costs, dtype=dtype, device=device)
     new_obj = torch.tensor([new_obj],dtype=dtype, device=device)
     
+    if acqf == 'EEIPU':
+        new_stg_costs = new_stg_costs.unsqueeze(0)
+    else:
+        new_stg_costs = new_stg_costs.sum().unsqueeze(0).unsqueeze(0)
+
     if dataset.get("y") is not None and dataset.get("c") is not None:
         dataset["y"] = torch.cat([dataset['y'], new_obj])
-        dataset["c"] = torch.cat([dataset['c'], new_stg_costs], axis=1)
+        dataset["c"] = torch.cat([dataset['c'], new_stg_costs])
     else:
         dataset["y"] = new_obj
         dataset["c"] = new_stg_costs
@@ -157,21 +165,20 @@ def update_dataset_new_run(dataset, new_hp_dict, new_stg_costs, new_obj, x_bound
     bounds = get_dataset_bounds(dataset["x"], dataset["y"], dataset["c"], x_bounds)
     bounds = {f"{key}_bounds":val for key, val in bounds.items()}
     dataset.update(bounds)
-    
     # write_dataset(dataset)
+    # print(f"FOR ACQF = {acqf} THE DATASET SO FAR IS:\n{dataset}")
     
     return dataset
 
-def log_metrics(dataset, logging_metadata: Dict, verbose: bool=False):
+def log_metrics(dataset, logging_metadata: Dict, exp_name, verbose: bool=False, iteration=None, trial=None, acqf=None, eta=None):
     y_pred = logging_metadata.pop("y_pred")
     n_memoised = logging_metadata.pop("n_memoised")
     E_inv_c = logging_metadata.pop("E_inv_c")
     E_c = logging_metadata.pop("E_c")
-    
     # dataset = update_dataset_new_run(dataset, new_hp, stage_costs_outputs, obj_output, x_bounds, dtype, device)
     best_f = dataset["y"].max().item()
     new_y = dataset["y"][-1].item()
-    stage_cost_list = dataset["c"][:, -1].squeeze()
+    stage_cost_list = dataset["c"][-1, :].tolist()
     sum_stages = sum(stage_cost_list)
     cum_cost = dataset["c"].sum()
     inv_cost = 1/sum_stages
@@ -206,6 +213,38 @@ def log_metrics(dataset, logging_metadata: Dict, verbose: bool=False):
             inv_c_res=abs(E_inv_c-inv_cost) if E_inv_c else None,
             hp_table=hp_table,
         )
+    csv_log = dict(
+        acqf=acqf,
+        trial=trial,
+        iteration=iteration,
+        best_f=best_f,
+        sum_c_x=sum_stages,
+        cum_costs=cum_cost,
+        eta=eta
+    )
+    
+    dir_name = f"./experiment_logs/{exp_name}"
+    Path(dir_name).mkdir(exist_ok=True, parents=True) # Create if it doesn't exist
+    csv_file_name = f"{dir_name}/{acqf}_trial_{trial}.csv"
+
+    # Check if the file exists
+    try:
+        with open(csv_file_name, 'r') as csvfile:
+            reader = csv.reader(csvfile)
+            fieldnames = next(reader)  # Read the headers in the first row
+
+    except FileNotFoundError:
+        # If file does not exist, create it and write headers
+        fieldnames = ['acqf', 'trial', 'iteration', 'best_f', 'sum_c_x', 'cum_costs', 'eta']
+        with open(csv_file_name, 'w', newline='') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            writer.writeheader()
+
+    # Append data
+    with open(csv_file_name, 'a', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writerow(csv_log)
+
     wandb.log(log)
     return
 
@@ -215,12 +254,13 @@ def generate_hps(
     hp_sampling_range,
     iteration,
     params,
+    consumed_budget=None,
     acq_type="EEIPU", 
 ):
     dtype = torch.double
-    device = "cuda" if torch.cuda.is_available() else "cpu"    
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     
-    h_ind = {}      # {0: [0,1], 1: [2,3,4], }
+    h_ind = {}      # {0: [0,1], 1: [2,3,4], } [[0,1], [2,3,4]...] [0,1,2,3,4...]
     hp_names = {}    # {0: ["mean", "std"], 1: ["lr", "batch_size", "decay"], }
     stage_ids = sorted([(key.split("__")) for key in hp_sampling_range], key=lambda item: item[0])
     
@@ -246,16 +286,21 @@ def generate_hps(
         else:
             x_bounds[id].append(bounds)
             hp_dtypes[id].append(value["dtype"])
+
     x_bounds = list(dict(sorted(x_bounds.items())).values())
     hp_dtypes = list(dict(sorted(hp_dtypes.items())).values())
+    
+    # print(f"FOR ACQF == {acq_type} THE RESULTS ARE:\n\nH_IND = {h_ind}\n\nHP_NAMES = {hp_names}\n\nX_BOUNDS = {x_bounds}\n\nHP_DTYPES = {hp_dtypes}")
     
     rand_seed = params["rand_seed"]
     torch.manual_seed(seed=rand_seed)
     random.seed(rand_seed)
     botorch.utils.sampling.manual_seed(seed=rand_seed)
+
+    params['hp_dtypes'] = list(chain(*hp_dtypes))
     
     new_hp, y_pred, n_memoised, E_c, E_inv_c = None, None, 0, None, None
-    if iteration >= params["n_init_data"]:
+    if consumed_budget > params['budget_0']:
         # Convert to tensors
         # print(dataset)
         x = torch.stack(list(dataset["x"].values()), axis=1)
@@ -263,16 +308,18 @@ def generate_hps(
         c = dataset["c"]
         
         bounds = {key.replace("_bounds", ""):val for key,val in dataset.items() if key.endswith("_bounds")}
+
         new_hp, n_memoised, E_c, E_inv_c, y_pred = bo_iteration(
-            X=x, y=y, c=c, bounds=bounds, acqf_str=acq_type, decay=params["init_eta"], iter=iteration, params=params)
+            X=x, y=y, c=c, bounds=bounds, acqf_str=acq_type, decay=params["init_eta"], iter=iteration, consumed_budget=consumed_budget, params=params)
         new_hp = new_hp.squeeze().tolist()
     
-    # When new_hp is None, `generate_hparams` will generate random samples.
-    # It also saves the new_hp to the respective files where the main function can read them 
-    new_hp = generate_hparams(new_hp, x_bounds, hp_dtypes)
+    else:
+        # When new_hp is None, `generate_hparams` will generate random samples.
+        # It also saves the new_hp to the respective files where the main function can read them 
+        new_hp = generate_hparams(new_hp, x_bounds, hp_dtypes, sampling_seed=iteration)
     
     logging_metadata = {"n_memoised": n_memoised, "y_pred": y_pred, "E_c": E_c, "E_inv_c": E_inv_c, "x_bounds": x_bounds}
-    
+
     # log_metrics(dataset, logging_metadata)
 
     # Convert new_hp into a dictionary of key representing the stage id and name in this format, "0__mean"
@@ -337,7 +384,7 @@ if __name__ == "__main__":
     # random.seed(params['rand_seed'])
     botorch.utils.sampling.manual_seed(seed=params['rand_seed'])
     
-    for iter in range(1, params["n_iters"]+1):
+    for iter in range(1, 2):
     # for iter in range(20):
         hp = generate_hps(
             iteration=iter,
@@ -348,4 +395,5 @@ if __name__ == "__main__":
             hp_stg_paths=hp_stg_paths,
             acq_type=args.acqf,
         )        
+        
     print("Done!!!")
