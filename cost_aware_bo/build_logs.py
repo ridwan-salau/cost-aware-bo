@@ -1,9 +1,6 @@
 import glob
 import os
 import pandas as pd
-from json_reader import read_json
-
-params = read_json('params')
 
 csv_file_name = 'real_exp_logs.csv'
     
