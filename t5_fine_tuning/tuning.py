@@ -15,7 +15,7 @@ from utils import tuning, distillation, load_hyperparameters, inference
 
 from copy import deepcopy
 
-num_samples = 100
+num_samples = 25000
 
 
 # @task(cache=True, cache_key_file="hparams", timer=True)
@@ -348,20 +348,19 @@ def t5_fine_tuning(
     stg_hparams: List[Dict],
 ):
     """Main Pipeline."""
-    output_dir = " to be implemented"
     data_preproc_hp = select_first_n_stages(stg_hparams, 1)
     tuning_hp = select_first_n_stages(stg_hparams, 2)
     distillation_hp = select_first_n_stages(stg_hparams, 3)
 
-    first_stg_output = data_preprocessing(dataset, output_dir, hparams=data_preproc_hp)
+    first_stg_output = data_preprocessing(dataset, output_dir/"data_preprocessing", hparams=data_preproc_hp)
     fine_tuned_model_path = fine_tuning(
-        first_stg_output, dataset, output_dir, hparams=tuning_hp
+        first_stg_output, dataset, output_dir/"fine_tuning", hparams=tuning_hp
     )
     distilled_model_path = model_distillation(
         dataset,
         first_stg_output,
         fine_tuned_model_path,
-        output_dir,
+        output_dir/"model_distillation",
         hparams=distillation_hp,
     )
     # inference_output = model_inference(
@@ -379,8 +378,10 @@ def t5_fine_tuning(
 
 
 if __name__ == "__main__":
-    dataset = Path("/home/ridwan/workdir/cost_aware_bo/t5_fine_tuning/inputs")
-    output_dir = time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime())
+    start = time.time()
+    dataset = Path("/home/ridwan/workdir/cost-aware-bo/t5_fine_tuning/inputs")
+    output_dir = Path("outputs") / time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime())
     stg_hparams = load_hyperparameters(dataset / "hparams.json")
     output = t5_fine_tuning(dataset, output_dir, stg_hparams)
     print(output)
+    print("Total duration:", time.time() - start)
