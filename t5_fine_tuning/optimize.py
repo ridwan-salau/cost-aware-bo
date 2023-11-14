@@ -89,3 +89,4 @@ finally:
     # Clean up cache
     if os.path.exists(args.cache_root):
         shutil.rmtree(args.cache_root, ignore_errors=True)
+    wandb.finish()
