@@ -13,7 +13,6 @@ from datasets import load_dataset
 from torch.utils.data import DataLoader, TensorDataset
 from utils import tuning, distillation, load_hyperparameters, inference
 
-import wandb
 from cachestore import Cache, LocalStorage
 
 parser = ArgumentParser()
@@ -405,7 +404,7 @@ def t5_fine_tuning(
 
 if __name__ == "__main__":
     start = time.time()
-    dataset = Path("/home/ridwan/workdir/cost-aware-bo/t5_fine_tuning/inputs")
+    dataset = Path("inputs")
     output_dir = Path("outputs") / time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime())
     stg_hparams = load_hyperparameters(dataset / "hparams.json")
     output = t5_fine_tuning(dataset, output_dir, stg_hparams)
