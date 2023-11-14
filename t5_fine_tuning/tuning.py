@@ -1,9 +1,9 @@
 import json
 import time
+import math
+from copy import deepcopy
+from argparse import ArgumentParser
 
-# from pirlib.iotypes impor
-# from pirlib.pipeline import pipeline
-# from pirlib.task import task
 from pathlib import Path
 from typing import Union, List, Dict, Any
 import torch
@@ -13,12 +13,24 @@ from datasets import load_dataset
 from torch.utils.data import DataLoader, TensorDataset
 from utils import tuning, distillation, load_hyperparameters, inference
 
-from copy import deepcopy
+import wandb
+from cachestore import Cache, LocalStorage
 
-num_samples = 25000
+parser = ArgumentParser()
+parser.add_argument("--exp-name", type=str, required=True, help="Specifies a unique experiment name")
+parser.add_argument("--trial", type=int, help="The trial number", default=1)
+parser.add_argument("--cache-root", type=Path, default=".cachestore", help="Cache directory")
+parser.add_argument("--acqf", type=str, help="Acquisition function", choices=["EEIPU", "EIPS", "CArBO", "EI", "RAND"], default="EI")
 
+args, _ = parser.parse_known_args()
+
+disable_cache = args.acqf!="EEIPU"
+cache = Cache(f"stacking_{args.exp_name}_{args.trial}_cache", storage=LocalStorage(args.cache_root), disable=disable_cache)
+
+num_samples = 10000 # 9540 seconds to finish 25K samples on 4 gpus
 
 # @task(cache=True, cache_key_file="hparams", timer=True)
+@cache(ignore={"output_dir", "dataset"})
 def data_preprocessing(
     dataset: Union[Path, str], output_dir: Union[Path, str], *, hparams
 ):
@@ -30,7 +42,7 @@ def data_preprocessing(
     dataset = Path(dataset)
     output_dir = Path(output_dir)
 
-    start_time = time.time()
+    # start_time = time.time()
     train_inputs_encodings, train_summaries_encodings = torch.load(
         dataset / "tokenized_train_data.pt"
     )
@@ -66,14 +78,15 @@ def data_preprocessing(
         val_summaries_encodings["attention_mask"],
     )
 
+    batch_size = hparams["0__batch_size"] * torch.cuda.device_count()
     train_dataloader = DataLoader(
         train_dataset,
-        hparams["0__batch_size"],
+        batch_size,
         shuffle=True,
     )
     val_dataloader = DataLoader(
         val_dataset,
-        hparams["0__batch_size"],
+        batch_size,
         shuffle=False,
     )
 
@@ -88,18 +101,19 @@ def data_preprocessing(
     with (output_dir / "data_preprocessing.txt").open("w") as f:
         f.write("Data preprocessing has been completed!")
 
-    end_time = time.time()
-    metrics = {"cost": end_time - start_time}
-    with open(output_dir / "metrics.json", "w") as metrics_file:
-        json.dump(metrics, metrics_file)
+    # end_time = time.time()
+    # metrics = {"cost": end_time - start_time}
+    # with open(output_dir / "metrics.json", "w") as metrics_file:
+    #     json.dump(metrics, metrics_file)
 
     return output_dir
 
 
 # @task(cache=True, cache_key_file="hparams", timer=True)
+@cache(ignore={"output_dir", "dataset", "data_prepoc_output_path"})
 def fine_tuning(
-    prev_stg_output: Union[Path, str],
     dataset: Union[Path, str],
+    data_prepoc_output_path: Union[Path, str],
     output_dir: Union[Path, str],
     *,
     hparams,
@@ -107,17 +121,17 @@ def fine_tuning(
     """Fine Tuning Stage."""
     dataset = Path(dataset)
     output_dir = Path(output_dir)
-    prev_stg_output = Path(prev_stg_output)
+    data_prepoc_output_path = Path(data_prepoc_output_path)
 
-    start_time = time.time()
+    # start_time = time.time()
     model_name = "t5-small"
 
     tokenizer = T5Tokenizer.from_pretrained(model_name)
     model = T5ForConditionalGeneration.from_pretrained(model_name).to("cuda:0")
-    optimizer = torch.optim.AdamW(model.parameters(), lr=hparams["1__learning_rate"])
+    optimizer = torch.optim.AdamW(model.parameters(), lr=hparams["1__learning_rate"], weight_decay=hparams["1__weight_decay"])
 
-    train_dataloader = torch.load(prev_stg_output / "training_data")
-    val_dataloader = torch.load(prev_stg_output / "validation_data")
+    train_dataloader = torch.load(data_prepoc_output_path / "training_data")
+    val_dataloader = torch.load(data_prepoc_output_path / "validation_data")
     validation_dataset = datasets.load_from_disk(dataset / "validation_data")
     if num_samples > 0 and num_samples < 13368:
         validation_dataset = validation_dataset.select(range(num_samples))
@@ -126,6 +140,7 @@ def fine_tuning(
         train_dataloader,
         val_dataloader,
         optimizer,
+        # num_epochs__1,
         hparams["1__num_epochs"],
         tokenizer,
         validation_dataset,
@@ -134,15 +149,15 @@ def fine_tuning(
     fine_tuned_model.save_pretrained(output_dir / "fine_tuned_model/")
     fine_tuned_tokenizer.save_pretrained(output_dir / "fine_tuned_tokenizer/")
 
-    metrics["epoch_num"].append(hparams["1__num_epochs"])
+    # metrics["epoch_num"].append(hparams["1__num_epochs"])
     metrics["learning_rate"].append(hparams["1__learning_rate"])
     metrics["batch_size"].append(hparams["0__batch_size"])
 
-    end_time = time.time()
-    metrics["cost"] = end_time - start_time
+    # end_time = time.time()
+    # metrics["cost"] = end_time - start_time
 
-    with open(output_dir / "metrics.json", "w") as metrics_file:
-        json.dump(metrics, metrics_file)
+    # with open(output_dir / "metrics.json", "w") as metrics_file:
+    #     json.dump(metrics, metrics_file)
 
     print("fine tuning completed")
 
@@ -150,16 +165,18 @@ def fine_tuning(
 
 
 # @task(cache=True, cache_key_file="hparams")
+@cache(ignore={"output_dir", "dataset", "fine_tuned_model_path", "data_prepoc_output_path"})
 def model_distillation(
     dataset: Union[Path, str],
-    first_stg_output: Union[Path, str],
+    data_prepoc_output_path: Union[Path, str],
     fine_tuned_model_path: Union[Path, str],
     output_dir: Union[Path, str],
     *,
     hparams,
 ):
     """Distillation Stage."""
-    start_time = time.time()
+    output_dir.mkdir(parents=True)
+    # start_time = time.time()
     model_name = "t5-small"
 
     # Load your fine-tuned t5-small teacher model and tokenizer
@@ -177,12 +194,12 @@ def model_distillation(
     student_model = T5ForConditionalGeneration(student_config).to("cuda")
 
     optimizer = torch.optim.AdamW(
-        student_model.parameters(), lr=hparams["2__learning_rate"]
+        student_model.parameters(), lr=hparams["2__learning_rate"], weight_decay=hparams["2__weight_decay"]
     )
 
     # Define your training & validation dataset and dataloader
-    train_dataloader = torch.load(first_stg_output / "training_data")
-    val_dataloader = torch.load(first_stg_output / "validation_data")
+    train_dataloader = torch.load(data_prepoc_output_path / "training_data")
+    val_dataloader = torch.load(data_prepoc_output_path / "validation_data")
     validation_dataset = datasets.load_from_disk(dataset / "validation_data")
 
     if num_samples > 0 and num_samples < 13368:
@@ -194,6 +211,7 @@ def model_distillation(
         train_dataloader,
         val_dataloader,
         optimizer,
+        # num_epochs__2,
         hparams["2__num_epochs"],
         tokenizer,
         validation_dataset,
@@ -204,22 +222,22 @@ def model_distillation(
     distilled_model.save_pretrained(output_dir / "distilled_model")
     distilled_tokenizer.save_pretrained(output_dir / "distilled_tokenizer")
 
-    metrics["epoch_num"].append(hparams["2__num_epochs"])
+    # metrics["epoch_num"].append(hparams["2__num_epochs"])
     metrics["learning_rate"].append(hparams["2__learning_rate"])
     metrics["batch_size"].append(hparams["0__batch_size"])
-    end_time = time.time()
-    metrics["cost"] = end_time - start_time
-    with open(output_dir / "metrics.json", "w") as metrics_file:
-        json.dump(metrics, metrics_file)
+    # end_time = time.time()
+    # metrics["cost"] = end_time - start_time
+    # with open(output_dir / "metrics.json", "w") as metrics_file:
+    #     json.dump(metrics, metrics_file)
 
     print("Distillation has been completed")
 
-    return output_dir
+    return metrics["rouge_scores"][0]["rougeLsum"]
 
 
 # @task(cache=True, cache_key_file="hparams")
 def model_inference(
-    first_stg_output: Union[Path, str],
+    data_prepoc_output_path: Union[Path, str],
     fine_tuned_model_path: Union[Path, str],
     # dataset: Union[Path, str],
     distilled_model_path: Union[Path, str],
@@ -245,7 +263,7 @@ def model_inference(
     quantized_distilled_tokenizer = T5Tokenizer.from_pretrained(
         distilled_model_path / "distilled_tokenizer/"
     )
-    test_dataset = datasets.load_from_disk(first_stg_output / "testing_data")
+    test_dataset = datasets.load_from_disk(data_prepoc_output_path / "testing_data")
     test_data = test_dataset["article"]
     reference_summaries = test_dataset["highlights"]
 
@@ -280,7 +298,7 @@ def model_inference(
 
 # @task(cache=True, cache_key_file="hparams")
 def generate_output(
-    first_stg_output: Union[Path, str],
+    data_prepoc_output_path: Union[Path, str],
     fine_tuned_model_path: Union[Path, str],
     distilled_model_path: Union[Path, str],
 ):
@@ -295,7 +313,7 @@ def generate_output(
 
     # hp_dataset = hyperparmeters["dataset"]
 
-    with open(first_stg_output / "metrics.json") as _metrics:
+    with open(data_prepoc_output_path / "metrics.json") as _metrics:
         data_metrics = json.load(_metrics)
 
     with open(fine_tuned_model_path / "metrics.json") as _metrics:
@@ -352,29 +370,37 @@ def t5_fine_tuning(
     tuning_hp = select_first_n_stages(stg_hparams, 2)
     distillation_hp = select_first_n_stages(stg_hparams, 3)
 
-    first_stg_output = data_preprocessing(dataset, output_dir/"data_preprocessing", hparams=data_preproc_hp)
+    start_data_proc = time.time()
+    data_prepoc_output_path = data_preprocessing(dataset, output_dir/"data_preprocessing", hparams=data_preproc_hp)
+    start_fine_tune = time.time()
     fine_tuned_model_path = fine_tuning(
-        first_stg_output, dataset, output_dir/"fine_tuning", hparams=tuning_hp
+        dataset, data_prepoc_output_path, output_dir/"fine_tuning", hparams=tuning_hp
     )
-    distilled_model_path = model_distillation(
+    start_distil = time.time()
+    rougeLsum = model_distillation(
         dataset,
-        first_stg_output,
+        data_prepoc_output_path,
         fine_tuned_model_path,
         output_dir/"model_distillation",
         hparams=distillation_hp,
     )
     # inference_output = model_inference(
-    #     first_stg_output,
+    #     data_prepoc_output_path,
     #     fine_tuned_model_path,
     #     distilled_model_path,
     #     output_dir,
     #     hparams=stg_hparams,
     # )
-    final_metrics = generate_output(
-        first_stg_output, fine_tuned_model_path, distilled_model_path
-    )
 
-    return final_metrics
+    end = time.time()
+    # obj = generate_output(
+    #     data_prepoc_output_path, fine_tuned_model_path, distilled_model_path
+    # )
+    stage1_cost = start_fine_tune - start_data_proc
+    stage2_cost = start_distil - start_fine_tune
+    stage3_cost = end - start_distil
+
+    return {"obj": rougeLsum, "costs": [stage1_cost, stage2_cost, stage3_cost]}
 
 
 if __name__ == "__main__":

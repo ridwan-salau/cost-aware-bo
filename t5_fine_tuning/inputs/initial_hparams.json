@@ -1,77 +1,79 @@
 {
-    "iteration": 0,
-    "n_init_data": 10,
-    "acq_type": "EI",
+    "params": {
+        "iteration": 0,
+        "n_init_data": 10,
+        "acq_type": "EI",
+        "n_trials": 10,
+        "n_iters": 40,
+        "alpha": 9,
+        "norm_eps": 1,
+        "epsilon": 0.1,
+        "batch_size": 1,
+        "normalization_bounds": [
+            0,
+            1
+        ],
+        "cost_samples": 1000,
+        "prefix_thresh": 10000000,
+        "warmup_iters": 10,
+        "use_pref_pool": 1,
+        "verbose": 1,
+        "rand_seed": 42,
+        "total_budget": 1000,
+        "budget_0": 350
+    },
     "hp_sampling_range": {
         "0__batch_size": {
-            "upper": {
-                "value": 512,
-                "dtype": "int"
+            "upper": 40,
+            "lower": 1,
+            "dtype": "int"
             },
-            "lower": {
-                "value": 50,
-                "dtype": "int"
-            }
-        },
         "1__learning_rate": {
-            "upper": {
-                "value": 1e-3,
-                "dtype": "float"
+            "upper": 1e-3,
+            "lower": 1e-5,
+            "dtype": "float"
             },
-            "lower": {
-                "value": 1e-5,
-                "dtype": "float"
-            }
-        },
+        "1__weight_decay": {
+            "upper": 8e-1,
+            "lower": 1e-4,
+            "dtype": "float"
+            },
         "1__num_epochs": {
-            "upper": {
-                "value": 5,
-                "dtype": "int"
+            "upper": 30,
+            "lower": 10,
+            "dtype": "int"
             },
-            "lower": {
-                "value": 2,
-                "dtype": "int"
-            }
-        },
         "2__learning_rate": {
-            "upper": {
-                "value": 1e-3,
-                "dtype": "float"
+            "upper": 1e-3,
+            "lower":1e-5,
+            "dtype": "float"
             },
-            "lower": {
-                "value": 1e-5,
-                "dtype": "float"
-            }
-        },
-        "2__num_epochs": {
-            "upper": {
-                "value": 6,
-                "dtype": "int"
-            },
-            "lower": {
-                "value": 4,
-                "dtype": "int"
-            }
-        },
         "2__temperature": {
-            "upper": {
-                "value": 1,
-                "dtype": "int"
+            "upper": 3,
+            "lower": 1,
+            "dtype": "int"
             },
-            "lower": {
-                "value": 3,
-                "dtype": "int"
+        "2__weight_decay": {
+            "upper": 8e-1,
+            "lower": 1e-4,
+            "dtype": "float"
+            },
+        "2__num_epochs": {
+            "upper": 60,
+            "lower": 20,
+            "dtype": "int"
             }
-        }
     },
     "dataset": {
         "hps": {
             "0__batch_size": [],
             "1__learning_rate": [],
             "1__num_epochs": [],
+            "1__weight_decay": [],
             "2__learning_rate": [],
             "2__num_epochs": [],
-            "2__temperature": []
+            "2__temperature": [],
+            "2__weight_decay": []
         },
         "obj": [],
         "cost": []
