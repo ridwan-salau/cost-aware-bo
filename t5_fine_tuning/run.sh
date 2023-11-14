@@ -6,9 +6,9 @@ ACQF_ARRAY=(EEIPU EI CArBO EIPS)
 python_path=/home/ridwan/miniconda3/envs/t5env/bin/python
 
 c=0
-for trial in {1..1}; do
+for trial in {1..10}; do
     # for acqf in ${ACQF_ARRAY[@]}; do
-        acqf="EEIPU"
+        acqf=$1
         # ((c+=1))
         cache_root=.cachestore/${acqf}/${RANDOM}_trial_${trial}
         $python_path optimize.py \
