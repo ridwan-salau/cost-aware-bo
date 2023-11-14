@@ -139,10 +139,11 @@ def update_dataset_new_run(dataset, new_hp_dict, new_stg_costs, new_obj, x_bound
     new_stg_costs = torch.tensor(new_stg_costs, dtype=dtype, device=device)
     new_obj = torch.tensor([new_obj],dtype=dtype, device=device)
     
-    if acqf == 'EEIPU':
-        new_stg_costs = new_stg_costs.unsqueeze(0)
-    else:
-        new_stg_costs = new_stg_costs.sum().unsqueeze(0).unsqueeze(0)
+    new_stg_costs = new_stg_costs.unsqueeze(0)
+    # if acqf == 'EEIPU':
+    #     new_stg_costs = new_stg_costs.unsqueeze(0)
+    # else:
+    #     new_stg_costs = new_stg_costs.sum().unsqueeze(0).unsqueeze(0)
 
     if dataset.get("y") is not None and dataset.get("c") is not None:
         dataset["y"] = torch.cat([dataset['y'], new_obj])
