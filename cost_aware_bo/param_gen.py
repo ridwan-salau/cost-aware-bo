@@ -198,6 +198,18 @@ def log_metrics(dataset, logging_metadata: Dict, exp_name, verbose: bool=False, 
         print("==="*20)
         print("\n")
     
+    csv_log = dict(
+        acqf=acqf,
+        trial=trial,
+        iteration=iteration,
+        best_f=best_f,
+        sum_c_x=sum_stages,
+        cum_costs=cum_cost,
+        eta=eta
+    )
+    csv_log_table = wandb.Table(columns=list(csv_log.keys()))
+    csv_log_table.add_data(*csv_log.values())
+
     log = dict(
             best_f=best_f,
             f_hat_x=y_pred,
@@ -213,15 +225,7 @@ def log_metrics(dataset, logging_metadata: Dict, exp_name, verbose: bool=False, 
             c_res=dict(zip(map(str,range(len(stage_cost_list))) ,[abs(act-est) for act, est in zip(E_c,stage_cost_list)])) if E_c else None,
             inv_c_res=abs(E_inv_c-inv_cost) if E_inv_c else None,
             hp_table=hp_table,
-        )
-    csv_log = dict(
-        acqf=acqf,
-        trial=trial,
-        iteration=iteration,
-        best_f=best_f,
-        sum_c_x=sum_stages,
-        cum_costs=cum_cost,
-        eta=eta
+            csv_log_table=csv_log_table
     )
     
     dir_name = f"./experiment_logs/{exp_name}"
