@@ -9,7 +9,7 @@ for trial in {1..10}; do
         acqf=$1
         # ((c+=1))
         cache_root=.cachestore/${acqf}/${RANDOM}_trial_${trial}
-        ptyhon optimize.py \
+        python optimize.py \
             --exp-name t5-pipeline-tuun --trial $trial --cache-root \
             $cache_root --acqf $acqf && rm -rf $cache_root
 
