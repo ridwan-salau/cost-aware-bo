@@ -26,7 +26,7 @@ args, _ = parser.parse_known_args()
 disable_cache = args.acqf!="EEIPU"
 cache = Cache(f"stacking_{args.exp_name}_{args.trial}_cache", storage=LocalStorage(args.cache_root), disable=disable_cache)
 
-num_samples = 5000 # 9540 seconds to finish 25K samples on 4 gpus
+num_samples = 2500 # 9540 seconds to finish 25K samples on 4 gpus
 
 # @task(cache=True, cache_key_file="hparams", timer=True)
 @cache(ignore={"output_dir", "dataset"})
