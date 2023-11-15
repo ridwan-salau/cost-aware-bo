@@ -3,15 +3,13 @@ set -e
 
 ACQF_ARRAY=(EEIPU EI CArBO EIPS)
 
-python_path=/home/ridwan/miniconda3/envs/t5env/bin/python
-
 c=0
 for trial in {1..10}; do
     # for acqf in ${ACQF_ARRAY[@]}; do
         acqf=$1
         # ((c+=1))
         cache_root=.cachestore/${acqf}/${RANDOM}_trial_${trial}
-        $python_path optimize.py \
+        ptyhon optimize.py \
             --exp-name t5-pipeline-tuun --trial $trial --cache-root \
             $cache_root --acqf $acqf && rm -rf $cache_root
 
