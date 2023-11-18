@@ -3,6 +3,7 @@ import os
 import shutil
 import sys
 import time
+import pickle
 from argparse import ArgumentParser
 from copy import deepcopy
 from math import sqrt
@@ -32,7 +33,13 @@ data_dir: Path = args.data_dir
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
+dataset_path = Path("inputs/t5_hp_dataset.json")
 dataset = {}
+t5_dataset = {}
+if dataset_path.exists():
+    with dataset_path.open("rb") as f:
+        t5_dataset = pickle.load(f)
+        
 with (data_dir/"initial_hparams.json").open() as f:
     initial_hparams = json.load(f)
     hp_sampling_range = initial_hparams["hp_sampling_range"]
@@ -53,13 +60,24 @@ wandb.init(
     )
 
 consumed_budget, total_budget, init_budget = 0, params['total_budget'], params['budget_0']
+
 i=0
 warmup = True
+if t5_dataset:
+    dataset = t5_dataset["dataset"]
+    consumed_budget = t5_dataset["consumed_budget"]
+    n_init_data = i = t5_dataset["n_init_data"]
+    warmup = False
 try:
     while consumed_budget < total_budget:
         tic = time.time()
         
         if consumed_budget > init_budget and warmup:
+            with dataset_path.open("wb") as f:
+                t5_dataset = {"dataset":dataset, "consumed_budget":consumed_budget, "n_init_data":i}
+                print("T5 HP Dataset")
+                print(t5_dataset)
+                pickle.dump(t5_dataset, f)
             warmup = False
             params['n_init_data'] = i
         print(hp_sampling_range)
