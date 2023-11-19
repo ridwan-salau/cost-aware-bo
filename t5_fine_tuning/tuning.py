@@ -19,7 +19,7 @@ parser = ArgumentParser()
 parser.add_argument("--exp-name", type=str, required=True, help="Specifies a unique experiment name")
 parser.add_argument("--trial", type=int, help="The trial number", default=1)
 parser.add_argument("--cache-root", type=Path, default=".cachestore", help="Cache directory")
-parser.add_argument("--acqf", type=str, help="Acquisition function", choices=["EEIPU", "EIPS", "CArBO", "EI", "RAND"], default="EI")
+parser.add_argument("--acqf", type=str, help="Acquisition function", choices=["EEIPU", "MS_CArBO", "EIPS", "CArBO", "EI", "RAND"], default="EI")
 
 args, _ = parser.parse_known_args()
 

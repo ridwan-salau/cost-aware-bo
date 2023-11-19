@@ -22,7 +22,7 @@ parser.add_argument("--exp-name", type=str, required=True, help="Specifies a uni
 parser.add_argument("--trial", type=int, help="The trial number", default=1)
 parser.add_argument("--init-eta", type=float, help="Initial ETA", default=1)
 parser.add_argument("--decay-factor", type=float, help="Decay factor", default=0.95)
-parser.add_argument("--acqf", type=str, help="Acquisition function", choices=["EEIPU", "EIPS", "CArBO", "EI", "RAND"], default="EI")
+parser.add_argument("--acqf", type=str, help="Acquisition function", choices=["EEIPU", "MS_CArBO", "EIPS", "CArBO", "EI", "RAND"], default="EI")
 parser.add_argument("--cache-root", type=Path, default=".cachestore", help="Cache directory")
 parser.add_argument("--disable-cache", action="store_true", help="Disable cache")
 parser.add_argument("--data-dir", type=Path, help="Directory with the data", default="./inputs")

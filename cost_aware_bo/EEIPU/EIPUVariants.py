@@ -82,7 +82,7 @@ class EIPUVariants(AnalyticAcquisitionFunction):
                 cat_stages = reshaped_samples if (not torch.is_tensor(cat_stages)) else torch.cat([cat_stages, reshaped_samples], axis=2)
             else:
                 hyp_indexes = self.params['h_ind'][i]
-                if self.acq_type == 'EEIPU':
+                if self.acq_type in ('EEIPU', 'MS_CArBO'):
                     cost_posterior = cost_model.posterior(X[:,:,hyp_indexes])
                 else:
                     cost_posterior = cost_model.posterior(X)
@@ -121,7 +121,7 @@ class EIPUVariants(AnalyticAcquisitionFunction):
         all_cost_obj = []
         for i, cost_model in enumerate(self.cost_gp):
             hyp_indexes = self.params['h_ind'][i]
-            if self.acq_type == 'EEIPU':
+            if self.acq_type in ('EEIPU', 'MS_CArBO'):
                 cost_posterior = cost_model.posterior(X[:,hyp_indexes])
             else:
                 cost_posterior = cost_model.posterior(X)
@@ -163,13 +163,13 @@ class EIPUVariants(AnalyticAcquisitionFunction):
 
         cost_cool = remaining / init_budget
      
-        if self.acq_type in ['EEIPU', 'CArBO', 'EIPS']:
+        if self.acq_type in ['EEIPU', 'CArBO', 'EIPS', 'MS_CArBO']:
             inv_cost =  self.compute_expected_inverse_cost(X, delta=delta)
 
             return ei * (inv_cost**cost_cool) if self.acq_type != 'EIPS' else ei * inv_cost
        
         else:
-            raise Exception("ERROR: Only EEIPU, CArBO, and EIPS are supported!")
+            raise Exception("ERROR: Only EEIPU, MS_CArBO, CArBO, and EIPS are supported!")
 
 
 
