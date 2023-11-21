@@ -35,7 +35,7 @@ def get_cost_models(X, C, iter, param_idx, bounds, acqf):
         
         norm_stage_cost = standardize(log_sc, bounds['c'][:,i])
         stage_idx = param_idx[i]
-        if acqf == 'EEIPU':
+        if acqf in ('EEIPU', 'MS_CArBO'):
             stage_x = X[:, stage_idx] + 0
         else:
             stage_x = X + 0
@@ -79,7 +79,7 @@ def bo_iteration(X, y, c, bounds=None, acqf_str='', decay=None, iter=None, consu
         acqf = ExpectedImprovement(model=gp_model, best_f=train_y.max())
     else:
         cost_mll, cost_gp = None, None
-        if acqf_str in ['EEIPU', 'CArBO', 'EIPS']:
+        if acqf_str in ['EEIPU', 'CArBO', 'EIPS', 'MS_CArBO']:
             cost_mll, cost_gp = get_cost_models(train_x, c, iter, params['h_ind'], bounds, acqf_str)
         
         cost_sampler = SobolQMCNormalSampler(sample_shape=params['cost_samples'], seed=params['rand_seed'])
@@ -91,7 +91,7 @@ def bo_iteration(X, y, c, bounds=None, acqf_str='', decay=None, iter=None, consu
     new_x, n_memoised = optimize_acqf_by_mem(acqf=acqf, acqf_str=acqf_str, bounds=norm_bounds, iter=iter, prefix_pool=prefix_pool, seed=params['rand_seed'])
     
     E_c, E_inv_c, E_y = [0], torch.tensor([0]), 0
-    if acqf_str in ['EEIPU', 'CArBO', 'EIPS']:
+    if acqf_str in ['EEIPU', 'CArBO', 'EIPS', 'MS_CArBO']:
         E_c = acqf.compute_expected_cost(new_x)
         E_inv_c = acqf.compute_expected_inverse_cost(new_x[:, None, :])
     # E_y = get_expected_y(new_x, gp_model, params['cost_samples'], bounds['x_cube'], params['rand_seed'])

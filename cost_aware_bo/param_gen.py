@@ -16,7 +16,7 @@ import wandb
 from einops import rearrange
 import csv
 import os
-from itertools import chain
+
 from .single_iteration import bo_iteration
 from .optimizer.optimize_acqf_funcs import optimize_acqf, _optimize_acqf_batch, gen_candidates_scipy, gen_batch_initial_conditions
 from .functions import get_dataset_bounds
@@ -139,10 +139,11 @@ def update_dataset_new_run(dataset, new_hp_dict, new_stg_costs, new_obj, x_bound
     new_stg_costs = torch.tensor(new_stg_costs, dtype=dtype, device=device)
     new_obj = torch.tensor([new_obj],dtype=dtype, device=device)
     
-    if acqf == 'EEIPU':
-        new_stg_costs = new_stg_costs.unsqueeze(0)
-    else:
-        new_stg_costs = new_stg_costs.sum().unsqueeze(0).unsqueeze(0)
+    new_stg_costs = new_stg_costs.unsqueeze(0)
+    # if acqf == 'EEIPU':
+    #     new_stg_costs = new_stg_costs.unsqueeze(0)
+    # else:
+    #     new_stg_costs = new_stg_costs.sum().unsqueeze(0).unsqueeze(0)
 
     if dataset.get("y") is not None and dataset.get("c") is not None:
         dataset["y"] = torch.cat([dataset['y'], new_obj])
@@ -197,6 +198,18 @@ def log_metrics(dataset, logging_metadata: Dict, exp_name, verbose: bool=False, 
         print("==="*20)
         print("\n")
     
+    csv_log = dict(
+        acqf=acqf,
+        trial=trial,
+        iteration=iteration,
+        best_f=best_f,
+        sum_c_x=sum_stages,
+        cum_costs=cum_cost,
+        eta=eta
+    )
+    csv_log_table = wandb.Table(columns=list(csv_log.keys()))
+    csv_log_table.add_data(*csv_log.values())
+
     log = dict(
             best_f=best_f,
             f_hat_x=y_pred,
@@ -212,15 +225,7 @@ def log_metrics(dataset, logging_metadata: Dict, exp_name, verbose: bool=False, 
             c_res=dict(zip(map(str,range(len(stage_cost_list))) ,[abs(act-est) for act, est in zip(E_c,stage_cost_list)])) if E_c else None,
             inv_c_res=abs(E_inv_c-inv_cost) if E_inv_c else None,
             hp_table=hp_table,
-        )
-    csv_log = dict(
-        acqf=acqf,
-        trial=trial,
-        iteration=iteration,
-        best_f=best_f,
-        sum_c_x=sum_stages,
-        cum_costs=cum_cost,
-        eta=eta
+            csv_log_table=csv_log_table
     )
     
     dir_name = f"./experiment_logs/{exp_name}"
@@ -296,8 +301,6 @@ def generate_hps(
     torch.manual_seed(seed=rand_seed)
     random.seed(rand_seed)
     botorch.utils.sampling.manual_seed(seed=rand_seed)
-
-    params['hp_dtypes'] = list(chain(*hp_dtypes))
     
     new_hp, y_pred, n_memoised, E_c, E_inv_c = None, None, 0, None, None
     if consumed_budget > params['budget_0']:
@@ -313,10 +316,9 @@ def generate_hps(
             X=x, y=y, c=c, bounds=bounds, acqf_str=acq_type, decay=params["init_eta"], iter=iteration, consumed_budget=consumed_budget, params=params)
         new_hp = new_hp.squeeze().tolist()
     
-    else:
-        # When new_hp is None, `generate_hparams` will generate random samples.
-        # It also saves the new_hp to the respective files where the main function can read them 
-        new_hp = generate_hparams(new_hp, x_bounds, hp_dtypes, sampling_seed=iteration)
+    # When new_hp is None, `generate_hparams` will generate random samples.
+    # It also saves the new_hp to the respective files where the main function can read them 
+    new_hp = generate_hparams(new_hp, x_bounds, hp_dtypes, sampling_seed=iteration)
     
     logging_metadata = {"n_memoised": n_memoised, "y_pred": y_pred, "E_c": E_c, "E_inv_c": E_inv_c, "x_bounds": x_bounds}
 

@@ -20,12 +20,7 @@ def optimize_acqf_by_mem(acqf=None, acqf_str=None, bounds=None, iter=None, prefi
         
         new_candidate, acqf_val = optimize_acqf(acq_function=acqf, acq_type=acqf_str, delta=pref_stages, bounds=bounds, q=1, num_restarts=10, raw_samples=512, options={'seed': seed})
         
-        for i in range(new_candidate.shape[1]):
-            if params['hp_dtypes'][i] == 'int':
-                new_candidate[:, i] = torch.round(new_candidate[:, i])
         best_candidate, best_acqf_val, n_memoised = update_candidate(new_candidate, acqf_val.item(), best_candidate, best_acqf_val, n_memoised, pref_stages)
-    
-    print('Proposed candidate is: ', best_candidate)
     
     return best_candidate, n_memoised
         
