@@ -318,7 +318,7 @@ def generate_hps(
     
     # When new_hp is None, `generate_hparams` will generate random samples.
     # It also saves the new_hp to the respective files where the main function can read them 
-    new_hp = generate_hparams(new_hp, x_bounds, hp_dtypes, sampling_seed=iteration)
+    new_hp = generate_hparams(new_hp, x_bounds, hp_dtypes, sampling_seed=iteration*(params["trial"]+1))
     
     logging_metadata = {"n_memoised": n_memoised, "y_pred": y_pred, "E_c": E_c, "E_inv_c": E_inv_c, "x_bounds": x_bounds}
 
