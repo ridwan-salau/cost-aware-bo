@@ -17,7 +17,7 @@ from cachestore import Cache, LocalStorage
 
 parser = ArgumentParser()
 parser.add_argument(
-    "--exp-name", type=str, required=True, help="Specifies a unique experiment name"
+    "--exp-name", type=str, help="Specifies a unique experiment name", default='test-run3'
 )
 parser.add_argument("--trial", type=int, help="The trial number", default=1)
 parser.add_argument(
@@ -40,7 +40,8 @@ cache = Cache(
     disable=disable_cache,
 )
 
-num_samples = 2500 # 9540 seconds to finish 25K samples on 4 gpus
+num_samples = 2500  # 9540 seconds to finish 25K samples on 4 gpus
+
 
 # @task(cache=True, cache_key_file="hparams", timer=True)
 @cache(ignore={"output_dir", "dataset"})
@@ -132,7 +133,7 @@ def fine_tuning(
     *,
     hparams,
     global_epochs,
-    model_name,
+    model_name: Union[Path, str],
 ):
     """Fine Tuning Stage."""
     dataset = Path(dataset)
@@ -140,9 +141,14 @@ def fine_tuning(
     data_prepoc_output_path = Path(data_prepoc_output_path)
 
     # start_time = time.time()
-
-    tokenizer = T5Tokenizer.from_pretrained(model_name)
-    model = T5ForConditionalGeneration.from_pretrained(model_name).to("cuda:0")
+    if isinstance(model_name, Path) and model_name.exists():
+        tokenizer = T5Tokenizer.from_pretrained(model_name / "fine_tuned_tokenizer")
+        model = T5ForConditionalGeneration.from_pretrained(
+            model_name / "fine_tuned_model"
+        ).to("cuda:0")
+    else:
+        tokenizer = T5Tokenizer.from_pretrained(model_name)
+        model = T5ForConditionalGeneration.from_pretrained(model_name).to("cuda:0")
     optimizer = torch.optim.AdamW(
         model.parameters(),
         lr=hparams["1__learning_rate"],
@@ -180,7 +186,7 @@ def fine_tuning(
     # with open(output_dir / "metrics.json", "w") as metrics_file:
     #     json.dump(metrics, metrics_file)
 
-    print("fine tuning completed")
+    print(f"Epoch {global_epochs} fine tuning completed")
 
     return model_chkpt_path
 
@@ -390,7 +396,7 @@ def t5_fine_tuning(
     output_dir: Union[Path, str],
     stg_hparams: List[Dict],
     num_epochs: int,
-    epochs_per_stage=10,
+    epochs_per_stage=30,
 ):
     """Main Pipeline."""
     data_preproc_hp = select_first_n_stages(stg_hparams, 1)
@@ -450,6 +456,7 @@ if __name__ == "__main__":
     dataset = Path("inputs")
     output_dir = Path("outputs") / time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime())
     stg_hparams = load_hyperparameters(dataset / "hparams.json")
-    output = t5_fine_tuning(dataset, output_dir, stg_hparams, num_epochs=30)
+    print(stg_hparams)
+    output = t5_fine_tuning(dataset, output_dir, stg_hparams, num_epochs=30, epochs_per_stage=30)
     print(output)
     print("Total duration:", time.time() - start)
