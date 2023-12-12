@@ -2,9 +2,10 @@
 import json
 import torch
 import evaluate
+from copy import deepcopy
 # from pirlib.iotypes import DirectoryPath
 from pathlib import Path
-from typing import Union, Dict, List, Tuple
+from typing import Union, Dict, List, Tuple, Any
 from torch.nn.parallel import DataParallel
 from transformers import PreTrainedModel, PreTrainedTokenizerBase
 from nltk.translate.bleu_score import corpus_bleu
@@ -361,3 +362,15 @@ def inference(model, tokenizer, test_data, reference_summaries):
     metrics["average_inference_time"] = inference_time_total / len(test_data)
 
     return metrics
+
+def select_first_n_stages(stg_hparams: Dict[str, Any], n: int):
+    """Select first n stages of the hyperparameters
+
+    n (int): 1 means select only first stage, 2 - second, etc.
+    """
+    stg_hparams = deepcopy(stg_hparams)
+    keys = list(stg_hparams.keys())
+    for key in keys:
+        if int(key.split("__")[0]) >= n:
+            stg_hparams.pop(key)
+    return stg_hparams
