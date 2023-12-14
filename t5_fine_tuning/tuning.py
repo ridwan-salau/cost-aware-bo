@@ -1,32 +1,50 @@
 import json
 import time
-import math
-from copy import deepcopy
 from argparse import ArgumentParser
-
 from pathlib import Path
-from typing import Union, List, Dict, Any
-import torch
-from transformers import T5Tokenizer, T5ForConditionalGeneration, T5Config
+from typing import Dict, List, Union
+
 import datasets
+import torch
+from cachestore import Cache, LocalStorage
 from datasets import load_dataset
 from torch.utils.data import DataLoader, TensorDataset
-from utils import tuning, distillation, load_hyperparameters, inference, select_first_n_stages
-
-from cachestore import Cache, LocalStorage
+from transformers import T5Config, T5ForConditionalGeneration, T5Tokenizer
+from utils import (
+    distillation,
+    inference,
+    load_hyperparameters,
+    select_first_n_stages,
+    tuning,
+)
 
 parser = ArgumentParser()
-parser.add_argument("--exp-name", type=str, required=True, help="Specifies a unique experiment name")
+parser.add_argument(
+    "--exp-name", type=str, required=True, help="Specifies a unique experiment name"
+)
 parser.add_argument("--trial", type=int, help="The trial number", default=1)
-parser.add_argument("--cache-root", type=Path, default=".cachestore", help="Cache directory")
-parser.add_argument("--acqf", type=str, help="Acquisition function", choices=["EEIPU", "MS_CArBO", "EIPS", "CArBO", "EI", "RAND"], default="EI")
+parser.add_argument(
+    "--cache-root", type=Path, default=".cachestore", help="Cache directory"
+)
+parser.add_argument(
+    "--acqf",
+    type=str,
+    help="Acquisition function",
+    choices=["EEIPU", "MS_CArBO", "EIPS", "CArBO", "EI", "RAND"],
+    default="EI",
+)
 
 args, _ = parser.parse_known_args()
 
-disable_cache = args.acqf!="EEIPU"
-cache = Cache(f"stacking_{args.exp_name}_{args.trial}_cache", storage=LocalStorage(args.cache_root), disable=disable_cache)
+disable_cache = args.acqf != "EEIPU"
+cache = Cache(
+    f"stacking_{args.exp_name}_{args.trial}_cache",
+    storage=LocalStorage(args.cache_root),
+    disable=disable_cache,
+)
 
-num_samples = 2500 # 9540 seconds to finish 25K samples on 4 gpus
+num_samples = 2500  # 9540 seconds to finish 25K samples on 4 gpus
+
 
 # @task(cache=True, cache_key_file="hparams", timer=True)
 @cache(ignore={"output_dir", "dataset"})
@@ -127,7 +145,11 @@ def fine_tuning(
 
     tokenizer = T5Tokenizer.from_pretrained(model_name)
     model = T5ForConditionalGeneration.from_pretrained(model_name).to("cuda:0")
-    optimizer = torch.optim.AdamW(model.parameters(), lr=hparams["1__learning_rate"], weight_decay=hparams["1__weight_decay"])
+    optimizer = torch.optim.AdamW(
+        model.parameters(),
+        lr=hparams["1__learning_rate"],
+        weight_decay=hparams["1__weight_decay"],
+    )
 
     train_dataloader = torch.load(data_prepoc_output_path / "training_data")
     val_dataloader = torch.load(data_prepoc_output_path / "validation_data")
@@ -164,7 +186,9 @@ def fine_tuning(
 
 
 # @task(cache=True, cache_key_file="hparams")
-@cache(ignore={"output_dir", "dataset", "fine_tuned_model_path", "data_prepoc_output_path"})
+@cache(
+    ignore={"output_dir", "dataset", "fine_tuned_model_path", "data_prepoc_output_path"}
+)
 def model_distillation(
     dataset: Union[Path, str],
     data_prepoc_output_path: Union[Path, str],
@@ -193,7 +217,9 @@ def model_distillation(
     student_model = T5ForConditionalGeneration(student_config).to("cuda")
 
     optimizer = torch.optim.AdamW(
-        student_model.parameters(), lr=hparams["2__learning_rate"], weight_decay=hparams["2__weight_decay"]
+        student_model.parameters(),
+        lr=hparams["2__learning_rate"],
+        weight_decay=hparams["2__weight_decay"],
     )
 
     # Define your training & validation dataset and dataloader
@@ -357,17 +383,19 @@ def t5_fine_tuning(
     distillation_hp = select_first_n_stages(stg_hparams, 3)
 
     start_data_proc = time.time()
-    data_prepoc_output_path = data_preprocessing(dataset, output_dir/"data_preprocessing", hparams=data_preproc_hp)
+    data_prepoc_output_path = data_preprocessing(
+        dataset, output_dir / "data_preprocessing", hparams=data_preproc_hp
+    )
     start_fine_tune = time.time()
     fine_tuned_model_path = fine_tuning(
-        dataset, data_prepoc_output_path, output_dir/"fine_tuning", hparams=tuning_hp
+        dataset, data_prepoc_output_path, output_dir / "fine_tuning", hparams=tuning_hp
     )
     start_distil = time.time()
     rougeLsum = model_distillation(
         dataset,
         data_prepoc_output_path,
         fine_tuned_model_path,
-        output_dir/"model_distillation",
+        output_dir / "model_distillation",
         hparams=distillation_hp,
     )
     # inference_output = model_inference(
