@@ -17,7 +17,7 @@ for acqf in ${ACQF_ARRAY[@]}; do
             --exp-name $exp_name --trial $trial --cache-root \
             $cache_root --acqf $acqf --data-dir $data_dir 2>&1 | tee ${log_file}.log && rm -rf $cache_root &
 
-        if [ $(($target_dev%$num_gpus)) -eq 0 ]; then
+        if [ $(($((target_dev+1))%$num_gpus)) -eq 0 ]; then
             wait # Wait for the inner loop to complete before continuing
         fi
     done
