@@ -15,7 +15,7 @@ for acqf in ${ACQF_ARRAY[@]}; do
         cache_root=.cachestore/${acqf}/${RANDOM}_trial_${trial} && \
         CUDA_VISIBLE_DEVICES=$target_dev python optimize_multi.py \
             --exp-name $exp_name --trial $trial --cache-root \
-            $cache_root --acqf $acqf --data-dir $data_dir 2>&1 | tee -a ${log_file}.log && rm -rf $cache_root &
+            $cache_root --acqf $acqf --data-dir $data_dir 2>&1 | tee ${log_file}.log && rm -rf $cache_root &
 
         if [ $(($target_dev%$num_gpus)) -eq 0 ]; then
             wait # Wait for the inner loop to complete before continuing
