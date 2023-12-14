@@ -1,7 +1,6 @@
 #! /bin/bash
 set -e
 
-mkdir
 ACQF_ARRAY=(EEIPU EI CArBO EIPS MS_CArBO)
 exp_name=t5-pipeline-multi-tuun
 
