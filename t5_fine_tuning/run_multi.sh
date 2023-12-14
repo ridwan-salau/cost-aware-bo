@@ -13,7 +13,7 @@ for acqf in ${ACQF_ARRAY[@]}; do
         data_dir="${2:-./inputs}" && \
         ((target_dev+=1))
         cache_root=.cachestore/${acqf}/${RANDOM}_trial_${trial} && \
-        CUDA_VISIBLE_DEVICES=$target_dev =python optimize_multi.py \
+        CUDA_VISIBLE_DEVICES=$target_dev python optimize_multi.py \
             --exp-name $exp_name --trial $trial --cache-root \
             $cache_root --acqf $acqf --data-dir $data_dir &>> ${log_dir}.log && rm -rf $cache_root
 
