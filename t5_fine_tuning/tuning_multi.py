@@ -409,6 +409,7 @@ def t5_fine_tuning(
     dstl_num_stgs: int = 3,
 ):
     """Main Pipeline."""
+    print(f"HPs for this iteration:\n\n{stg_hparams}\n\n")
     tot_num_stgs = 1 + fine_tune_num_stgs + dstl_num_stgs
     tot_num_hp_stgs = len(set(int(key.split("__")[0]) for key in stg_hparams))
     assert (
