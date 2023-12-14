@@ -11,7 +11,7 @@ from transformers import T5Tokenizer, T5ForConditionalGeneration, T5Config
 import datasets
 from datasets import load_dataset
 from torch.utils.data import DataLoader, TensorDataset
-from utils import tuning, distillation, load_hyperparameters, inference
+from utils import tuning, distillation, load_hyperparameters, inference, select_first_n_stages
 
 from cachestore import Cache, LocalStorage
 
@@ -344,19 +344,6 @@ def generate_output(
     #     json.dump(final_metrics, f)
 
     return final_metrics
-
-
-def select_first_n_stages(stg_hparams: Dict[str, Any], n: int):
-    """Select first n stages of the hyperparameters
-
-    n (int): 1 means select only first stage, 2 - second, etc.
-    """
-    stg_hparams = deepcopy(stg_hparams)
-    keys = list(stg_hparams.keys())
-    for key in keys:
-        if int(key.split("__")[0]) >= n:
-            stg_hparams.pop(key)
-    return stg_hparams
 
 
 def t5_fine_tuning(

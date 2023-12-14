@@ -33,7 +33,7 @@ data_dir: Path = args.data_dir
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-dataset_path = Path("inputs/t5_hp_dataset.json")
+dataset_path = Path("inputs/t5_hp_dataset.pk")
 dataset = {}
 t5_dataset = {}
 if dataset_path.exists():
