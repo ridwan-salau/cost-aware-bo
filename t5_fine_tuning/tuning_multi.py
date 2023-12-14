@@ -1,23 +1,22 @@
 import json
 import time
 from argparse import ArgumentParser
-
 from pathlib import Path
-from typing import Union, List, Dict, Tuple
-import torch
-from transformers import T5Tokenizer, T5ForConditionalGeneration, T5Config
+from typing import Dict, List, Tuple, Union
+
 import datasets
+import torch
+from cachestore import Cache, LocalStorage
 from datasets import load_dataset
 from torch.utils.data import DataLoader, TensorDataset
+from transformers import T5Config, T5ForConditionalGeneration, T5Tokenizer
 from utils import (
-    tuning,
     distillation,
-    load_hyperparameters,
     inference,
+    load_hyperparameters,
     select_first_n_stages,
+    tuning,
 )
-
-from cachestore import Cache, LocalStorage
 
 parser = ArgumentParser()
 parser.add_argument(
@@ -282,9 +281,8 @@ def model_distillation(
     # metrics["cost"] = end_time - start_time
     # with open(output_dir / "metrics.json", "w") as metrics_file:
     #     json.dump(metrics, metrics_file)
-    
-    print(f"Epoch {global_epochs} of distillation completed")
 
+    print(f"Epoch {global_epochs} of distillation completed")
 
     return metrics["rouge_scores"][0]["rougeLsum"], model_chkpt_path
 
@@ -405,21 +403,29 @@ def t5_fine_tuning(
     dataset: Union[Path, str],
     output_dir: Union[Path, str],
     stg_hparams: List[Dict],
-    ft_num_epochs: int,
-    fine_tune_num_stgs: int,
-    dstl_num_epochs: int,
-    dstl_num_stgs: int,
+    ft_num_epochs: int = 20,
+    fine_tune_num_stgs: int = 1,
+    dstl_num_epochs: int = 45,
+    dstl_num_stgs: int = 3,
 ):
     """Main Pipeline."""
     tot_num_stgs = 1 + fine_tune_num_stgs + dstl_num_stgs
     tot_num_hp_stgs = len(set(int(key.split("__")[0]) for key in stg_hparams))
-    assert tot_num_stgs == tot_num_hp_stgs, f"The total number of stages in the pipeline, {tot_num_stgs}, is not equal to the number hyperparameter stages {tot_num_hp_stgs}"
-    
+    assert (
+        tot_num_stgs == tot_num_hp_stgs
+    ), f"The total number of stages in the pipeline, {tot_num_stgs}, is not equal to the number hyperparameter stages {tot_num_hp_stgs}"
+
     curr_stg = 1
     data_preproc_hp = select_first_n_stages(stg_hparams, curr_stg)
-    tuning_hps = [select_first_n_stages(stg_hparams, stg+1+curr_stg) for stg in range(fine_tune_num_stgs)]
+    tuning_hps = [
+        select_first_n_stages(stg_hparams, stg + 1 + curr_stg)
+        for stg in range(fine_tune_num_stgs)
+    ]
     curr_stg += fine_tune_num_stgs
-    distillation_hps = [select_first_n_stages(stg_hparams, stg+1+curr_stg) for stg in range(dstl_num_stgs)]
+    distillation_hps = [
+        select_first_n_stages(stg_hparams, stg + 1 + curr_stg)
+        for stg in range(dstl_num_stgs)
+    ]
 
     start_data_proc = time.time()
     data_prepoc_output_path = data_preprocessing(
@@ -429,7 +435,9 @@ def t5_fine_tuning(
     start_fine_tune = time.time()
     fine_tuned_model_path = "t5-small"
     global_epochs = 0
-    ft_epochs_per_stage = (ft_num_epochs // fine_tune_num_stgs) + (1 if (ft_num_epochs % fine_tune_num_stgs) else 0)
+    ft_epochs_per_stage = (ft_num_epochs // fine_tune_num_stgs) + (
+        1 if (ft_num_epochs % fine_tune_num_stgs) else 0
+    )
     while global_epochs < ft_num_epochs:
         epochs = min(ft_epochs_per_stage, ft_num_epochs - global_epochs)
         print(epochs)
@@ -447,7 +455,9 @@ def t5_fine_tuning(
     start_distil = time.time()
     distilled_model_path = "t5-small"
     global_epochs = 0
-    dstl_epochs_per_stage = (dstl_num_epochs // dstl_num_stgs) + (1 if (dstl_num_epochs % dstl_num_stgs) else 0)
+    dstl_epochs_per_stage = (dstl_num_epochs // dstl_num_stgs) + (
+        1 if (dstl_num_epochs % dstl_num_stgs) else 0
+    )
     while global_epochs < dstl_num_epochs:
         epochs = min(dstl_epochs_per_stage, dstl_num_epochs - global_epochs)
         print(epochs)
