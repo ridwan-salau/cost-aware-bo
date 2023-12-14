@@ -9,7 +9,7 @@ num_gpus=$(nvidia-smi --list-gpus | wc -l)
 target_dev=0
 for acqf in ${ACQF_ARRAY[@]}; do
     for trial in {1..5}; do
-        log_dir=log/$exp_name && \
+        log_dir=log/$acqf/$exp_name && \
         data_dir="${2:-./inputs}" && \
         ((target_dev+=1))
         cache_root=.cachestore/${acqf}/${RANDOM}_trial_${trial} && \
