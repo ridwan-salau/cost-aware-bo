@@ -22,7 +22,7 @@ ACQF_ARRAY=(EEIPU EI CArBO EIPS MS_CArBO)
 exp_name=t5-pipeline-multi-tuun
 
 mkdir -p log/{EEIPU,EI,CArBO,EIPS,MS_CArBO}
-max_concurrent_executions=2
+max_concurrent_executions=$(nvidia-smi --list-gpus | wc -l)
 target_dev=0
 for acqf in ${ACQF_ARRAY[@]}; do
     for trial in {1..5}; do
