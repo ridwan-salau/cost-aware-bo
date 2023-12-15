@@ -11,7 +11,7 @@ for acqf in ${ACQF_ARRAY[@]}; do
     for trial in {1..5}; do
         log_file=log/$acqf/$exp_name"_trial_"$trial && \
         data_dir="${2:-./inputs}" && \
-        ((target_dev+=1))
+        ((target_dev+=1)) && \
         cache_root=.cachestore/${acqf}/${RANDOM}_trial_${trial} && \
         CUDA_VISIBLE_DEVICES=$target_dev python optimize_multi.py \
             --exp-name $exp_name --trial $trial --cache-root \
