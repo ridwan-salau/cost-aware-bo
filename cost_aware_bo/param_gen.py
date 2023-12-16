@@ -314,7 +314,7 @@ def log_metrics(
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writerow(csv_log)
 
-    wandb.log(log)
+    wandb.log(log, step=iteration)
     return
 
 
