@@ -429,12 +429,15 @@ def t5_fine_tuning(
         for stg in range(dstl_num_stgs)
     ]
 
+    # Stage 1: Data preprocessing
+    all_stages_costs = []
     start_data_proc = time.time()
     data_prepoc_output_path = data_preprocessing(
         dataset, output_dir / "data_preprocessing", hparams=data_preproc_hp
     )
 
     start_fine_tune = time.time()
+    all_stages_costs.append(start_fine_tune-start_data_proc)
     fine_tuned_model_path = "t5-small"
     global_epochs = 0
     ft_epochs_per_stage = (ft_num_epochs // fine_tune_num_stgs) + (
@@ -453,6 +456,9 @@ def t5_fine_tuning(
             model_name=fine_tuned_model_path,
         )
         global_epochs += ft_epochs_per_stage
+
+        all_stages_costs.append(time.time()-start_fine_tune)
+        start_fine_tune = time.time()
 
     start_distil = time.time()
     distilled_model_path = "t5-small"
@@ -474,23 +480,11 @@ def t5_fine_tuning(
             global_epochs=global_epochs,
         )
         global_epochs += dstl_epochs_per_stage
-    # inference_output = model_inference(
-    #     data_prepoc_output_path,
-    #     fine_tuned_model_path,
-    #     distilled_model_path,
-    #     output_dir,
-    #     hparams=stg_hparams,
-    # )
 
-    end = time.time()
-    # obj = generate_output(
-    #     data_prepoc_output_path, fine_tuned_model_path, distilled_model_path
-    # )
-    stage1_cost = start_fine_tune - start_data_proc
-    stage2_cost = start_distil - start_fine_tune
-    stage3_cost = end - start_distil
+        all_stages_costs.append(time.time()-start_distil)
+        start_distil = time.time()
 
-    return {"obj": rougeLsum, "costs": [stage1_cost, stage2_cost, stage3_cost]}
+    return {"obj": rougeLsum, "costs": all_stages_costs}
 
 
 if __name__ == "__main__":
