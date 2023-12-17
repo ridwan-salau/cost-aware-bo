@@ -235,14 +235,15 @@ def log_metrics(
     hp_table = wandb.Table(columns=list(range(len(dataset_x[0]))), data=dataset_x)
 
     if verbose:  # and iteration >= bo_params['n_init_data']:
-        print(f"f(x^)={y_pred}", end="   ")
-        print(f"f(x)={new_y:>4.3f}", end="   ")
+        print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}]", end=":\t")
+        print(f"f(x^)={y_pred}", end="\t")
+        print(f"f(x)={new_y:>4.3f}", end="\t")
         print(
             "c(x)=[" + ", ".join("{:.3f}".format(val) for val in stage_cost_list) + "]",
-            end="   ",
+            end="\t",
         )
-        print(f"s(c(x)) = [{sum_stages:>4.3f}]", end="   ")
-        print(f"c(c) = {cum_cost:>4.3f}", end="   ")
+        print(f"s(c(x)) = [{sum_stages:>4.3f}]", end="\t")
+        print(f"c(c) = {cum_cost:>4.3f}", end="\t")
         print(f"num_memoise = {n_memoised}", end="\n\n")
         print("===" * 20)
         print("\n")
