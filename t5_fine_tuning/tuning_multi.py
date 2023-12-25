@@ -404,7 +404,7 @@ def t5_fine_tuning(
     dataset: Union[Path, str],
     output_dir: Union[Path, str],
     stg_hparams: List[Dict],
-    ft_num_epochs: int = 20,
+    ft_num_epochs: int = 5,
     fine_tune_num_stgs: int = 1,
     dstl_num_epochs: int = 45,
     dstl_num_stgs: int = 3,
