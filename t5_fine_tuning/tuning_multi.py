@@ -436,6 +436,7 @@ def t5_fine_tuning(
         dataset, output_dir / "data_preprocessing", hparams=data_preproc_hp
     )
 
+    # Stage 2: Fine-tuning
     start_fine_tune = time.time()
     all_stages_costs.append(start_fine_tune-start_data_proc)
     fine_tuned_model_path = "t5-small"
@@ -460,6 +461,7 @@ def t5_fine_tuning(
         all_stages_costs.append(time.time()-start_fine_tune)
         start_fine_tune = time.time()
 
+    # Stage 3: Distillation
     start_distil = time.time()
     distilled_model_path = "t5-small"
     global_epochs = 0
