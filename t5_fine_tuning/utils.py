@@ -60,7 +60,7 @@ def model_validation(model, val_dataloader, generated_summaries):
     model.eval()
     with torch.no_grad():
         val_losses = []
-        for val_batch in tqdm(val_dataloader):
+        for val_batch in (val_dataloader):
             (
                 val_input_ids,
                 val_input_attention_mask,
@@ -115,10 +115,10 @@ def tuning(
     consecutive_no_improvement = 0
     # generated_summaries = []
 
-    for epoch in tqdm(range(num_epochs)):
+    for epoch in (range(num_epochs)):
         total_loss = 0.0
         generated_summaries = []
-        for batch_idx, batch in enumerate(tqdm(train_dataloader, leave=False)):
+        for batch_idx, batch in enumerate(train_dataloader):
             optimizer.zero_grad()
             (
                 input_ids,
@@ -213,12 +213,12 @@ def distillation(
     best_val_loss = float("inf")
     consecutive_no_improvement = 0
 
-    for epoch in tqdm(range(num_epochs)):
+    for epoch in range(num_epochs):
         student_model.train()
         total_loss = 0.0
         generated_summaries = []
         batch_count = 0
-        for batch in tqdm(train_dataloader, leave=False):
+        for batch in train_dataloader:
             (input_ids, attention_mask, summary_ids, summary_attention_mask) = batch
             (input_ids, attention_mask, summary_ids, summary_attention_mask) = (
                 input_ids.to("cuda"),
@@ -330,7 +330,7 @@ def inference(model, tokenizer, test_data, reference_summaries):
     memory_usage_total = 0  # Initialize total memory usage
     inference_time_total = 0  # Initialize total inference time
 
-    for text in tqdm(test_data):
+    for text in test_data:
         # Tokenize the input text
         input_ids = tokenizer.encode(text, return_tensors="pt")
 
