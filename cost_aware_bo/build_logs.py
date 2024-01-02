@@ -1,14 +1,16 @@
 import glob
 import os
+
 import pandas as pd
+
 from json_reader import read_json
 
-params = read_json('params')
+params = read_json("params")
 
-csv_file_name = 'real_exp_logs.csv'
-    
-read_dir_name = 'experiment_logs'
-save_dir_name = 'final_csv_logs'
+csv_file_name = "real_exp_logs.csv"
+
+read_dir_name = "experiment_logs"
+save_dir_name = "final_csv_logs"
 
 read_path = f"{read_dir_name}/*.csv"
 save_path = f"{save_dir_name}/{csv_file_name}"

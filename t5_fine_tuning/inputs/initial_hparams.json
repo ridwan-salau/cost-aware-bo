@@ -1,0 +1,81 @@
+{
+    "params": {
+        "iteration": 0,
+        "n_init_data": 10,
+        "acq_type": "EI",
+        "n_trials": 10,
+        "n_iters": 40,
+        "alpha": 9,
+        "norm_eps": 1,
+        "epsilon": 0.1,
+        "batch_size": 1,
+        "normalization_bounds": [
+            0,
+            1
+        ],
+        "cost_samples": 1000,
+        "prefix_thresh": 10000000,
+        "warmup_iters": 10,
+        "use_pref_pool": 1,
+        "verbose": 1,
+        "rand_seed": 42,
+        "total_budget": 25000,
+        "budget_0": 7500
+    },
+    "hp_sampling_range": {
+        "0__batch_size": {
+            "upper": 40,
+            "lower": 1,
+            "dtype": "int"
+            },
+        "1__learning_rate": {
+            "upper": 1e-3,
+            "lower": 1e-5,
+            "dtype": "float"
+            },
+        "1__weight_decay": {
+            "upper": 8e-1,
+            "lower": 1e-4,
+            "dtype": "float"
+            },
+        "1__num_epochs": {
+            "upper": 30,
+            "lower": 10,
+            "dtype": "int"
+            },
+        "2__learning_rate": {
+            "upper": 1e-3,
+            "lower":1e-5,
+            "dtype": "float"
+            },
+        "2__temperature": {
+            "upper": 1,
+            "lower": 0,
+            "dtype": "float"
+            },
+        "2__weight_decay": {
+            "upper": 8e-1,
+            "lower": 1e-4,
+            "dtype": "float"
+            },
+        "2__num_epochs": {
+            "upper": 60,
+            "lower": 20,
+            "dtype": "int"
+            }
+    },
+    "dataset": {
+        "hps": {
+            "0__batch_size": [],
+            "1__learning_rate": [],
+            "1__num_epochs": [],
+            "1__weight_decay": [],
+            "2__learning_rate": [],
+            "2__num_epochs": [],
+            "2__temperature": [],
+            "2__weight_decay": []
+        },
+        "obj": [],
+        "cost": []
+    }
+}
