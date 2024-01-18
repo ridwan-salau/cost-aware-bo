@@ -1,7 +1,7 @@
 import json
 import time
 from argparse import ArgumentParser
-from pathlib import Path
+# from pathlib import Path
 from typing import Dict, List, Tuple, Union
 
 import datasets
@@ -10,6 +10,7 @@ from cachestore import Cache, LocalStorage
 from datasets import load_dataset
 from torch.utils.data import DataLoader, TensorDataset
 from transformers import T5Config, T5ForConditionalGeneration, T5Tokenizer
+import s3fs
 
 from utils import (
     distillation,
@@ -19,6 +20,8 @@ from utils import (
     tuning,
 )
 
+s3=s3fs.S3FileSystem()
+
 parser = ArgumentParser()
 parser.add_argument(
     "--exp-name",
@@ -27,7 +30,7 @@ parser.add_argument(
 )
 parser.add_argument("--trial", type=int, help="The trial number", default=1)
 parser.add_argument(
-    "--cache-root", type=Path, default=".cachestore", help="Cache directory"
+    "--cache-root", type=str, default=".cachestore", help="Cache directory"
 )
 parser.add_argument(
     "--acqf",
@@ -52,15 +55,15 @@ num_samples = 2500  # 9540 seconds to finish 25K samples on 4 gpus
 # @task(cache=True, cache_key_file="hparams", timer=True)
 @cache(ignore={"output_dir", "dataset"})
 def data_preprocessing(
-    dataset: Union[Path, str], output_dir: Union[Path, str], *, hparams
+    dataset: str, output_dir: str, *, hparams
 ):
     """Data Preprocessing Stage.
 
-    dataset (Path or str): path where the training dataset and the hyperparameters dataset are stored.
-    output_dir (Path or str): path where output results are stored. Must be unique for each run
+    dataset (str or str): path where the training dataset and the hyperparameters dataset are stored.
+    output_dir (str or str): path where output results are stored. Must be unique for each run
     """
-    dataset = Path(dataset)
-    output_dir = Path(output_dir)
+    dataset = str(dataset)
+    output_dir = str(output_dir)
 
     # start_time = time.time()
     train_inputs_encodings, train_summaries_encodings = torch.load(
@@ -118,7 +121,7 @@ def data_preprocessing(
     test_dataset.save_to_disk(output_dir / "testing_data")
     torch.save(train_dataloader, output_dir / "training_data")
     torch.save(val_dataloader, output_dir / "validation_data")
-    with (output_dir / "data_preprocessing.txt").open("w") as f:
+    with s3.open(output_dir / "data_preprocessing.txt", "w") as f:
         f.write("Data preprocessing has been completed!")
 
     # end_time = time.time()
@@ -132,23 +135,23 @@ def data_preprocessing(
 # @task(cache=True, cache_key_file="hparams", timer=True)
 @cache(ignore={"output_dir", "dataset", "data_prepoc_output_path", "epochs"})
 def fine_tuning(
-    dataset: Union[Path, str],
-    data_prepoc_output_path: Union[Path, str],
-    output_dir: Union[Path, str],
+    dataset: str,
+    data_prepoc_output_path: str,
+    output_dir: str,
     epochs,
     *,
     hparams,
     global_epochs,
-    model_name: Union[Path, str],
-) -> Path:
+    model_name: str,
+) -> str:
     """Fine Tuning Stage."""
-    dataset = Path(dataset)
-    output_dir = Path(output_dir)
-    data_prepoc_output_path = Path(data_prepoc_output_path)
+    dataset = str(dataset)
+    output_dir = str(output_dir)
+    data_prepoc_output_path = str(data_prepoc_output_path)
 
     # start_time = time.time()
     model_path = tokenizer_path = model_name
-    if isinstance(model_name, Path) and model_name.exists():
+    if s3.exists(model_name):
         model_path = model_path / "fine_tuned_model"
         tokenizer_path = tokenizer_path / "fine_tuned_tokenizer"
 
@@ -208,18 +211,18 @@ def fine_tuning(
     }
 )
 def model_distillation(
-    dataset: Union[Path, str],
-    data_prepoc_output_path: Union[Path, str],
-    fine_tuned_model_path: Union[Path, str],
-    output_dir: Union[Path, str],
+    dataset: str,
+    data_prepoc_output_path: str,
+    fine_tuned_model_path: str,
+    output_dir: str,
     epochs,
     *,
     hparams,
-    student_model_name: Union[Path, str],
+    student_model_name: str,
     global_epochs,
-) -> Tuple[float, Path]:
+) -> Tuple[float, str]:
     """Distillation Stage."""
-    output_dir.mkdir(parents=True, exist_ok=True)
+    s3.mkdirs(output_dir, exist_ok=True)
     # start_time = time.time()
     # model_name = "t5-small"
 
@@ -229,7 +232,7 @@ def model_distillation(
     ).to("cuda")
 
     student_model_path = student_tokenizer_path = student_model_name
-    if isinstance(student_model_name, Path) and student_model_name.exists():
+    if s3.exists(student_model_name):
         student_model_path = student_model_path / "distilled_model"
         student_tokenizer_path = student_tokenizer_path / "distilled_tokenizer"
 
@@ -290,11 +293,11 @@ def model_distillation(
 
 # @task(cache=True, cache_key_file="hparams")
 def model_inference(
-    data_prepoc_output_path: Union[Path, str],
-    fine_tuned_model_path: Union[Path, str],
-    # dataset: Union[Path, str],
-    distilled_model_path: Union[Path, str],
-    output_dir: Union[Path, str],
+    data_prepoc_output_path: str,
+    fine_tuned_model_path: str,
+    # dataset: str,
+    distilled_model_path: str,
+    output_dir: str,
     *,
     hparams,
 ):
@@ -341,7 +344,7 @@ def model_inference(
     end_time = time.time()
     metrics["cost"] = end_time - start_time
 
-    with open(output_dir / "metrics.json", "w") as metrics_file:
+    with s3.open(output_dir / "metrics.json", "w") as metrics_file:
         json.dump(metrics, metrics_file)
 
     print("Inference has been completed")
@@ -351,9 +354,9 @@ def model_inference(
 
 # @task(cache=True, cache_key_file="hparams")
 def generate_output(
-    data_prepoc_output_path: Union[Path, str],
-    fine_tuned_model_path: Union[Path, str],
-    distilled_model_path: Union[Path, str],
+    data_prepoc_output_path: str,
+    fine_tuned_model_path: str,
+    distilled_model_path: str,
 ):
     """Output Generation."""
     # with open(dataset / "initial_hparams.json") as initial_hparams:
@@ -366,13 +369,13 @@ def generate_output(
 
     # hp_dataset = hyperparmeters["dataset"]
 
-    with open(data_prepoc_output_path / "metrics.json") as _metrics:
+    with s3.open(data_prepoc_output_path / "metrics.json") as _metrics:
         data_metrics = json.load(_metrics)
 
-    with open(fine_tuned_model_path / "metrics.json") as _metrics:
+    with s3.open(fine_tuned_model_path / "metrics.json") as _metrics:
         fine_tuning_metrics = json.load(_metrics)
 
-    with open(distilled_model_path / "metrics.json") as _metrics:
+    with s3.open(distilled_model_path / "metrics.json") as _metrics:
         distillation_metrics = json.load(_metrics)
 
     # with open(inference_output / "metrics.json") as _metrics:
@@ -401,8 +404,8 @@ def generate_output(
 
 
 def t5_fine_tuning(
-    dataset: Union[Path, str],
-    output_dir: Union[Path, str],
+    dataset: str,
+    output_dir: str,
     stg_hparams: List[Dict],
     ft_num_epochs: int = 5,
     fine_tune_num_stgs: int = 1,
@@ -491,8 +494,8 @@ def t5_fine_tuning(
 
 if __name__ == "__main__":
     start = time.time()
-    dataset = Path("inputs")
-    output_dir = Path("outputs") / time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime())
+    dataset = str("inputs")
+    output_dir = str("outputs") / time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime())
     stg_hparams = load_hyperparameters(dataset / "hparams_multi.json")
     print(stg_hparams)
     output = t5_fine_tuning(
