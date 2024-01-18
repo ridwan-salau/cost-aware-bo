@@ -7,6 +7,7 @@ from gpytorch.mlls import ExactMarginalLogLikelihood
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 MS_ACQFS = ['EEIPU', 'MS_CArBO', 'LaMBO', 'MS_BO']
+SS_ACQFS = ['CArBO', 'EIPS', 'EI']
 
 def assert_positive_costs(cost):
     try:
