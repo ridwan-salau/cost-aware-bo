@@ -10,10 +10,15 @@ from botorch.acquisition.acquisition import (
     AcquisitionFunction,
     OneShotAcquisitionFunction,
 )
+from botorch import settings
 from botorch.acquisition.knowledge_gradient import qKnowledgeGradient
 from botorch.acquisition.utils import is_nonnegative
 from botorch.exceptions import UnsupportedError
-from botorch.exceptions.warnings import BadInitialCandidatesWarning, OptimizationWarning
+from botorch.exceptions.warnings import (
+    BadInitialCandidatesWarning,
+    OptimizationWarning,
+    SamplingWarning,
+)
 from botorch.generation.gen import TGenCandidates, _process_scipy_result
 from botorch.generation.utils import _remove_fixed_features_from_optimization
 from botorch.logging import logger

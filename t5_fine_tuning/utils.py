@@ -13,7 +13,6 @@ import psutil
 import torch
 from nltk.translate.bleu_score import corpus_bleu
 from torch.nn.parallel import DataParallel
-from tqdm import tqdm
 from transformers import PreTrainedModel, PreTrainedTokenizerBase
 
 
@@ -60,7 +59,7 @@ def model_validation(model, val_dataloader, generated_summaries):
     model.eval()
     with torch.no_grad():
         val_losses = []
-        for val_batch in (val_dataloader):
+        for val_batch in val_dataloader:
             (
                 val_input_ids,
                 val_input_attention_mask,
@@ -115,7 +114,7 @@ def tuning(
     consecutive_no_improvement = 0
     # generated_summaries = []
 
-    for epoch in (range(num_epochs)):
+    for epoch in range(num_epochs):
         total_loss = 0.0
         generated_summaries = []
         for batch_idx, batch in enumerate(train_dataloader):
