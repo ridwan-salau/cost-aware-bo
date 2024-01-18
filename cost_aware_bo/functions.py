@@ -101,13 +101,6 @@ def get_dataset_bounds(X: Dict[str, List], Y, C, gen_bounds):
         std_c_bounds[1].append(log_sc.std().item())
     bounds["c"] = torch.tensor(std_c_bounds, device=DEVICE)
 
-    c_cube = [[], []]
-    for stage in range(C.shape[1]):
-        stage_costs = C[:, stage]
-        c_cube[0].append(stage_costs.min().item())
-        c_cube[1].append(stage_costs.max().item())
-    bounds["c_cube"] = torch.tensor(c_cube, device=DEVICE)
-
     return bounds
 
 

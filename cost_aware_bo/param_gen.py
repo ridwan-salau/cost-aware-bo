@@ -20,12 +20,25 @@ from .optimizer.optimize_acqf_funcs import (
     gen_candidates_scipy,
     optimize_acqf,
 )
-from .single_iteration import bo_iteration
+from .acquisition_funcs.cost_aware_acqf import CArBO_iteration, EIPS_iteration
+from .acquisition_funcs.EEIPU.EEIPU_iteration import eeipu_iteration
+from .acquisition_funcs.EI.EI_iteration import ei_iteration
+from .acquisition_funcs.LaMBO.LaMBO_iteration import lambo_iteration
+from .acquisition_funcs.MS_BO.MS_BO_iteration import msbo_iteration
 
 botorch.optim.optimize.optimize_acqf = optimize_acqf
 botorch.optim.optimize._optimize_acqf_batch = _optimize_acqf_batch
 botorch.generation.gen.gen_candidates_scipy = gen_candidates_scipy
 botorch.optim.initializers.gen_batch_initial_conditions = gen_batch_initial_conditions
+
+iteration_funcs = {
+    'EEIPU_iteration': eeipu_iteration,
+    'MS_BO_iteration': msbo_iteration,
+    'LaMBO_iteration': lambo_iteration,
+    'EI_iteration': ei_iteration,
+    'CArBO_iteration': CArBO_iteration.carbo_iteration,
+    'EIPS_iteration': EIPS_iteration.eips_iteration,
+}
 
 # TODO: Define bounds for hyperparameter values that are bounded
 
@@ -359,15 +372,14 @@ def generate_hps(
     x_bounds = list(dict(sorted(x_bounds.items())).values())
     hp_dtypes = list(dict(sorted(hp_dtypes.items())).values())
 
-    # print(f"FOR ACQF == {acq_type} THE RESULTS ARE:\n\nH_IND = {h_ind}\n\nHP_NAMES = {hp_names}\n\nX_BOUNDS = {x_bounds}\n\nHP_DTYPES = {hp_dtypes}")
-
+    
     rand_seed = params["rand_seed"]
     torch.manual_seed(seed=rand_seed)
     random.seed(rand_seed)
     botorch.utils.sampling.manual_seed(seed=rand_seed)
 
-    new_hp, y_pred, n_memoised, E_c, E_inv_c = None, None, 0, None, None
-    if consumed_budget > params["budget_0"]:
+    new_hp, n_memoised, n_init_data = None, 0, params['n_init_data']
+    if iteration > n_init_data:
         # Convert to tensors
         # print(dataset)
         x = torch.stack(list(dataset["x"].values()), axis=1)
@@ -380,7 +392,8 @@ def generate_hps(
             if key.endswith("_bounds")
         }
 
-        new_hp, n_memoised, E_c, E_inv_c, y_pred = bo_iteration(
+        bo_iter_function = iteration_funcs[f'{acq_type}_iteration']
+        new_hp, n_memoised, acq_value = bo_iter_function(
             X=x,
             y=y,
             c=c,
@@ -401,9 +414,6 @@ def generate_hps(
 
     logging_metadata = {
         "n_memoised": n_memoised,
-        "y_pred": y_pred,
-        "E_c": E_c,
-        "E_inv_c": E_inv_c,
         "x_bounds": x_bounds,
     }
 
