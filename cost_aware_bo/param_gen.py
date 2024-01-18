@@ -13,7 +13,7 @@ import numpy as np
 import torch
 import wandb
 
-from .functions import get_dataset_bounds
+from .functions.processing_funcs import get_dataset_bounds
 from .optimizer.optimize_acqf_funcs import (
     _optimize_acqf_batch,
     gen_batch_initial_conditions,
@@ -32,12 +32,12 @@ botorch.generation.gen.gen_candidates_scipy = gen_candidates_scipy
 botorch.optim.initializers.gen_batch_initial_conditions = gen_batch_initial_conditions
 
 iteration_funcs = {
-    'EEIPU_iteration': eeipu_iteration,
-    'MS_BO_iteration': msbo_iteration,
-    'LaMBO_iteration': lambo_iteration,
-    'EI_iteration': ei_iteration,
-    'CArBO_iteration': CArBO_iteration.carbo_iteration,
-    'EIPS_iteration': EIPS_iteration.eips_iteration,
+    "EEIPU_iteration": eeipu_iteration,
+    "MS_BO_iteration": msbo_iteration,
+    "LaMBO_iteration": lambo_iteration,
+    "EI_iteration": ei_iteration,
+    "CArBO_iteration": CArBO_iteration.carbo_iteration,
+    "EIPS_iteration": EIPS_iteration.eips_iteration,
 }
 
 # TODO: Define bounds for hyperparameter values that are bounded
@@ -372,13 +372,12 @@ def generate_hps(
     x_bounds = list(dict(sorted(x_bounds.items())).values())
     hp_dtypes = list(dict(sorted(hp_dtypes.items())).values())
 
-    
     rand_seed = params["rand_seed"]
     torch.manual_seed(seed=rand_seed)
     random.seed(rand_seed)
     botorch.utils.sampling.manual_seed(seed=rand_seed)
 
-    new_hp, n_memoised, n_init_data = None, 0, params['n_init_data']
+    new_hp, n_memoised, n_init_data = None, 0, params["n_init_data"]
     if iteration > n_init_data:
         # Convert to tensors
         # print(dataset)
@@ -392,7 +391,7 @@ def generate_hps(
             if key.endswith("_bounds")
         }
 
-        bo_iter_function = iteration_funcs[f'{acq_type}_iteration']
+        bo_iter_function = iteration_funcs[f"{acq_type}_iteration"]
         new_hp, n_memoised, acq_value = bo_iter_function(
             X=x,
             y=y,
