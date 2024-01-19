@@ -28,7 +28,7 @@ target_dev=0
 for acqf in ${ACQF_ARRAY[@]}; do
     for trial in {1..5}; do
         # Execute your function in the background
-        run_trial 
+        run_trial &
         ((target_dev+=1)) 
 
         # Track the background processes
