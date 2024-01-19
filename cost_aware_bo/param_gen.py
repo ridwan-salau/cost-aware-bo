@@ -232,11 +232,7 @@ def log_metrics(
     acqf=None,
     eta=None,
 ):
-    y_pred = logging_metadata.pop("y_pred")
     n_memoised = logging_metadata.pop("n_memoised")
-    E_inv_c = logging_metadata.pop("E_inv_c")
-    E_c = logging_metadata.pop("E_c")
-    # dataset = update_dataset_new_run(dataset, new_hp, stage_costs_outputs, obj_output, x_bounds, dtype, device)
     best_f = dataset["y"].max().item()
     new_y = dataset["y"][-1].item()
     stage_cost_list = dataset["c"][-1, :].tolist()
@@ -249,7 +245,6 @@ def log_metrics(
 
     if verbose:  # and iteration >= bo_params['n_init_data']:
         print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}]", end=":\t")
-        print(f"f(x^)={y_pred}", end="\t")
         print(f"f(x)={new_y:>4.3f}", end="\t")
         print(
             "c(x)=[" + ", ".join("{:.3f}".format(val) for val in stage_cost_list) + "]",
@@ -275,25 +270,11 @@ def log_metrics(
 
     log = dict(
         best_f=best_f,
-        f_hat_x=y_pred,
         f_x=new_y,
-        f_res=abs(y_pred - new_y) if y_pred else None,
         sum_c_x=sum_stages,
         cum_costs=cum_cost,
-        E_inv_c=E_inv_c,
-        sum_Ec=sum(E_c) if E_c else None,
         inv_cost=inv_cost,
-        E_c=dict(zip(map(str, range(len(E_c))), E_c)) if E_c else None,
         c_x=dict(zip(map(str, range(len(stage_cost_list))), stage_cost_list)),
-        c_res=dict(
-            zip(
-                map(str, range(len(stage_cost_list))),
-                [abs(act - est) for act, est in zip(E_c, stage_cost_list)],
-            )
-        )
-        if E_c
-        else None,
-        inv_c_res=abs(E_inv_c - inv_cost) if E_inv_c else None,
         hp_table=hp_table,
         csv_log_table=csv_log_table,
     )
