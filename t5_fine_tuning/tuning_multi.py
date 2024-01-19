@@ -406,7 +406,7 @@ def t5_fine_tuning(
     stg_hparams: List[Dict],
     ft_num_epochs: int = 5,
     fine_tune_num_stgs: int = 1,
-    dstl_num_epochs: int = 45,
+    dstl_num_epochs: int = 15,
     dstl_num_stgs: int = 3,
 ):
     """Main Pipeline."""
