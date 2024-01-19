@@ -19,8 +19,8 @@ run_trial() {
 
 }
 
-ACQF_ARRAY=(EEIPU EI CArBO EIPS MS_CArBO)
-exp_name=t5-pipeline-multi-tuun2
+ACQF_ARRAY=(EEIPU CArBO MS_BO MS_CArBO EIPS EI) #LaMBO
+exp_name=t5-pipe-multi-new
 
 mkdir -p log/{EEIPU,EI,CArBO,EIPS,MS_CArBO}
 max_concurrent_executions=$(nvidia-smi --list-gpus | wc -l)
