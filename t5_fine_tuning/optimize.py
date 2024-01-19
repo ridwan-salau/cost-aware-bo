@@ -73,24 +73,24 @@ wandb.init(
     config=params,
 )
 
-consumed_budget, total_budget, init_budget = (
+consumed_budget, total_budget, n_init_data = (
     0,
     params["total_budget"],
-    params["budget_0"],
+    params["n_init_data"],
 )
 
 i = 0
 warmup = True
 if t5_init_dataset:
     dataset = t5_init_dataset["dataset"]
-    consumed_budget = t5_init_dataset["consumed_budget"]
-    n_init_data = i = t5_init_dataset["n_init_data"]
+    params["budget_0"] = consumed_budget = t5_init_dataset["consumed_budget"]
+    i = t5_init_dataset["n_init_data"]
     warmup = False
 try:
     while consumed_budget < total_budget:
         tic = time.time()
 
-        if consumed_budget > init_budget and warmup:
+        if i >= n_init_data and warmup: # Only execute this for the once for a trial 
             with init_dataset_path.open("wb") as f:
                 t5_init_dataset = {
                     "dataset": dataset,
@@ -101,7 +101,7 @@ try:
                 print(t5_init_dataset)
                 pickle.dump(t5_init_dataset, f)
             warmup = False
-            params["n_init_data"] = i
+            params["budget_0"] = consumed_budget
         print(hp_sampling_range)
         new_hp_dict, logging_metadata = generate_hps(
             dataset,
@@ -132,7 +132,7 @@ try:
         print(
             f"\n\n[{time.strftime('%Y-%m-%d-%H%M')}]    Iteration-{i} [acq_type: {args.acqf}] Trial No. #{args.trial} Runtime: {time.time()-tic} Consumed Budget: {consumed_budget}"
         )
-        eta = 1 if i < n_init_data else (total_budget - consumed_budget) / (total_budget - budget_0)
+        eta = 1 if i < n_init_data else (total_budget - consumed_budget) / (total_budget - params["budget_0"])
         log_metrics(
             dataset,
             logging_metadata,
