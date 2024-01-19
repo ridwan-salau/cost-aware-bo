@@ -22,7 +22,7 @@ run_trial() {
 ACQF_ARRAY=(EEIPU CArBO MS_BO MS_CArBO EIPS EI) #LaMBO
 exp_name=t5-pipe-multi-new
 
-mkdir -p log/{EEIPU,EI,CArBO,EIPS,MS_CArBO}
+mkdir -p log/{EEIPU,EI,CArBO,EIPS,MS_CArBO,MS_BO,LaMBO}
 max_concurrent_executions=$(nvidia-smi --list-gpus | wc -l)
 target_dev=0
 for acqf in ${ACQF_ARRAY[@]}; do
