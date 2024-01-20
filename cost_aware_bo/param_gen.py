@@ -37,6 +37,7 @@ iteration_funcs = {
     "LaMBO_iteration": lambo_iteration,
     "EI_iteration": ei_iteration,
     "CArBO_iteration": CArBO_iteration.carbo_iteration,
+    "MS_CArBO_iteration": CArBO_iteration.carbo_iteration,
     "EIPS_iteration": EIPS_iteration.eips_iteration,
 }
 
