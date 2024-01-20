@@ -85,8 +85,8 @@ def get_gen_bounds(param_idx, func_bounds, funcs=None, bound_type=""):
     bounds = torch.tensor([lo_bounds, hi_bounds], device=DEVICE, dtype=torch.double)
     return bounds
 
-def get_cost_bounds(C, bounds):
 
+def get_cost_bounds(C, bounds):
     std_c_bounds = [[], []]
     for stage in range(C.shape[1]):
         stage_costs = C[:, stage]
@@ -114,7 +114,6 @@ def get_dataset_bounds(X: Dict[str, List], Y, C, gen_bounds):
     )
 
     bounds = get_cost_bounds(C, bounds)
-    
 
     return bounds
 

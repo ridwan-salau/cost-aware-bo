@@ -5,7 +5,7 @@ from cost_aware_bo.functions.processing_funcs import (
     standardize,
     unstandardize,
     get_gen_bounds,
-    get_cost_bounds
+    get_cost_bounds,
 )
 from cost_aware_bo.functions.iteration_funcs import get_gp_models, get_cost_model
 from cost_aware_bo.optimize_mem_acqf import optimize_acqf_by_mem
