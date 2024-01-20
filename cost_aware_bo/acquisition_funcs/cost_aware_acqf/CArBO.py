@@ -8,7 +8,7 @@ from torch.distributions import Normal
 from torch import Tensor
 import torch
 
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DEVICE = torch.device("cpu" if torch.cuda.is_available() else "cpu")
 
 
 class CArBO(AnalyticAcquisitionFunction):
