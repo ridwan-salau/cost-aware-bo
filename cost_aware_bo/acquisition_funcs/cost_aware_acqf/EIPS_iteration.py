@@ -5,6 +5,7 @@ from cost_aware_bo.functions.processing_funcs import (
     standardize,
     unstandardize,
     get_gen_bounds,
+    get_cost_bounds,
 )
 from cost_aware_bo.functions.iteration_funcs import get_gp_models, get_cost_model
 from cost_aware_bo.optimize_mem_acqf import optimize_acqf_by_mem
@@ -23,7 +24,7 @@ def eips_iteration(
     consumed_budget=None,
     params=None,
 ):
-    train_x = normalize(X, bounds=bounds["x"])
+    train_x = normalize(X, bounds=bounds["x_cube"])
     train_y = standardize(y, bounds["y"])
 
     mll, gp_model = get_gp_models(train_x, train_y, iter, params=params)
@@ -32,6 +33,8 @@ def eips_iteration(
         params["h_ind"], params["normalization_bounds"], bound_type="norm"
     )
 
+    c = c.sum(axis=1).unsqueeze(-1)
+    bounds = get_cost_bounds(c, bounds)
     cost_mll, cost_gp = get_cost_model(
         train_x, c, iter, params["h_ind"], bounds, acqf_str
     )
@@ -63,6 +66,6 @@ def eips_iteration(
         seed=iter,
     )
 
-    new_x = unnormalize(new_x, bounds=bounds["x"])
+    new_x = unnormalize(new_x, bounds=bounds["x_cube"])
 
     return new_x, n_memoised, acq_value

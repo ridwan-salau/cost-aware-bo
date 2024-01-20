@@ -1,5 +1,6 @@
 import json
 import os
+import pickle
 import shutil
 import time
 from argparse import ArgumentParser
@@ -10,16 +11,17 @@ from typing import Any, Dict
 import numpy as np
 import pandas as pd
 import torch
-import wandb
 import xgboost as xgb
-from cachestore import Cache, LocalStorage
 from catboost import CatBoostClassifier
+from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import KFold
 
-from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
+import wandb
+from cachestore import Cache, LocalStorage
+
 from data_processing import prepare_data
 
 parser = ArgumentParser()
@@ -33,7 +35,7 @@ parser.add_argument(
     "--acqf",
     type=str,
     help="Acquisition function",
-    choices=["EEIPU", "EIPS", "CArBO", "EI", "RAND"],
+    choices=["EEIPU", "MS_CArBO", "EIPS", "CArBO", "EI", "RAND", "LaMBO", "MS_BO"],
     default="EI",
 )
 parser.add_argument(
@@ -41,10 +43,7 @@ parser.add_argument(
 )
 parser.add_argument("--disable-cache", action="store_true", help="Disable cache")
 parser.add_argument(
-    "--data-dir",
-    type=Path,
-    help="Directory with the data",
-    default="/home/ridwan/workdir/cost_aware_bo/inputs/",
+    "--data-dir", type=Path, help="Directory with the data", default="./inputs"
 )
 args = parser.parse_args()
 disable_cache = args.acqf != "EEIPU"
@@ -53,7 +52,7 @@ cache = Cache(
     storage=LocalStorage(args.cache_root),
 )
 
-data_dir = args.data_dir
+data_dir: Path = args.data_dir
 
 NFOLDS = 3
 SEED = 0
@@ -141,6 +140,7 @@ def train_basemodels1(
 
     # Separate features from targets.
     y_train = train["TARGET"]
+    # y_test = test["TARGET"]
     x_train = train.drop("TARGET", axis=1)
     x_test = test.drop("TARGET", axis=1)
 
@@ -170,6 +170,7 @@ def train_basemodels2(
 
     # Separate features from targets.
     y_train = train["TARGET"]
+    # y_test = test["TARGET"]
     x_train = train.drop("TARGET", axis=1)
     x_test = test.drop("TARGET", axis=1)
 
@@ -295,7 +296,7 @@ def main(new_hps_dict):
 
 
 dataset = {}
-with open("cost-aware-bo/sampling-range-stacking.json") as f:
+with open("inputs/sampling-range-stacking.json") as f:
     hp_sampling_range = json.load(f)
 
 params = {
@@ -315,9 +316,20 @@ params = {
     "use_pref_pool": 1,
     "verbose": 1,
     "rand_seed": 42,
-    "total_budget": 1000,
-    "budget_0": 400,
+    "total_budget": 500,
+    # "budget_0": 400
+    "n_prefixes": 5,
 }
+
+init_dataset_path = Path(
+    f"inputs/{args.exp_name}/stacking_init_dataset-trial_{args.trial}.pk"
+)
+init_dataset_path.parent.mkdir(parents=True, exist_ok=True)
+dataset = {}
+stacking_init_dataset = {}
+if init_dataset_path.exists():
+    with init_dataset_path.open("rb") as f:
+        stacking_init_dataset = pickle.load(f)
 
 args_dict = deepcopy(vars(args))
 params.update(args_dict)
@@ -333,21 +345,36 @@ wandb.init(
     config=params,
 )
 
-consumed_budget, total_budget, init_budget = (
+consumed_budget, total_budget, n_init_data = (
     0,
     params["total_budget"],
-    params["budget_0"],
+    params["n_init_data"],
 )
+
 i = 0
 warmup = True
+if stacking_init_dataset:
+    dataset = stacking_init_dataset["dataset"]
+    params["budget_0"] = consumed_budget = stacking_init_dataset["consumed_budget"]
+    i = stacking_init_dataset["n_init_data"]
+    warmup = False
 try:
     while consumed_budget < total_budget:
         tic = time.time()
 
-        if consumed_budget > init_budget and warmup:
+        if i >= n_init_data and warmup:  # Only execute this for the once for a trial
+            with init_dataset_path.open("wb") as f:
+                stacking_init_dataset = {
+                    "dataset": dataset,
+                    "consumed_budget": consumed_budget,
+                    "n_init_data": i,
+                }
+                print("Stacking HP Dataset")
+                print(stacking_init_dataset)
+                pickle.dump(stacking_init_dataset, f)
             warmup = False
-            params["n_init_data"] = i + 0
-
+            params["budget_0"] = consumed_budget
+        print(hp_sampling_range)
         new_hp_dict, logging_metadata = generate_hps(
             dataset,
             hp_sampling_range,
@@ -356,6 +383,9 @@ try:
             consumed_budget=consumed_budget,
             acq_type=args.acqf,
         )
+
+        output_dir: Path = args.cache_root / f"iter_{i}"
+        output_dir.mkdir(parents=True)
 
         obj, cost_per_stage = main(new_hp_dict)
 
@@ -374,7 +404,11 @@ try:
         print(
             f"\n\n[{time.strftime('%Y-%m-%d-%H%M')}]    Iteration-{i} [acq_type: {args.acqf}] Trial No. #{args.trial} Runtime: {time.time()-tic} Consumed Budget: {consumed_budget}"
         )
-        eta = (total_budget - consumed_budget) / (total_budget - params["budget_0"])
+        eta = (
+            1
+            if i < n_init_data
+            else (total_budget - consumed_budget) / (total_budget - params["budget_0"])
+        )
         log_metrics(
             dataset,
             logging_metadata,
@@ -389,4 +423,5 @@ try:
 finally:
     # Clean up cache
     if os.path.exists(args.cache_root):
-        shutil.rmtree(args.cache_root)
+        shutil.rmtree(args.cache_root, ignore_errors=True)
+    wandb.finish()
