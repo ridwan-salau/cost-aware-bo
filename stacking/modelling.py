@@ -1,25 +1,30 @@
 import json
 import os
+import pickle
 import shutil
+import sys
 import time
 from argparse import ArgumentParser
 from copy import deepcopy
+from math import sqrt
 from pathlib import Path
 from typing import Any, Dict
 
 import numpy as np
 import pandas as pd
 import torch
-import wandb
 import xgboost as xgb
-from cachestore import Cache, LocalStorage
 from catboost import CatBoostClassifier
+from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import KFold
 
-from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
+import wandb
+from cachestore import Cache, Formatter, LocalStorage
+
+sys.path.append("./")
 from data_processing import prepare_data
 
 parser = ArgumentParser()
@@ -33,7 +38,7 @@ parser.add_argument(
     "--acqf",
     type=str,
     help="Acquisition function",
-    choices=["EEIPU", "EIPS", "CArBO", "EI", "RAND"],
+    choices=["EEIPU", "MS_CArBO", "EIPS", "CArBO", "EI", "RAND", "LaMBO", "MS_BO"],
     default="EI",
 )
 parser.add_argument(
@@ -41,25 +46,18 @@ parser.add_argument(
 )
 parser.add_argument("--disable-cache", action="store_true", help="Disable cache")
 parser.add_argument(
-    "--data-dir",
-    type=Path,
-    help="Directory with the data",
-    default="/home/ridwan/workdir/cost_aware_bo/inputs/",
+    "--data-dir", type=Path, help="Directory with the data", default="./inputs"
 )
 args = parser.parse_args()
-disable_cache = args.acqf != "EEIPU"
-cache = Cache(
-    f"stacking_{args.exp_name}_{args.trial}_cache",
-    storage=LocalStorage(args.cache_root),
-)
+disable_cache = args.acqf!="EEIPU"
+cache = Cache(f"stacking_{args.exp_name}_{args.trial}_cache", storage=LocalStorage(args.cache_root))
 
-data_dir = args.data_dir
+data_dir: Path = args.data_dir
 
 NFOLDS = 3
 SEED = 0
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
-
 
 class SklearnWrapper(object):
     def __init__(self, clf, seed=0, params=None):
@@ -76,7 +74,7 @@ class SklearnWrapper(object):
 class CatboostWrapper(object):
     def __init__(self, clf, seed=0, params=None):
         params["random_seed"] = seed
-        self.clf: CatBoostClassifier = clf(**params)
+        self.clf:CatBoostClassifier = clf(**params)
 
     def train(self, x_train, y_train):
         self.clf.fit(x_train, y_train, silent=True)
@@ -131,45 +129,38 @@ def get_oof(clf, x_train, y_train, x_test, n_folds=3):
     oof_test[:] = oof_test_skf.mean(axis=0)
     return oof_train.reshape(-1, 1), oof_test.reshape(-1, 1)
 
-
 def train_basemodels1(
     train: pd.DataFrame, test: pd.DataFrame, params: Dict[str, Any]
 ) -> Dict[str, Any]:
     # Initiate the meta models.
     xg = XgbWrapper(seed=SEED, params=params["xgb_params"])
     et = SklearnWrapper(clf=ExtraTreesClassifier, seed=SEED, params=params["et_params"])
-
+    
     # Separate features from targets.
     y_train = train["TARGET"]
+    y_test = test["TARGET"]
     x_train = train.drop("TARGET", axis=1)
     x_test = test.drop("TARGET", axis=1)
-
+    
     # Train the meta modles.
     xg_oof_train, xg_oof_test = get_oof(xg, x_train, y_train, x_test)
     et_oof_train, et_oof_test = get_oof(et, x_train, y_train, x_test)
-
+    
     x_train = np.concatenate((xg_oof_train, et_oof_train), axis=1)
     x_test = np.concatenate((xg_oof_test, et_oof_test), axis=1)
-
-    return {
-        "train": pd.DataFrame(x_train, columns=["xg", "et"]),
-        "test": pd.DataFrame(x_test, columns=["xg", "et"]),
-    }
-
-
+    
+    return {"train": pd.DataFrame(x_train, columns=["xg", "et"]), "test": pd.DataFrame(x_test, columns=["xg", "et"])}
+    
 def train_basemodels2(
     train: pd.DataFrame, test: pd.DataFrame, params: Dict[str, Any]
 ) -> Dict[str, Any]:
     # Initiate the meta models.
-    rf = SklearnWrapper(
-        clf=RandomForestClassifier, seed=SEED, params=params["rf_params"]
-    )
-    cb = CatboostWrapper(
-        clf=CatBoostClassifier, seed=SEED, params=params["catboost_params"]
-    )
+    rf = SklearnWrapper(clf=RandomForestClassifier, seed=SEED, params=params["rf_params"])
+    cb = CatboostWrapper(clf=CatBoostClassifier, seed=SEED, params=params["catboost_params"])
 
     # Separate features from targets.
     y_train = train["TARGET"]
+    y_test = test["TARGET"]
     x_train = train.drop("TARGET", axis=1)
     x_test = test.drop("TARGET", axis=1)
 
@@ -180,10 +171,7 @@ def train_basemodels2(
     x_train = np.concatenate((rf_oof_train, cb_oof_train), axis=1)
     x_test = np.concatenate((rf_oof_test, cb_oof_test), axis=1)
 
-    return {
-        "train": pd.DataFrame(x_train, columns=["rf", "cb"]),
-        "test": pd.DataFrame(x_test, columns=["rf", "cb"]),
-    }
+    return {"train": pd.DataFrame(x_train, columns=["rf", "cb"]), "test": pd.DataFrame(x_test, columns=["rf", "cb"])}
 
 
 def train_metamodel(
@@ -203,33 +191,22 @@ def train_metamodel(
 
     return {"AUROC": au_roc}
 
-
 @cache()
-def preprocess():
-    train = pd.read_csv(data_dir / "train.csv")
-    test = pd.read_csv(data_dir / "test.csv")
-    prev = pd.read_csv(data_dir / "previous_application.csv")
-    print(
-        f"Train shape: {train.shape} ::: Test shape: {test.shape} ::: Prev shape: {prev.shape}"
-    )
-    print(
-        f"Class dist train: {train['TARGET'].value_counts()}; test: {test['TARGET'].value_counts()}"
-    )
-
-    train = prepare_data(train, prev).sample(
-        frac=0.01, ignore_index=True, random_state=SEED
-    )
-    test = prepare_data(test, prev).sample(
-        frac=0.01, ignore_index=True, random_state=SEED
-    )
+def preprocess():        
+    train = pd.read_csv(data_dir/"train.csv")
+    test = pd.read_csv(data_dir/"test.csv")
+    prev = pd.read_csv(data_dir/"previous_application.csv")
+    print(f"Train shape: {train.shape} ::: Test shape: {test.shape} ::: Prev shape: {prev.shape}")
+    print(f"Class dist train: {train['TARGET'].value_counts()}; test: {test['TARGET'].value_counts()}")
+    
+    train = prepare_data(train, prev).sample(frac=0.01, ignore_index=True, random_state=SEED)
+    test = prepare_data(test, prev).sample(frac=0.01, ignore_index=True, random_state=SEED)
 
     print(f"Shape after prep: train-{train.shape} :: test-{test.shape}")
 
     return train, test
 
-
 train, test = preprocess()
-
 
 # Train base models.
 @cache(ignore={"train", "test"}, disable=disable_cache)
@@ -237,14 +214,9 @@ def stage_1(train, test, hp1_params):
     base_model_op1 = train_basemodels1(train, test, hp1_params)
     print("Done with basemodel 1")
     base_model_op2 = train_basemodels2(train, test, hp1_params)
-    train = pd.concat(
-        [base_model_op1["train"], base_model_op2["train"], train["TARGET"]], axis=1
-    )
-    test = pd.concat(
-        [base_model_op1["test"], base_model_op2["test"], test["TARGET"]], axis=1
-    )
+    train = pd.concat([base_model_op1["train"], base_model_op2["train"], train["TARGET"]], axis=1)
+    test = pd.concat([base_model_op1["test"], base_model_op2["test"], test["TARGET"]], axis=1)
     return train, test
-
 
 # Train the meta model and generate test AUROC score.
 # @cache(ignore={"train", "test"})
@@ -254,9 +226,8 @@ def stage_2(train, test, hp2_params):
     #     json.dump(meta_model_op, f)
     return meta_model_op
 
-
 def main(new_hps_dict):
-    hp1_params = {
+    hp1_params={
         "et_params": {
             "n_estimators": new_hps_dict["0__n_estimators0"],
         },
@@ -270,13 +241,13 @@ def main(new_hps_dict):
         },
         "catboost_params": {
             "learning_rate": new_hps_dict["0__learning_rate1"],
-        },
+        }
     }
-
+    
     hp2_params = {
         "C": new_hps_dict["1__C"],
         "tol": new_hps_dict["1__tol"],
-        "max_iter": new_hps_dict["1__max_iter"],
+        "max_iter": new_hps_dict["1__max_iter"]
     }
     base0_time = time.time()
     train_stg1, test_stg1 = stage_1(train, test, hp1_params)
@@ -288,14 +259,13 @@ def main(new_hps_dict):
     obj = auroc_dict["AUROC"]
     meta_time = time.time()
 
-    cost_per_stage = [base1_time - base0_time, meta_time - base1_time]
+    cost_per_stage = [base1_time-base0_time, meta_time-base1_time]
     print(f"Meta duration: {meta_time-base1_time}")
-
+    
     return obj, cost_per_stage
 
-
 dataset = {}
-with open("cost-aware-bo/sampling-range-stacking.json") as f:
+with open("inputs/sampling-range-stacking.json") as f:
     hp_sampling_range = json.load(f)
 
 params = {
@@ -315,9 +285,21 @@ params = {
     "use_pref_pool": 1,
     "verbose": 1,
     "rand_seed": 42,
-    "total_budget": 1000,
-    "budget_0": 400,
+    "total_budget": 150,
+    # "budget_0": 400
+    "n_init_data": 10,
+    "n_prefixes": 5,
 }
+
+init_dataset_path = Path(
+    f"inputs/{args.exp_name}/stacking_init_dataset-trial_{args.trial}.pk"
+)
+init_dataset_path.parent.mkdir(parents=True, exist_ok=True)
+dataset = {}
+stacking_init_dataset = {}
+if init_dataset_path.exists():
+    with init_dataset_path.open("rb") as f:
+        stacking_init_dataset = pickle.load(f)
 
 args_dict = deepcopy(vars(args))
 params.update(args_dict)
@@ -333,21 +315,36 @@ wandb.init(
     config=params,
 )
 
-consumed_budget, total_budget, init_budget = (
+consumed_budget, total_budget, n_init_data = (
     0,
     params["total_budget"],
-    params["budget_0"],
+    params["n_init_data"],
 )
+
 i = 0
 warmup = True
+if stacking_init_dataset:
+    dataset = stacking_init_dataset["dataset"]
+    params["budget_0"] = consumed_budget = stacking_init_dataset["consumed_budget"]
+    i = stacking_init_dataset["n_init_data"]
+    warmup = False
 try:
     while consumed_budget < total_budget:
         tic = time.time()
 
-        if consumed_budget > init_budget and warmup:
+        if i >= n_init_data and warmup: # Only execute this for the once for a trial 
+            with init_dataset_path.open("wb") as f:
+                stacking_init_dataset = {
+                    "dataset": dataset,
+                    "consumed_budget": consumed_budget,
+                    "n_init_data": i,
+                }
+                print("Stacking HP Dataset")
+                print(stacking_init_dataset)
+                pickle.dump(stacking_init_dataset, f)
             warmup = False
-            params["n_init_data"] = i + 0
-
+            params["budget_0"] = consumed_budget
+        print(hp_sampling_range)
         new_hp_dict, logging_metadata = generate_hps(
             dataset,
             hp_sampling_range,
@@ -357,8 +354,11 @@ try:
             acq_type=args.acqf,
         )
 
+        output_dir: Path = args.cache_root / f"iter_{i}"
+        output_dir.mkdir(parents=True)
+        
         obj, cost_per_stage = main(new_hp_dict)
-
+        
         consumed_budget += sum(cost_per_stage)
 
         dataset = update_dataset_new_run(
@@ -374,7 +374,7 @@ try:
         print(
             f"\n\n[{time.strftime('%Y-%m-%d-%H%M')}]    Iteration-{i} [acq_type: {args.acqf}] Trial No. #{args.trial} Runtime: {time.time()-tic} Consumed Budget: {consumed_budget}"
         )
-        eta = (total_budget - consumed_budget) / (total_budget - params["budget_0"])
+        eta = 1 if i < n_init_data else (total_budget - consumed_budget) / (total_budget - params["budget_0"])
         log_metrics(
             dataset,
             logging_metadata,
@@ -389,4 +389,5 @@ try:
 finally:
     # Clean up cache
     if os.path.exists(args.cache_root):
-        shutil.rmtree(args.cache_root)
+        shutil.rmtree(args.cache_root, ignore_errors=True)
+    wandb.finish()

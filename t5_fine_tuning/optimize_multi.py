@@ -38,7 +38,6 @@ parser.add_argument(
     "--data-dir", type=Path, help="Directory with the data", default="./inputs"
 )
 args = parser.parse_args()
-disable_cache = args.acqf != "EEIPU"
 
 data_dir: Path = args.data_dir
 
