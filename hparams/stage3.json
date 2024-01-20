@@ -1,0 +1,90 @@
+[
+    {
+        "et_params": {
+            "n_jobs": 16,
+            "n_estimators": 200,
+            "__n_estimators": {
+                "range": [
+                    1,
+                    200
+                ]
+            },
+            "max_features": 0.5,
+            "max_depth": 12,
+            "min_samples_leaf": 2
+        },
+        "xgb_params": {
+            "seed": 0,
+            "colsample_bytree": 0.7,
+            "subsample": 0.7,
+            "learning_rate": 0.075,
+            "__learning_rate": {
+                "range": [
+                    0.001,
+                    0.999
+                ]
+            },
+            "objective": "binary:logistic",
+            "max_depth": 4,
+            "__max_depth": {
+                "range": [
+                    1,
+                    20
+                ]
+            },
+            "num_parallel_tree": 1,
+            "min_child_weight": 1,
+            "nrounds": 200
+        }
+    },
+    {
+        "rf_params": {
+            "n_jobs": 16,
+            "n_estimators": 200,
+            "__n_estimators": {
+                "range": [
+                    1,
+                    200
+                ]
+            },
+            "max_features": 0.2,
+            "max_depth": 12,
+            "__max_depth": {
+                "range": [
+                    1,
+                    100
+                ]
+            },
+            "min_samples_leaf": 2
+        },
+        "catboost_params": {
+            "iterations": 200,
+            "learning_rate": 0.5,
+            "__learning_rate": {
+                "range": [
+                    0.001,
+                    0.999
+                ]
+            },
+            "depth": 3,
+            "l2_leaf_reg": 40,
+            "bootstrap_type": "Bernoulli",
+            "subsample": 0.7,
+            "scale_pos_weight": 5,
+            "eval_metric": "AUC",
+            "od_type": "Iter",
+            "allow_writing_files": false
+        }
+    },
+    {
+        "lr_params": {
+            "C": 1.0,
+            "__C": {
+                "range": [
+                    0.1,
+                    10.0
+                ]
+            }
+        }
+    }
+]

@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cost-aware-bo"
+authors = [
+  { name="Abdulmajid Esofi", email="abdelmajid.essofi@mbzuai.ac.ae" },
+  { name="Ridwan Salahuddeen", email="ridzy619@yahoo.com" },
+]
+description = "Cost-Aware Bayesian Optimization"
+readme = "README.md"
+requires-python = ">=3.7"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dynamic = ["dependencies", "version"]
+
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+version = {attr = "cost_aware_bo.__version__"}
+
+
+[project.urls]
+"Homepage" = "https://github.com/ridwan-salau/cost-aware-bo"
+"Bug Tracker" = "https://github.com/ridwan-salau/cost-aware-bo/issues"
+
+[tool.setuptools.packages.find]
+exclude = ["run_real_world.sh", "run.sh", "env.yml", "t5_fine_tuning", "cost_aware_bo.egg-info"]
