@@ -27,7 +27,7 @@ parser.add_argument(
     "--acqf",
     type=str,
     help="Acquisition function",
-    choices=["EEIPU", "MS_CArBO", "EIPS", "CArBO", "EI", "RAND"],
+    choices=["EEIPU", "MS_CArBO", "EIPS", "CArBO", "EI", "RAND", "LaMBO", "MS_BO"],
     default="EI",
 )
 parser.add_argument(
