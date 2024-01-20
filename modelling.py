@@ -1,7 +1,6 @@
 import json
 import os
 import shutil
-import sys
 import time
 from argparse import ArgumentParser
 from copy import deepcopy
@@ -20,7 +19,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import KFold
 
-sys.path.append("./")
 from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
 from data_processing import prepare_data
 

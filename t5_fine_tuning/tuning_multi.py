@@ -406,7 +406,7 @@ def t5_fine_tuning(
     stg_hparams: List[Dict],
     ft_num_epochs: int = 5,
     fine_tune_num_stgs: int = 1,
-    dstl_num_epochs: int = 45,
+    dstl_num_epochs: int = 15,
     dstl_num_stgs: int = 3,
 ):
     """Main Pipeline."""
@@ -438,7 +438,7 @@ def t5_fine_tuning(
 
     # Stage 2: Fine-tuning
     start_fine_tune = time.time()
-    all_stages_costs.append(start_fine_tune-start_data_proc)
+    all_stages_costs.append(start_fine_tune - start_data_proc)
     fine_tuned_model_path = "t5-small"
     global_epochs = 0
     ft_epochs_per_stage = (ft_num_epochs // fine_tune_num_stgs) + (
@@ -458,7 +458,7 @@ def t5_fine_tuning(
         )
         global_epochs += ft_epochs_per_stage
 
-        all_stages_costs.append(time.time()-start_fine_tune)
+        all_stages_costs.append(time.time() - start_fine_tune)
         start_fine_tune = time.time()
 
     # Stage 3: Distillation
@@ -483,7 +483,7 @@ def t5_fine_tuning(
         )
         global_epochs += dstl_epochs_per_stage
 
-        all_stages_costs.append(time.time()-start_distil)
+        all_stages_costs.append(time.time() - start_distil)
         start_distil = time.time()
 
     return {"obj": rougeLsum, "costs": all_stages_costs}

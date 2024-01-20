@@ -1,13 +1,21 @@
+import torch
 import copy
-import random
-from collections import deque
 from typing import Dict, List
 
-import torch
+# from functions.synthetic_functions import Cost_F, F # We shouldn't have this here, I think
 from botorch.models import SingleTaskGP
 from gpytorch.mlls import ExactMarginalLogLikelihood
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+MS_ACQFS = ["EEIPU", "MS_CArBO", "LaMBO", "MS_BO"]
+SS_ACQFS = ["CArBO", "EIPS", "EI"]
+
+
+def assert_positive_costs(cost):
+    try:
+        assert cost.min() > 0
+    except AssertionError:
+        print("Negative costs detected")
 
 
 def normalize(data, bounds=None):
@@ -29,20 +37,6 @@ def unnormalize(data, bounds=None):
     return data_
 
 
-def normalize_cost(data, params):
-    mn, mx = 10, 300
-    data = (data - mn) / (mx - mn)
-    alpha, eps = params["alpha"], params["norm_eps"]
-    data = alpha * data + eps
-    try:
-        assert data.min() > 0
-    except AssertionError:
-        print(
-            f"EXCEPTION RAISED BECAUSE THE MINIMUM DATAPOINT IS = {data.min().item()}, MAXIMUM FOR SOME REASON IS = {data.max().item()}, SHAPE IS = {data.shape}, AND NUMBER OF NANS IS {torch.isnan(data.view(-1)).sum().item()}"
-        )
-    return data
-
-
 def standardize(data, bounds=None):
     data_ = data + 0
     mean, std = bounds[0].item(), bounds[1].item()
@@ -55,6 +49,23 @@ def unstandardize(data, bounds=None):
     mean, std = bounds[0].item(), bounds[1].item()
     data_ = (data_ * std) + mean
     return data_
+
+
+def get_initial_data(n, bounds=None, seed=0, acqf=None, params=None):
+    X, init_cost = generate_input_data(
+        N=n, bounds=bounds, seed=seed, acqf=acqf, params=params
+    )
+    y = F(X, params).unsqueeze(-1)
+    c = Cost_F(X, params)
+
+    if acqf not in MS_ACQFS:
+        c = c.sum(dim=1).unsqueeze(-1)
+
+    c_inv = 1 / c.sum(dim=1)
+    c_inv = c_inv.to(DEVICE)
+    c_inv = c_inv.unsqueeze(-1)
+
+    return X, y, c, c_inv, init_cost
 
 
 def get_gen_bounds(param_idx, func_bounds, funcs=None, bound_type=""):
@@ -83,9 +94,6 @@ def get_dataset_bounds(X: Dict[str, List], Y, C, gen_bounds):
         [min(hp_values) for hp_values in X.values()],
         [max(hp_values) for hp_values in X.values()],
     ]
-    # for i in range(X.shape[1]):
-    #     x_cube_bounds[0].append(X[:,i].min().item())
-    #     x_cube_bounds[1].append(X[:,i].max().item())
     bounds["x_cube"] = torch.tensor(x_cube_bounds, device=DEVICE)
 
     bounds["y"] = torch.tensor(
@@ -101,54 +109,58 @@ def get_dataset_bounds(X: Dict[str, List], Y, C, gen_bounds):
         std_c_bounds[1].append(log_sc.std().item())
     bounds["c"] = torch.tensor(std_c_bounds, device=DEVICE)
 
-    c_cube = [[], []]
-    for stage in range(C.shape[1]):
-        stage_costs = C[:, stage]
-        c_cube[0].append(stage_costs.min().item())
-        c_cube[1].append(stage_costs.max().item())
-    bounds["c_cube"] = torch.tensor(c_cube, device=DEVICE)
-
     return bounds
+
+
+def get_random_observations(N=None, bounds=None, seed=None):
+    torch.manual_seed(seed=seed)
+    X = None
+    # Generate initial training data, one dimension at a time
+    for dim in range(len(bounds[0])):
+        lo_bounds, hi_bounds = bounds[0][dim], bounds[1][dim]
+
+        if torch.is_tensor(X):
+            temp = torch.distributions.uniform.Uniform(lo_bounds, hi_bounds).sample(
+                [N, 1]
+            )
+            X = torch.cat((X, temp), dim=1)
+        else:
+            X = torch.distributions.uniform.Uniform(lo_bounds, hi_bounds).sample([N, 1])
+    X = X.to(DEVICE)
+    return X
 
 
 def initialize_GP_model(X, y, params=None):
     X_, y_ = X + 0, y + 0
+    X_, y_ = X_.double(), y_.double()
     gp_model = SingleTaskGP(X_, y_).to(X_)
     gp_model = gp_model.to(DEVICE)
-    # if params is not None:
-    #     kernel = params['kernel']
-    #     kernel = KERNELS[kernel]
-    #     gp_model.covar_module = ScaleKernel(kernel).to(DEVICE)
     mll = ExactMarginalLogLikelihood(gp_model.likelihood, gp_model).to(DEVICE)
     return mll, gp_model
 
 
-def generate_prefix_pool(X, acqf, params):
-    prefix_pool = []
+def generate_prefix_pool(X, Y, acqf, params):
     first_idx = params["n_init_data"]
+    x, y = X[first_idx:], Y[first_idx:]
 
-    if acqf != "EEIPU":
-        prefix_pool.append([])
+    data_pool = [(x[i, :], y[i].item()) for i in range(x.shape[0])]
+    data_pool.sort(key=lambda d: d[1], reverse=True)
+    prefix_pool = [[]]
+
+    if acqf not in ["EEIPU", "EIPU-MEMO"]:
         return prefix_pool
 
-    for i, param_config in enumerate(X[first_idx:]):
+    for i, (param_config, obj) in enumerate(data_pool):
+        if i >= params["n_prefixes"]:
+            break
+
         prefix = []
-        n_stages = len(params["h_ind"])
-        for j in range(n_stages - 1):
+        n_memoizable_stages = len(params["h_ind"]) - 1
+
+        # mem_stages = random.randint(1, n_memoizable_stages)
+        for j in range(n_memoizable_stages):
             stage_params = params["h_ind"][j]
-            # print(j, "Stage params:", stage_params, param_config[stage_params])
             prefix.append(list(param_config[stage_params].cpu().detach().numpy()))
             prefix_pool.append(copy.deepcopy(prefix))
-            # print(j, "Prefix: ", prefix)
-
-    random.shuffle(prefix_pool)
-
-    # Constant complexity to append at beginning of list
-    prefix_pool = deque(prefix_pool)
-    prefix_pool.appendleft([])
-    prefix_pool = list(prefix_pool)
-
-    if len(prefix_pool) > params["prefix_thresh"]:
-        prefix_pool = prefix_pool[: params["prefix_thresh"]]
 
     return prefix_pool

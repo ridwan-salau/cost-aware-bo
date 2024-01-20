@@ -19,16 +19,16 @@ run_trial() {
 
 }
 
-ACQF_ARRAY=(EEIPU EI CArBO EIPS MS_CArBO)
-exp_name=t5-pipeline-multi-tuun2
+ACQF_ARRAY=(EEIPU CArBO MS_BO MS_CArBO EIPS EI) #LaMBO
+exp_name=t5-pipe-multi-new
 
-mkdir -p log/{EEIPU,EI,CArBO,EIPS,MS_CArBO}
+mkdir -p log/{EEIPU,EI,CArBO,EIPS,MS_CArBO,MS_BO,LaMBO}
 max_concurrent_executions=$(nvidia-smi --list-gpus | wc -l)
 target_dev=0
 for acqf in ${ACQF_ARRAY[@]}; do
     for trial in {1..5}; do
         # Execute your function in the background
-        run_trial 
+        run_trial &
         ((target_dev+=1)) 
 
         # Track the background processes
