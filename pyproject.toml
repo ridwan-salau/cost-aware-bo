@@ -3,8 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "cost_aware_bo"
-version = "0.0.3"
+name = "cost-aware-bo"
 authors = [
   { name="Abdulmajid Esofi", email="abdelmajid.essofi@mbzuai.ac.ae" },
   { name="Ridwan Salahuddeen", email="ridzy619@yahoo.com" },
@@ -16,10 +15,12 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Operating System :: OS Independent",
 ]
+dynamic = ["dependencies", "version"]
 
-dynamic = ["dependencies"]
+
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
+version = {attr = "cost_aware_bo.__version__"}
 
 
 [project.urls]
@@ -27,4 +28,4 @@ dependencies = {file = ["requirements.txt"]}
 "Bug Tracker" = "https://github.com/ridwan-salau/cost-aware-bo/issues"
 
 [tool.setuptools.packages.find]
-exclude = ["run_real_world.sh", "run.sh", "env.yml"]
+exclude = ["run_real_world.sh", "run.sh", "env.yml", "t5_fine_tuning", "cost_aware_bo.egg-info"]

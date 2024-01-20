@@ -1,16 +1,19 @@
 """library imports."""
 import json
-import torch
-import evaluate
+import os
+import time
+from copy import deepcopy
+
 # from pirlib.iotypes import DirectoryPath
 from pathlib import Path
-from typing import Union, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, Union
+
+import evaluate
+import psutil
+import torch
+from nltk.translate.bleu_score import corpus_bleu
 from torch.nn.parallel import DataParallel
 from transformers import PreTrainedModel, PreTrainedTokenizerBase
-from nltk.translate.bleu_score import corpus_bleu
-import time
-import psutil
-import os
 
 
 def calculate_bleu_score(predictions, references):
@@ -20,7 +23,7 @@ def calculate_bleu_score(predictions, references):
     )
 
 
-def load_hyperparameters(hparams_path: Union[Path,str]) -> Dict:
+def load_hyperparameters(hparams_path: Union[Path, str]) -> Dict:
     """Function for loading hyperparameters.
     hparams_path (Path or str): directory path where the hyperparameters json file is stored
     """
@@ -90,7 +93,7 @@ def tuning(
     validation_dataset,
     patience=3,  # Number of consecutive epochs without improvement before stopping
     accumulation_steps=2,
-)-> Tuple[Dict[str, List], PreTrainedModel, PreTrainedTokenizerBase]:
+) -> Tuple[Dict[str, List], PreTrainedModel, PreTrainedTokenizerBase]:
     """Function for fine tuning."""
     torch.cuda.empty_cache()
     model = DataParallel(model)
@@ -337,7 +340,7 @@ def inference(model, tokenizer, test_data, reference_summaries):
         start_time = time.time()
 
         with torch.no_grad():
-            summary_ids = model.generate(
+            _ = model.generate(
                 input_ids,
                 max_length=150,
                 num_beams=4,
@@ -361,3 +364,16 @@ def inference(model, tokenizer, test_data, reference_summaries):
     metrics["average_inference_time"] = inference_time_total / len(test_data)
 
     return metrics
+
+
+def select_first_n_stages(stg_hparams: Dict[str, Any], n: int):
+    """Select first n stages of the hyperparameters
+
+    n (int): 1 means select only first stage, 2 - second, etc.
+    """
+    stg_hparams = deepcopy(stg_hparams)
+    keys = list(stg_hparams.keys())
+    for key in keys:
+        if int(key.split("__")[0]) >= n:
+            stg_hparams.pop(key)
+    return stg_hparams

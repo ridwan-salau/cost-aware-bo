@@ -2,7 +2,7 @@ import json
 import time
 from argparse import ArgumentParser
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, List, Tuple, Union
 
 import datasets
 import torch
@@ -21,7 +21,9 @@ from utils import (
 
 parser = ArgumentParser()
 parser.add_argument(
-    "--exp-name", type=str, required=True, help="Specifies a unique experiment name"
+    "--exp-name",
+    type=str,
+    help="Specifies a unique experiment name",
 )
 parser.add_argument("--trial", type=int, help="The trial number", default=1)
 parser.add_argument(
@@ -128,24 +130,31 @@ def data_preprocessing(
 
 
 # @task(cache=True, cache_key_file="hparams", timer=True)
-@cache(ignore={"output_dir", "dataset", "data_prepoc_output_path"})
+@cache(ignore={"output_dir", "dataset", "data_prepoc_output_path", "epochs"})
 def fine_tuning(
     dataset: Union[Path, str],
     data_prepoc_output_path: Union[Path, str],
     output_dir: Union[Path, str],
+    epochs,
     *,
     hparams,
-):
+    global_epochs,
+    model_name: Union[Path, str],
+) -> Path:
     """Fine Tuning Stage."""
     dataset = Path(dataset)
     output_dir = Path(output_dir)
     data_prepoc_output_path = Path(data_prepoc_output_path)
 
     # start_time = time.time()
-    model_name = "t5-small"
+    model_path = tokenizer_path = model_name
+    if isinstance(model_name, Path) and model_name.exists():
+        model_path = model_path / "fine_tuned_model"
+        tokenizer_path = tokenizer_path / "fine_tuned_tokenizer"
 
-    tokenizer = T5Tokenizer.from_pretrained(model_name)
-    model = T5ForConditionalGeneration.from_pretrained(model_name).to("cuda:0")
+    tokenizer = T5Tokenizer.from_pretrained(tokenizer_path)
+    model = T5ForConditionalGeneration.from_pretrained(model_path).to("cuda:0")
+
     optimizer = torch.optim.AdamW(
         model.parameters(),
         lr=hparams["1__learning_rate"],
@@ -163,13 +172,15 @@ def fine_tuning(
         val_dataloader,
         optimizer,
         # num_epochs__1,
-        hparams["1__num_epochs"],
+        # hparams["1__num_epochs"],
+        epochs,
         tokenizer,
         validation_dataset,
     )
 
-    fine_tuned_model.save_pretrained(output_dir / "fine_tuned_model/")
-    fine_tuned_tokenizer.save_pretrained(output_dir / "fine_tuned_tokenizer/")
+    model_chkpt_path = output_dir / str(global_epochs)
+    fine_tuned_model.save_pretrained(model_chkpt_path / "fine_tuned_model/")
+    fine_tuned_tokenizer.save_pretrained(model_chkpt_path / "fine_tuned_tokenizer/")
 
     # metrics["epoch_num"].append(hparams["1__num_epochs"])
     metrics["learning_rate"].append(hparams["1__learning_rate"])
@@ -181,39 +192,53 @@ def fine_tuning(
     # with open(output_dir / "metrics.json", "w") as metrics_file:
     #     json.dump(metrics, metrics_file)
 
-    print("fine tuning completed")
+    print(f"Epoch {global_epochs} fine tuning completed")
 
-    return output_dir
+    return model_chkpt_path
 
 
 # @task(cache=True, cache_key_file="hparams")
 @cache(
-    ignore={"output_dir", "dataset", "fine_tuned_model_path", "data_prepoc_output_path"}
+    ignore={
+        "output_dir",
+        "dataset",
+        "fine_tuned_model_path",
+        "data_prepoc_output_path",
+        "epochs",
+    }
 )
 def model_distillation(
     dataset: Union[Path, str],
     data_prepoc_output_path: Union[Path, str],
     fine_tuned_model_path: Union[Path, str],
     output_dir: Union[Path, str],
+    epochs,
     *,
     hparams,
-):
+    student_model_name: Union[Path, str],
+    global_epochs,
+) -> Tuple[float, Path]:
     """Distillation Stage."""
-    output_dir.mkdir(parents=True)
+    output_dir.mkdir(parents=True, exist_ok=True)
     # start_time = time.time()
-    model_name = "t5-small"
+    # model_name = "t5-small"
 
     # Load your fine-tuned t5-small teacher model and tokenizer
     teacher_model = T5ForConditionalGeneration.from_pretrained(
         fine_tuned_model_path / "fine_tuned_model/"
     ).to("cuda")
 
+    student_model_path = student_tokenizer_path = student_model_name
+    if isinstance(student_model_name, Path) and student_model_name.exists():
+        student_model_path = student_model_path / "distilled_model"
+        student_tokenizer_path = student_tokenizer_path / "distilled_tokenizer"
+
     # Load T5-tiny student model
     tokenizer = T5Tokenizer.from_pretrained(
-        model_name, d_model=128, d_ff=512, d_kv=64, num_layers=2
+        student_tokenizer_path, d_model=128, d_ff=512, d_kv=64, num_layers=2
     )
     student_config = T5Config.from_pretrained(
-        model_name, d_model=128, d_ff=512, d_kv=64, num_layers=2
+        student_model_path, d_model=128, d_ff=512, d_kv=64, num_layers=2
     )
     student_model = T5ForConditionalGeneration(student_config).to("cuda")
 
@@ -238,15 +263,17 @@ def model_distillation(
         val_dataloader,
         optimizer,
         # num_epochs__2,
-        hparams["2__num_epochs"],
+        # hparams["2__num_epochs"],
+        epochs,
         tokenizer,
         validation_dataset,
         hparams["2__temperature"],
         output_dir,
     )
 
-    distilled_model.save_pretrained(output_dir / "distilled_model")
-    distilled_tokenizer.save_pretrained(output_dir / "distilled_tokenizer")
+    model_chkpt_path = output_dir / str(global_epochs)
+    distilled_model.save_pretrained(model_chkpt_path / "distilled_model")
+    distilled_tokenizer.save_pretrained(model_chkpt_path / "distilled_tokenizer")
 
     # metrics["epoch_num"].append(hparams["2__num_epochs"])
     metrics["learning_rate"].append(hparams["2__learning_rate"])
@@ -256,9 +283,9 @@ def model_distillation(
     # with open(output_dir / "metrics.json", "w") as metrics_file:
     #     json.dump(metrics, metrics_file)
 
-    print("Distillation has been completed")
+    print(f"Epoch {global_epochs} of distillation completed")
 
-    return metrics["rouge_scores"][0]["rougeLsum"]
+    return metrics["rouge_scores"][0]["rougeLsum"], model_chkpt_path
 
 
 # @task(cache=True, cache_key_file="hparams")
@@ -377,52 +404,105 @@ def t5_fine_tuning(
     dataset: Union[Path, str],
     output_dir: Union[Path, str],
     stg_hparams: List[Dict],
+    ft_num_epochs: int = 5,
+    fine_tune_num_stgs: int = 1,
+    dstl_num_epochs: int = 15,
+    dstl_num_stgs: int = 3,
 ):
     """Main Pipeline."""
-    data_preproc_hp = select_first_n_stages(stg_hparams, 1)
-    tuning_hp = select_first_n_stages(stg_hparams, 2)
-    distillation_hp = select_first_n_stages(stg_hparams, 3)
+    print(f"HPs for this iteration:\n\n{stg_hparams}\n\n")
+    tot_num_stgs = 1 + fine_tune_num_stgs + dstl_num_stgs
+    tot_num_hp_stgs = len(set(int(key.split("__")[0]) for key in stg_hparams))
+    assert (
+        tot_num_stgs == tot_num_hp_stgs
+    ), f"The total number of stages in the pipeline, {tot_num_stgs}, is not equal to the number hyperparameter stages {tot_num_hp_stgs}"
 
+    curr_stg = 1
+    data_preproc_hp = select_first_n_stages(stg_hparams, curr_stg)
+    tuning_hps = [
+        select_first_n_stages(stg_hparams, stg + 1 + curr_stg)
+        for stg in range(fine_tune_num_stgs)
+    ]
+    curr_stg += fine_tune_num_stgs
+    distillation_hps = [
+        select_first_n_stages(stg_hparams, stg + 1 + curr_stg)
+        for stg in range(dstl_num_stgs)
+    ]
+
+    # Stage 1: Data preprocessing
+    all_stages_costs = []
     start_data_proc = time.time()
     data_prepoc_output_path = data_preprocessing(
         dataset, output_dir / "data_preprocessing", hparams=data_preproc_hp
     )
+
+    # Stage 2: Fine-tuning
     start_fine_tune = time.time()
-    fine_tuned_model_path = fine_tuning(
-        dataset, data_prepoc_output_path, output_dir / "fine_tuning", hparams=tuning_hp
+    all_stages_costs.append(start_fine_tune - start_data_proc)
+    fine_tuned_model_path = "t5-small"
+    global_epochs = 0
+    ft_epochs_per_stage = (ft_num_epochs // fine_tune_num_stgs) + (
+        1 if (ft_num_epochs % fine_tune_num_stgs) else 0
     )
+    while global_epochs < ft_num_epochs:
+        epochs = min(ft_epochs_per_stage, ft_num_epochs - global_epochs)
+        print(epochs)
+        fine_tuned_model_path = fine_tuning(
+            dataset,
+            data_prepoc_output_path,
+            output_dir / "fine_tuning",
+            epochs,
+            hparams=tuning_hps.pop(0),
+            global_epochs=global_epochs,
+            model_name=fine_tuned_model_path,
+        )
+        global_epochs += ft_epochs_per_stage
+
+        all_stages_costs.append(time.time() - start_fine_tune)
+        start_fine_tune = time.time()
+
+    # Stage 3: Distillation
     start_distil = time.time()
-    rougeLsum = model_distillation(
-        dataset,
-        data_prepoc_output_path,
-        fine_tuned_model_path,
-        output_dir / "model_distillation",
-        hparams=distillation_hp,
+    distilled_model_path = "t5-small"
+    global_epochs = 0
+    dstl_epochs_per_stage = (dstl_num_epochs // dstl_num_stgs) + (
+        1 if (dstl_num_epochs % dstl_num_stgs) else 0
     )
-    # inference_output = model_inference(
-    #     data_prepoc_output_path,
-    #     fine_tuned_model_path,
-    #     distilled_model_path,
-    #     output_dir,
-    #     hparams=stg_hparams,
-    # )
+    while global_epochs < dstl_num_epochs:
+        epochs = min(dstl_epochs_per_stage, dstl_num_epochs - global_epochs)
+        print(epochs)
+        rougeLsum, distilled_model_path = model_distillation(
+            dataset,
+            data_prepoc_output_path,
+            fine_tuned_model_path,
+            output_dir / "model_distillation",
+            epochs,
+            hparams=distillation_hps.pop(0),
+            student_model_name=distilled_model_path,
+            global_epochs=global_epochs,
+        )
+        global_epochs += dstl_epochs_per_stage
 
-    end = time.time()
-    # obj = generate_output(
-    #     data_prepoc_output_path, fine_tuned_model_path, distilled_model_path
-    # )
-    stage1_cost = start_fine_tune - start_data_proc
-    stage2_cost = start_distil - start_fine_tune
-    stage3_cost = end - start_distil
+        all_stages_costs.append(time.time() - start_distil)
+        start_distil = time.time()
 
-    return {"obj": rougeLsum, "costs": [stage1_cost, stage2_cost, stage3_cost]}
+    return {"obj": rougeLsum, "costs": all_stages_costs}
 
 
 if __name__ == "__main__":
     start = time.time()
     dataset = Path("inputs")
     output_dir = Path("outputs") / time.strftime("%Y-%m-%d_%H:%M:%S", time.localtime())
-    stg_hparams = load_hyperparameters(dataset / "hparams.json")
-    output = t5_fine_tuning(dataset, output_dir, stg_hparams)
+    stg_hparams = load_hyperparameters(dataset / "hparams_multi.json")
+    print(stg_hparams)
+    output = t5_fine_tuning(
+        dataset,
+        output_dir,
+        stg_hparams,
+        ft_num_epochs=2,
+        fine_tune_num_stgs=1,
+        dstl_num_epochs=6,
+        dstl_num_stgs=3,
+    )
     print(output)
     print("Total duration:", time.time() - start)

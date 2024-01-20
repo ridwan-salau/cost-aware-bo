@@ -12,7 +12,7 @@ import torch
 import wandb
 from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
 
-from tuning import t5_fine_tuning
+from tuning_multi import t5_fine_tuning
 
 sys.path.append("./")
 
@@ -54,7 +54,7 @@ if init_dataset_path.exists():
     with init_dataset_path.open("rb") as f:
         t5_init_dataset = pickle.load(f)
 
-with (data_dir / "initial_hparams.json").open() as f:
+with (data_dir / "initial_hparams_multi.json").open() as f:
     initial_hparams = json.load(f)
     hp_sampling_range = initial_hparams["hp_sampling_range"]
     params = initial_hparams["params"]

@@ -1,53 +1,46 @@
 from __future__ import annotations
 
 import dataclasses
-
-import time
 import warnings
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+
 import numpy as np
-
 import torch
-from torch.optim import Optimizer
-from torch import Tensor
-from torch.quasirandom import SobolEngine
-
 from botorch.acquisition.acquisition import (
     AcquisitionFunction,
     OneShotAcquisitionFunction,
 )
-from botorch.utils.sampling import draw_sobol_samples
-from botorch.optim.optimize import _optimize_acqf, _optimize_acqf_all_features_fixed, _optimize_acqf_sequential_q
-from botorch.acquisition.utils import is_nonnegative
+from botorch import settings
 from botorch.acquisition.knowledge_gradient import qKnowledgeGradient
-from botorch.exceptions import InputDataError, UnsupportedError
-from botorch.exceptions.warnings import OptimizationWarning
+from botorch.acquisition.utils import is_nonnegative
+from botorch.exceptions import UnsupportedError
+from botorch.exceptions.warnings import (
+    BadInitialCandidatesWarning,
+    OptimizationWarning,
+    SamplingWarning,
+)
 from botorch.generation.gen import TGenCandidates, _process_scipy_result
+from botorch.generation.utils import _remove_fixed_features_from_optimization
 from botorch.logging import logger
 from botorch.optim.initializers import (
-    initialize_q_batch,
-    gen_one_shot_kg_initial_conditions,
     TGenInitialConditions,
-    initialize_q_batch_nonneg
+    gen_one_shot_kg_initial_conditions,
+    initialize_q_batch,
+    initialize_q_batch_nonneg,
 )
-from botorch.optim.stopping import ExpMAStoppingCriterion
-from botorch.optim.utils import _filter_kwargs
-from functools import partial
-from typing import Any, Callable, Dict, List, NoReturn, Optional, Tuple, Type, Union
-from botorch.exceptions.warnings import BadInitialCandidatesWarning
-
-from botorch.generation.utils import _remove_fixed_features_from_optimization
-from botorch.logging import _get_logger
+from botorch.optim.optimize import _optimize_acqf
 from botorch.optim.parameter_constraints import (
+    NLC_TOL,
     _arrayify,
     make_scipy_bounds,
     make_scipy_linear_constraints,
     make_scipy_nonlinear_inequality_constraints,
-    NLC_TOL,
 )
-from botorch.optim.stopping import ExpMAStoppingCriterion
 from botorch.optim.utils import _filter_kwargs, columnwise_clamp, fix_features
 from botorch.optim.utils.timeout import minimize_with_timeout
-from scipy.optimize import OptimizeResult
+from botorch.utils.sampling import draw_sobol_samples
+from torch import Tensor
+from torch.quasirandom import SobolEngine
 
 INIT_OPTION_KEYS = {
     # set of options for initialization that we should
@@ -65,6 +58,7 @@ INIT_OPTION_KEYS = {
     "seed",
     "thinning",
 }
+
 
 def gen_batch_initial_conditions(
     acq_function: AcquisitionFunction,
@@ -216,11 +210,13 @@ def gen_batch_initial_conditions(
                 start_idx = 0
                 while start_idx < X_rnd.shape[0]:
                     end_idx = min(start_idx + batch_limit, X_rnd.shape[0])
-                    Y_rnd_curr = acq_function(
-                        X_rnd[start_idx:end_idx].to(device=device)
-                    ).cpu() if 'EIPU' not in acq_type else acq_function(
-                        X_rnd[start_idx:end_idx].to(device=device), delta, curr_iter
-                    ).cpu()
+                    Y_rnd_curr = (
+                        acq_function(X_rnd[start_idx:end_idx].to(device=device)).cpu()
+                        if "EIPU" not in acq_type
+                        else acq_function(
+                            X_rnd[start_idx:end_idx].to(device=device), delta, curr_iter
+                        ).cpu()
+                    )
                     Y_rnd_list.append(Y_rnd_curr)
                     start_idx += batch_limit
                 Y_rnd = torch.cat(Y_rnd_list)
@@ -343,6 +339,7 @@ class OptimizeAcqfInputs:
             return gen_one_shot_kg_initial_conditions
         return gen_batch_initial_conditions
 
+
 def optimize_acqf(
     acq_function: AcquisitionFunction,
     acq_type: str,
@@ -369,7 +366,6 @@ def optimize_acqf(
     retry_on_optimization_warning: bool = True,
     **ic_gen_kwargs: Any,
 ) -> Tuple[Tensor, Tensor]:
-    
     # using a default of None simplifies unit testing
     if gen_candidates is None:
         gen_candidates = gen_candidates_scipy
@@ -399,6 +395,7 @@ def optimize_acqf(
         ic_gen_kwargs=ic_gen_kwargs,
     )
     return _optimize_acqf(opt_acqf_inputs)
+
 
 def _optimize_acqf_batch(
     opt_inputs: OptimizeAcqfInputs, start_time: float, timeout_sec: Optional[float]
@@ -481,8 +478,12 @@ def _optimize_acqf_batch(
                     batch_candidates_curr,
                     batch_acq_values_curr,
                 ) = opt_inputs.gen_candidates(
-                    batched_ics_, opt_inputs.acq_function, opt_inputs.acq_type,
-                    opt_inputs.delta, opt_inputs.curr_iter, **filtered_gen_kwargs
+                    batched_ics_,
+                    opt_inputs.acq_function,
+                    opt_inputs.acq_type,
+                    opt_inputs.delta,
+                    opt_inputs.curr_iter,
+                    **filtered_gen_kwargs,
                 )
             opt_warnings += ws
             batch_candidates_list.append(batch_candidates_curr)
@@ -563,6 +564,7 @@ def _optimize_acqf_batch(
 
     return batch_candidates, batch_acq_values
 
+
 def gen_candidates_scipy(
     initial_conditions: Tensor,
     acquisition_function: AcquisitionFunction,
@@ -578,7 +580,6 @@ def gen_candidates_scipy(
     fixed_features: Optional[Dict[int, Optional[float]]] = None,
     timeout_sec: Optional[float] = None,
 ) -> Tuple[Tensor, Tensor]:
-    
     options = options or {}
     options = {**options, "maxiter": options.get("maxiter", 2000)}
 
@@ -704,7 +705,11 @@ def gen_candidates_scipy(
     x0 = _arrayify(x0)
 
     def f(x):
-        return -acquisition_function(x) if 'EIPU' not in acq_type else -acquisition_function(x, delta, curr_iter)
+        return (
+            -acquisition_function(x)
+            if "EIPU" not in acq_type
+            else -acquisition_function(x, delta, curr_iter)
+        )
 
     res = minimize_with_timeout(
         fun=f_np_wrapper,
@@ -745,6 +750,10 @@ def gen_candidates_scipy(
         X=candidates, lower=lower_bounds, upper=upper_bounds, raise_on_violation=True
     )
     with torch.no_grad():
-        batch_acquisition = acquisition_function(clamped_candidates) if ('EIPU' not in acq_type) else acquisition_function(clamped_candidates, delta, curr_iter)
-    
+        batch_acquisition = (
+            acquisition_function(clamped_candidates)
+            if ("EIPU" not in acq_type)
+            else acquisition_function(clamped_candidates, delta, curr_iter)
+        )
+
     return clamped_candidates, batch_acquisition
