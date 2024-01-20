@@ -285,7 +285,7 @@ params = {
     "use_pref_pool": 1,
     "verbose": 1,
     "rand_seed": 42,
-    "total_budget": 150,
+    "total_budget": 500,
     # "budget_0": 400
     "n_init_data": 10,
     "n_prefixes": 5,

@@ -5,6 +5,7 @@ from cost_aware_bo.functions.processing_funcs import (
     standardize,
     unstandardize,
     get_gen_bounds,
+    get_cost_bounds
 )
 from cost_aware_bo.functions.iteration_funcs import (
     get_gp_models,
@@ -37,6 +38,8 @@ def carbo_iteration(
     )
 
     if acqf_str == "CArBO":
+        c = c.sum(axis=1).unsqueeze(-1)
+        bounds = get_cost_bounds(c, bounds)
         cost_mll, cost_gp = get_cost_model(
             train_x, c, iter, params["h_ind"], bounds, acqf_str
         )
