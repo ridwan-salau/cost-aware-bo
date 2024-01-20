@@ -99,8 +99,8 @@ def write_dataset(dataset):
 
 
 def generate_hparams(
-    hp: List[List[int | float]],
-    x_bounds: List[Tuple[int | float]],
+    hp: List[List[Union[int, float]]],
+    x_bounds: List[Tuple[Union[int, float]]],
     dtypes: List[str],
     sampling_seed,
 ):
