@@ -1,9 +1,8 @@
 import copy
-import numpy as np
 import torch
-import random
 
-DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 class Node:
     def __init__(self, parent, depth, idx):
@@ -16,7 +15,7 @@ class Node:
         self.leaf_partitions = None
         self.leaf_ranges = None
 
-        # Cache Data 
+        # Cache Data
         self.probs = None
         self.loss = None
         self.h = None
@@ -29,7 +28,7 @@ class Node:
         self.h = h
         self.global_input_bounds = global_input_bounds
         self.arm_idx = arm_idx
-    
+
     def retrieve_data(self):
         return self.probs, self.loss, self.h, self.global_input_bounds, self.arm_idx
 
@@ -51,6 +50,7 @@ class Node:
 
     def get_idx(self):
         return self.idx
+
 
 class MSET:
     def __init__(self, partitions, depths, last_stage_bounds):
@@ -81,32 +81,34 @@ class MSET:
         # bounds = torch.tensor(bounds, device=DEVICE, dtype=torch.double)
         node.add_value(bounds)
         node.add_leaf_partition(leaf_partition)
-        
+
         self.leaves.append(bounds)
         self.leaf_partitions.append(leaf_partition)
-        
+
         return node
 
     def build_children(self, node, stage_idx, node_idx, leaf_partition, bounds):
-        
-        left_range, right_range = 1e9, -1e9
-        
-        left = self.ConstructMSET(node, stage_idx + 1, 0, 2*node_idx + 1, leaf_partition, bounds)
-        right = self.ConstructMSET(node, stage_idx + 1, 1, 2*node_idx + 2, leaf_partition, bounds)
+        left = self.ConstructMSET(
+            node, stage_idx + 1, 0, 2 * node_idx + 1, leaf_partition, bounds
+        )
+        right = self.ConstructMSET(
+            node, stage_idx + 1, 1, 2 * node_idx + 2, leaf_partition, bounds
+        )
         node.add_child(left, right)
 
         return node
 
-    def ConstructMSET(self, parent, stage_idx, p_idx, node_idx, leaf_partitions=None, p_bounds=None):
-
+    def ConstructMSET(
+        self, parent, stage_idx, p_idx, node_idx, leaf_partitions=None, p_bounds=None
+    ):
         leaf_partition = copy.deepcopy(leaf_partitions)
 
         curr_stage_partitions = self.partitions[stage_idx]
 
         leaf_partition.append(p_idx)
-        
+
         bounds = self.update_bounds(curr_stage_partitions, p_bounds, p_idx)
-        
+
         curr_depth = parent.get_depth() + self.depths[stage_idx]
 
         node = Node(parent, curr_depth, node_idx)
@@ -125,16 +127,16 @@ class MSET:
             first_idx = 2**node.depth - 1
             node.leaf_ranges = (node.idx - first_idx, node.idx - first_idx)
             return node.leaf_ranges
-    
+
         # Recursive case: Compute ranges for left and right subtrees
         left_range = self.assign_leaf_ranges(node.left) if node.left else None
         right_range = self.assign_leaf_ranges(node.right) if node.right else None
-    
+
         # Combine the ranges from left and right children
         start = left_range[0] if left_range else right_range[0]
         end = right_range[1] if right_range else left_range[1]
         node.leaf_ranges = (start, end)
-    
+
         return node.leaf_ranges
 
     def get_leaves(self):
@@ -144,7 +146,6 @@ class MSET:
         return self.leaf_partitions
 
     def print_MSET(self, node):
-        
         if node.left is not None:
             # print(node.idx, ' ', node.leaf_ranges)
             self.print_MSET(node.left)
@@ -154,4 +155,4 @@ class MSET:
             print(node.value)
             print(node.leaf_partitions)
             print(node.leaf_ranges)
-            print('\n\n')
+            print("\n\n")

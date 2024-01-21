@@ -22,15 +22,14 @@ from .optimizer.optimize_acqf_funcs import (
     optimize_acqf,
 )
 from .acquisition_funcs.LaMBO.LaMBO import (
-    select_arm, 
-    update_all_probabilities, 
-    update_loss_estimators, 
+    select_arm,
+    update_all_probabilities,
+    update_loss_estimators,
     build_partitions,
     get_pdf,
     build_tree,
-    remove_invalid_partitions
+    remove_invalid_partitions,
 )
-from .acquisition_funcs.LaMBO.MSET import MSET, Node
 from .acquisition_funcs.cost_aware_acqf import CArBO_iteration, EIPS_iteration
 from .acquisition_funcs.EEIPU.EEIPU_iteration import eeipu_iteration
 from .acquisition_funcs.EI.EI_iteration import ei_iteration
@@ -324,43 +323,28 @@ def log_metrics(
     wandb.log(log, step=iteration)
     return
 
-def lambo_preprocessing(
-        acqf,
-        h_ind, 
-        x_bounds, 
-        n_stages, 
-        trial,
-        first_iter,
-        iteration
-        ):
-    
+
+def lambo_preprocessing(acqf, h_ind, x_bounds, n_stages, trial, first_iter, iteration):
     if acqf != "LaMBO" or iteration < first_iter:
         return None, None, None, None, None, None, x_bounds
 
     tree = None
-    filename = f'tree_pickle__{trial}.pkl'
+    filename = f"tree_pickle__{trial}.pkl"
     if os.path.exists(filename):
-        with open(filename, 'rb'):
+        with open(filename, "rb"):
             pickle.load(tree)
             root, mset = tree
             probs, loss, h, global_input_bounds, arm_idx = root.retrieve_data()
             return root, mset, loss, probs, arm_idx, h, global_input_bounds
-        
 
     n_leaves = 2 ** (n_stages - 1)
     probs = get_pdf(n_leaves)
 
-    partitions, last_stage_partition = build_partitions(
-        x_bounds, h_ind, n_stages
-    )
+    partitions, last_stage_partition = build_partitions(x_bounds, h_ind, n_stages)
 
-    depths = [1 for stage in range(n_stages-1)]
+    depths = [1 for stage in range(n_stages - 1)]
 
-    mset, root = build_tree(
-        partitions, 
-        depths, 
-        last_stage_partition
-        )
+    mset, root = build_tree(partitions, depths, last_stage_partition)
     arm_idx = random.randint(0, n_leaves)
 
     H = sum(depths)
@@ -369,57 +353,41 @@ def lambo_preprocessing(
     loss = np.zeros([n_leaves, H])
     return root, mset, loss, probs, arm_idx, h, x_bounds
 
+
 def lambo_pre_iteration(
-        mset, 
-        root, 
-        acqf, 
-        probs, 
-        h, 
-        n_stages, 
-        arm_idx,
-        bounds,
-        first_iter,
-        iteration
-        ):
-    
+    mset, root, acqf, probs, h, n_stages, arm_idx, bounds, first_iter, iteration
+):
     if acqf != "LaMBO" or iteration < first_iter:
         return bounds, 0
-    
+
     n_leaves = 2 ** (n_stages - 1)
     leaf_bounds = mset.leaves
-    input_bounds, arm_idx = select_arm(
-        root,
-        leaf_bounds,
-        probs,
-        h,
-        arm_idx,
-        n_leaves
-    )
+    input_bounds, arm_idx = select_arm(root, leaf_bounds, probs, h, arm_idx, n_leaves)
     bounds["x"] = input_bounds
 
     return bounds, arm_idx
 
+
 def lambo_post_iteration(
-        acqf, 
-        root,
-        mset,
-        loss,
-        probs,
-        arm_idx, 
-        acq_value, 
-        n_stages, 
-        global_input_bounds, 
-        h_ind, 
-        first_iter,
-        iteration,
-        trial
-        ):
-    
+    acqf,
+    root,
+    mset,
+    loss,
+    probs,
+    arm_idx,
+    acq_value,
+    n_stages,
+    global_input_bounds,
+    h_ind,
+    first_iter,
+    iteration,
+    trial,
+):
     if acqf != "LaMBO" or iteration < first_iter:
         return
-    
+
     n_leaves = 2 ** (n_stages - 1)
-    depths = [1 for stage in range(n_stages-1)]
+    depths = [1 for stage in range(n_stages - 1)]
     H = sum(depths)
 
     sigma = np.array(random.choices([-1, 1], k=H))
@@ -427,60 +395,36 @@ def lambo_post_iteration(
 
     h = np.where(sigma == -1)[0][0]
 
-    loss = update_loss_estimators(
-        loss, 
-        root, 
-        probs, 
-        arm_idx, 
-        sigma, 
-        H, 
-        acq_value
-        )
+    loss = update_loss_estimators(loss, root, probs, arm_idx, sigma, H, acq_value)
 
-    probs = update_all_probabilities(
-        loss, 
-        probs, 
-        arm_idx, 
-        n_leaves
-        )
+    probs = update_all_probabilities(loss, probs, arm_idx, n_leaves)
 
     # Probabilities are reinitialized if an arm is invalidated
     global_input_bounds, probs, loss = remove_invalid_partitions(
-        global_input_bounds, 
-        probs, 
-        loss, 
-        h_ind, 
-        n_leaves, 
-        H, 
-        n_stages, 
-        mset.leaf_partitions
-        )
-    
+        global_input_bounds,
+        probs,
+        loss,
+        h_ind,
+        n_leaves,
+        H,
+        n_stages,
+        mset.leaf_partitions,
+    )
+
     partitions, last_stage_partition = build_partitions(
-        global_input_bounds, 
-        h_ind, 
-        n_stages
-        )
-    
-    mset, root = build_tree(
-        partitions, 
-        depths, 
-        last_stage_partition
-        )
+        global_input_bounds, h_ind, n_stages
+    )
 
-    root.save_data(
-        probs, 
-        loss, 
-        h, 
-        global_input_bounds, 
-        arm_idx
-        )
+    mset, root = build_tree(partitions, depths, last_stage_partition)
 
-    with open(f'tree.pickle_{trial}.pkl', 'wb') as file:
+    root.save_data(probs, loss, h, global_input_bounds, arm_idx)
+
+    with open(f"tree.pickle_{trial}.pkl", "wb") as file:
         tree = (root, mset)
         pickle.dump(tree, file)
 
     return mset, root
+
 
 def reformat_xbounds(x_bounds, device="cuda"):
     x_b = [[], []]
@@ -489,6 +433,7 @@ def reformat_xbounds(x_bounds, device="cuda"):
             x_b[0].append(param_bounds[0])
             x_b[1].append(param_bounds[1])
     return torch.tensor(x_b)
+
 
 def generate_hps(
     dataset,
@@ -541,15 +486,9 @@ def generate_hps(
 
     first_iter, n_stages = params["n_init_data"] + 1, len(h_ind_list)
     root, mset, loss, probs, arm_idx, h, x_b = lambo_preprocessing(
-        acq_type,
-        h_ind_list,
-        x_b,
-        n_stages,
-        trial, 
-        first_iter, 
-        iteration
-        )
-        
+        acq_type, h_ind_list, x_b, n_stages, trial, first_iter, iteration
+    )
+
     new_hp, n_memoised, n_init_data = None, 0, params["n_init_data"]
     if iteration > n_init_data:
         x = torch.stack(list(dataset["x"].values()), axis=1)
@@ -563,17 +502,17 @@ def generate_hps(
         }
 
         bounds, arm_idx = lambo_pre_iteration(
-            mset, 
-            root, 
-            acq_type, 
-            probs, 
-            h, 
-            n_stages, 
+            mset,
+            root,
+            acq_type,
+            probs,
+            h,
+            n_stages,
             arm_idx,
-            bounds, 
-            first_iter, 
-            iteration
-            )
+            bounds,
+            first_iter,
+            iteration,
+        )
 
         bo_iter_function = iteration_funcs[f"{acq_type}_iteration"]
         new_hp, n_memoised, acq_value = bo_iter_function(
@@ -594,16 +533,16 @@ def generate_hps(
             root,
             mset,
             loss,
-            probs, 
-            arm_idx, 
-            acq_value, 
-            n_stages, 
-            x_b, 
-            h_ind_list, 
-            first_iter, 
+            probs,
+            arm_idx,
+            acq_value,
+            n_stages,
+            x_b,
+            h_ind_list,
+            first_iter,
             iteration,
-            trial
-            )
+            trial,
+        )
 
     # When new_hp is None, `generate_hparams` will generate random samples.
     # It also saves the new_hp to the respective files where the main function can read them

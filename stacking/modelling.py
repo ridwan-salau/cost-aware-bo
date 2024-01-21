@@ -382,7 +382,7 @@ try:
             params=params,
             consumed_budget=consumed_budget,
             acq_type=args.acqf,
-            trial=args.trial
+            trial=args.trial,
         )
 
         output_dir: Path = args.cache_root / f"iter_{i}"
