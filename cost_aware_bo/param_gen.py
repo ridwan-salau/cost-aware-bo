@@ -442,7 +442,6 @@ def generate_hps(
     dataset,
     hp_sampling_range,
     iteration,
-    trial,
     params,
     consumed_budget=None,
     acq_type="EEIPU",
@@ -489,7 +488,7 @@ def generate_hps(
 
     first_iter, n_stages = params["n_init_data"] + 1, len(h_ind_list)
     root, mset, loss, probs, arm_idx, h, x_b = lambo_preprocessing(
-        acq_type, h_ind_list, x_b, n_stages, trial, first_iter, iteration
+        acq_type, h_ind_list, x_b, n_stages, params["trial"], first_iter, iteration
     )
 
     new_hp, n_memoised, n_init_data = None, 0, params["n_init_data"]
@@ -544,7 +543,7 @@ def generate_hps(
             h_ind_list,
             first_iter,
             iteration,
-            trial,
+            params["trial"],
         )
 
     # When new_hp is None, `generate_hparams` will generate random samples.
