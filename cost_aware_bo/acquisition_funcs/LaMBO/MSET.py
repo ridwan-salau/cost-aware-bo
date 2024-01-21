@@ -15,6 +15,23 @@ class Node:
         self.leaf_partitions = None
         self.leaf_ranges = None
 
+        # Cache Data
+        self.probs = None
+        self.loss = None
+        self.h = None
+        self.global_input_bounds = None
+        self.arm_idx = None
+
+    def save_data(self, probs, loss, h, global_input_bounds, arm_idx):
+        self.probs = probs
+        self.loss = loss
+        self.h = h
+        self.global_input_bounds = global_input_bounds
+        self.arm_idx = arm_idx
+
+    def retrieve_data(self):
+        return self.probs, self.loss, self.h, self.global_input_bounds, self.arm_idx
+
     def add_parent(self, parent):
         self.parent = parent
 
