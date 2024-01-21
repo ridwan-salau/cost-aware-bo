@@ -86,6 +86,19 @@ def get_gen_bounds(param_idx, func_bounds, funcs=None, bound_type=""):
     return bounds
 
 
+def get_cost_bounds(C, bounds):
+    std_c_bounds = [[], []]
+    for stage in range(C.shape[1]):
+        stage_costs = C[:, stage]
+        # print("Stage costs:", stage_costs)
+        log_sc = torch.log(stage_costs)
+        std_c_bounds[0].append(log_sc.mean().item())
+        std_c_bounds[1].append(log_sc.std().item())
+    bounds["c"] = torch.tensor(std_c_bounds, device=DEVICE)
+
+    return bounds
+
+
 def get_dataset_bounds(X: Dict[str, List], Y, C, gen_bounds):
     bounds = {}
     bounds["x"] = gen_bounds + 0.0
@@ -100,14 +113,7 @@ def get_dataset_bounds(X: Dict[str, List], Y, C, gen_bounds):
         [[Y.mean().item()], [Y.std().item()]], device=DEVICE, dtype=torch.double
     )
 
-    std_c_bounds = [[], []]
-    for stage in range(C.shape[1]):
-        stage_costs = C[:, stage]
-        # print("Stage costs:", stage_costs)
-        log_sc = torch.log(stage_costs)
-        std_c_bounds[0].append(log_sc.mean().item())
-        std_c_bounds[1].append(log_sc.std().item())
-    bounds["c"] = torch.tensor(std_c_bounds, device=DEVICE)
+    bounds = get_cost_bounds(C, bounds)
 
     return bounds
 
