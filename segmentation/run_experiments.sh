@@ -1,8 +1,6 @@
 #! /bin/bash
 set -e
 
-
-
 run_trial() {
     # Your function code goes here
     # For example: sleep 5; echo "Function completed"
@@ -12,7 +10,7 @@ run_trial() {
     cache_root=.cachestore/${acqf}/${RANDOM}_trial_${trial} 
     gpu_id=$((target_dev%max_concurrent_executions))
     CUDA_VISIBLE_DEVICES=$gpu_id taskset --cpu-list $((60*gpu_id))-$((60*(gpu_id+1))) \
-    python optimize_multi.py \
+    python optimize.py \
         --exp-name $exp_name --trial $trial --cache-root \
         $cache_root --acqf $acqf --data-dir $data_dir 2>&1 | tee ${log_file} 
     rm -rf $cache_root 
@@ -20,7 +18,8 @@ run_trial() {
 }
 
 ACQF_ARRAY=(EEIPU CArBO LaMBO MS_BO MS_CArBO EIPS EI) #LaMBO
-exp_name=t5-pipe-multi-new
+exp_name=segment-exp-new
+data_dir=/aios-store/tuunv2/ridwan/dataset/semantic_drone_dataset
 
 mkdir -p log/{EEIPU,EI,CArBO,EIPS,MS_CArBO,MS_BO,LaMBO}
 max_concurrent_executions=$(nvidia-smi --list-gpus | wc -l)
