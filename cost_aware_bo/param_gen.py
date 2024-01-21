@@ -325,6 +325,7 @@ def log_metrics(
 
 
 def lambo_preprocessing(acqf, h_ind, x_bounds, n_stages, trial, first_iter, iteration):
+    # TODO: Refactor this if block to take it outside the function
     if acqf != "LaMBO" or iteration < first_iter:
         return None, None, None, None, None, None, x_bounds
 
@@ -357,6 +358,7 @@ def lambo_preprocessing(acqf, h_ind, x_bounds, n_stages, trial, first_iter, iter
 def lambo_pre_iteration(
     mset, root, acqf, probs, h, n_stages, arm_idx, bounds, first_iter, iteration
 ):
+    # TODO: Refactor this if block to take it outside the function
     if acqf != "LaMBO" or iteration < first_iter:
         return bounds, 0
 
@@ -383,6 +385,7 @@ def lambo_post_iteration(
     iteration,
     trial,
 ):
+    # TODO: Refactor this if block to take it outside the function
     if acqf != "LaMBO" or iteration < first_iter:
         return
 
