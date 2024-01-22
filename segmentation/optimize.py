@@ -16,6 +16,9 @@ from segmentation_exp import (  # Importing DroneDataset to prevent pickle error
     main,
     DroneDataset
 )
+import s3fs
+
+s3=s3fs.S3FileSystem()
 
 sys.path.append("./")
 
@@ -47,14 +50,14 @@ data_dir: Path = args.data_dir
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 init_dataset_path = Path(
-    f"inputs/{args.exp_name}/t5_init_dataset-trial_{args.trial}.pk"
+    f"inputs/{args.exp_name}/segment_init_dataset-trial_{args.trial}.pk"
 )
 init_dataset_path.parent.mkdir(parents=True, exist_ok=True)
 dataset = {}
-t5_init_dataset = {}
+segment_init_dataset = {}
 if init_dataset_path.exists():
     with init_dataset_path.open("rb") as f:
-        t5_init_dataset = pickle.load(f)
+        segment_init_dataset = pickle.load(f)
 
 with (data_dir / "initial_hparams_multi.json").open() as f:
     initial_hparams = json.load(f)
@@ -83,10 +86,10 @@ consumed_budget, total_budget, n_init_data = (
 
 i = 0
 warmup = True
-if t5_init_dataset:
-    dataset = t5_init_dataset["dataset"]
-    params["budget_0"] = consumed_budget = t5_init_dataset["consumed_budget"]
-    i = t5_init_dataset["n_init_data"]
+if segment_init_dataset:
+    dataset = segment_init_dataset["dataset"]
+    params["budget_0"] = consumed_budget = segment_init_dataset["consumed_budget"]
+    i = segment_init_dataset["n_init_data"]
     warmup = False
 try:
     while consumed_budget < total_budget:
@@ -94,14 +97,14 @@ try:
 
         if i >= n_init_data and warmup:  # Only execute this for the once for a trial
             with init_dataset_path.open("wb") as f:
-                t5_init_dataset = {
+                segment_init_dataset = {
                     "dataset": dataset,
                     "consumed_budget": consumed_budget,
                     "n_init_data": i,
                 }
-                print("T5 HP Dataset")
-                print(t5_init_dataset)
-                pickle.dump(t5_init_dataset, f)
+                print("Segmentation HP Dataset")
+                print(segment_init_dataset)
+                pickle.dump(segment_init_dataset, f)
             warmup = False
             params["budget_0"] = consumed_budget
         print(hp_sampling_range)
