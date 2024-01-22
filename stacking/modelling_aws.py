@@ -323,7 +323,7 @@ params = {
     "n_prefixes": 5,
 }
 
-root = "s3://mbz-hpc-aws-master/AROARU6TOWKRU3FNVE2PB:Ridwan.Salahuddeen@mbzuai.ac.ae/stacking"
+root = "mbz-hpc-aws-master/AROARU6TOWKRU3FNVE2PB:Ridwan.Salahuddeen@mbzuai.ac.ae/stacking"
 init_dataset_path = Path(
     f"{root}/inputs/{args.exp_name}/stacking_init_dataset-trial_{args.trial}.pk"
 )
