@@ -14,10 +14,11 @@ from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
 
 from segmentation_exp import (  # Importing DroneDataset to prevent pickle error
     main,
+    DroneDataset # noqa
 )
 import s3fs
 
-s3=s3fs.S3FileSystem()
+s3 = s3fs.S3FileSystem()
 
 sys.path.append("./")
 
@@ -48,14 +49,15 @@ data_dir: Path = args.data_dir
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
+root = "mbz-hpc-aws-master/AROARU6TOWKRU3FNVE2PB:Ridwan.Salahuddeen@mbzuai.ac.ae/segmentation"
 init_dataset_path = Path(
-    f"inputs/{args.exp_name}/segment_init_dataset-trial_{args.trial}.pk"
+    f"{root}/inputs/{args.exp_name}/stacking_init_dataset-trial_{args.trial}.pk"
 )
-init_dataset_path.parent.mkdir(parents=True, exist_ok=True)
+s3.mkdirs(init_dataset_path.parent, exist_ok=True)
 dataset = {}
-segment_init_dataset = {}
-if init_dataset_path.exists():
-    with init_dataset_path.open("rb") as f:
+stacking_init_dataset = {}
+if s3.exists(init_dataset_path):
+    with s3.open(init_dataset_path, "rb") as f:
         segment_init_dataset = pickle.load(f)
 
 with (data_dir / "initial_hparams_multi.json").open() as f:
