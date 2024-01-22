@@ -338,7 +338,7 @@ date_now = f"{time.strftime('%Y-%m-%d-%H%M')}"
 
 wandb.init(
     entity="cost-bo",
-    project="memoised-realworld-exp",
+    project="jan-2024-cost-aware-bo",
     group=f"{args.exp_name}|-acqf_{args.acqf}|-dec-fac_{args.decay_factor}"
     f"|init-eta_{args.init_eta}",
     name=f"{date_now}-trial-number_{args.trial}",

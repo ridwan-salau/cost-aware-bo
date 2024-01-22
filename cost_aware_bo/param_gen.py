@@ -632,7 +632,7 @@ if __name__ == "__main__":
     trial = args.trial
     wandb.init(
         entity="cost-bo",
-        project="memoised-realworld-exp",
+        project="jan-2024-cost-aware-bo",
         group=f"Stacking-{args.exp_group}|-acqf_{args.acqf}|-dec-fac_{args.decay_factor}"
         f"|init-eta_{args.init_eta}",
         name=f"{time.strftime('%Y-%m-%d-%H%M')}-trial-number_{trial}",

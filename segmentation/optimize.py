@@ -68,7 +68,7 @@ date_now = f"{time.strftime('%Y-%m-%d-%H%M')}"
 
 wandb.init(
     entity="cost-bo",
-    project="memoised-realworld-exp",
+    project="jan-2024-cost-aware-bo",
     group=f"{args.exp_name}|-acqf_{args.acqf}|-dec-fac_{args.decay_factor}"
     f"|init-eta_{args.init_eta}",
     name=f"{date_now}-trial-number_{args.trial}",
@@ -116,7 +116,7 @@ try:
 
         output_dir: Path = args.cache_root / f"iter_{i}"
         output_dir.mkdir(parents=True)
-        pipeline_outputs = main(data_dir, output_dir, new_hp_dict)
+        pipeline_outputs = main(new_hp_dict)
         obj, cost_per_stage = pipeline_outputs["obj"], pipeline_outputs["costs"]
 
         consumed_budget += sum(cost_per_stage)
