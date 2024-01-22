@@ -19,7 +19,7 @@ run_trial() {
 
 ACQF_ARRAY=(EEIPU CArBO LaMBO MS_BO MS_CArBO EIPS EI) #LaMBO
 exp_name=segment-exp-new
-data_dir=/aios-store/tuunv2/ridwan/dataset/semantic_drone_dataset
+data_dir=mbz-hpc-aws-master/AROARU6TOWKRU3FNVE2PB:Ridwan.Salahuddeen@mbzuai.ac.ae/segmentation/inputs
 
 mkdir -p log/{EEIPU,EI,CArBO,EIPS,MS_CArBO,MS_BO,LaMBO}
 max_concurrent_executions=$(nvidia-smi --list-gpus | wc -l)
