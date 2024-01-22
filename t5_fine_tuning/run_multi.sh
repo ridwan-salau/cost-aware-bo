@@ -19,7 +19,7 @@ run_trial() {
 
 }
 
-ACQF_ARRAY=(EEIPU CArBO LaMBO MS_BO MS_CArBO EIPS EI) #LaMBO
+ACQF_ARRAY=(EEIPU CArBO LaMBO MS_BO EIPS EI MS_CArBO)
 exp_name=t5-pipe-multi-new
 
 mkdir -p log/{EEIPU,EI,CArBO,EIPS,MS_CArBO,MS_BO,LaMBO}
