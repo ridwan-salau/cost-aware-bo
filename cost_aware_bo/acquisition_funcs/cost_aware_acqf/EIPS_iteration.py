@@ -11,7 +11,9 @@ from cost_aware_bo.functions.iteration_funcs import get_gp_models, get_cost_mode
 from cost_aware_bo.optimize_mem_acqf import optimize_acqf_by_mem
 from botorch.sampling import SobolQMCNormalSampler
 from botorch.acquisition.objective import IdentityMCObjective
+import torch
 
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def eips_iteration(
     X,
@@ -34,6 +36,7 @@ def eips_iteration(
     )
 
     c = c.sum(axis=1).unsqueeze(-1)
+    c = c.to(DEVICE)
     bounds = get_cost_bounds(c, bounds)
     cost_mll, cost_gp = get_cost_model(
         train_x, c, iter, params["h_ind"], bounds, acqf_str

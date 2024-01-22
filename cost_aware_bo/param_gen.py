@@ -435,7 +435,7 @@ def reformat_xbounds(x_bounds, device="cuda"):
         for param_bounds in stage:
             x_b[0].append(param_bounds[0])
             x_b[1].append(param_bounds[1])
-    return torch.tensor(x_b)
+    return torch.tensor(x_b, device=device)
 
 
 def generate_hps(
