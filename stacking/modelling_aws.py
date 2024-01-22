@@ -47,7 +47,7 @@ parser.add_argument("--disable-cache", action="store_true", help="Disable cache"
 parser.add_argument(
     "--data-dir", type=Path, help="Directory with the data", default="./inputs"
 )
-args = parser.parse_args()
+args, _ = parser.parse_known_args()
 disable_cache = args.acqf != "EEIPU"
 cache = Cache(
     f"stacking_{args.exp_name}_{args.trial}_cache",
