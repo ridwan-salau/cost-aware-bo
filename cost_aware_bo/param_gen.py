@@ -422,6 +422,7 @@ def lambo_post_iteration(
 
     root.save_data(probs, loss, h, global_input_bounds, arm_idx)
 
+    # TODO: params['exp_name'] cannot be relied on as exp_name is defined by the user
     tree_path = Path(f"{params['exp_name']}/{acqf}/tree.pickle_{trial}.pkl")
     tree_path.parent.mkdir(parents=True, exist_ok=True)
     with open(tree_path, "wb") as file:
@@ -489,6 +490,7 @@ def generate_hps(
     device = "cuda" if torch.cuda.is_available() else "cpu"
     x_b = reformat_xbounds(x_bounds, device=device)
 
+    # TODO: params["trial"] cannot be relied on as exp_name is defined by the user
     first_iter, n_stages = params["n_init_data"] + 1, len(h_ind_list)
     root, mset, loss, probs, arm_idx, h, x_b = lambo_preprocessing(
         acq_type, h_ind_list, x_b, n_stages, params["trial"], first_iter, iteration
