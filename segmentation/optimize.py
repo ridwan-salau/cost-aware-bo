@@ -12,7 +12,10 @@ import torch
 import wandb
 from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
 
-from tuning_multi import t5_fine_tuning
+from segmentation_exp import (  # Importing DroneDataset to prevent pickle error
+    main,
+    DroneDataset
+)
 
 sys.path.append("./")
 
@@ -113,7 +116,7 @@ try:
 
         output_dir: Path = args.cache_root / f"iter_{i}"
         output_dir.mkdir(parents=True)
-        pipeline_outputs = t5_fine_tuning(data_dir, output_dir, new_hp_dict)
+        pipeline_outputs = main(new_hp_dict)
         obj, cost_per_stage = pipeline_outputs["obj"], pipeline_outputs["costs"]
 
         consumed_budget += sum(cost_per_stage)

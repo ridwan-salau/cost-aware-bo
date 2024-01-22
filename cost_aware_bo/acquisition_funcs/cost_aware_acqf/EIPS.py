@@ -95,6 +95,7 @@ class EIPS(AnalyticAcquisitionFunction):
 
         inv_cost = 1 / stage_costs
         inv_cost = inv_cost.mean(dim=0)
+        inv_cost = inv_cost.to(DEVICE)
 
         return inv_cost
 
@@ -134,6 +135,7 @@ class EIPS(AnalyticAcquisitionFunction):
         updf = torch.exp(normal.log_prob(u))
 
         ei = sigma * (updf + u * ucdf)
+        ei = ei.to(DEVICE)
 
         return ei
 

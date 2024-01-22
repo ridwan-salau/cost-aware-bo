@@ -330,9 +330,9 @@ def lambo_preprocessing(acqf, h_ind, x_bounds, n_stages, trial, first_iter, iter
         return None, None, None, None, None, None, x_bounds
 
     tree = None
-    filename = f"tree_pickle__{trial}.pkl"
-    if os.path.exists(filename):
-        with open(filename, "rb"):
+    tree_path = Path(f"{params['exp_name']}/{acqf}/tree.pickle_{trial}.pkl")
+    if tree_path.exists():
+        with open(tree_path, "rb"):
             pickle.load(tree)
             root, mset = tree
             probs, loss, h, global_input_bounds, arm_idx = root.retrieve_data()
@@ -422,7 +422,10 @@ def lambo_post_iteration(
 
     root.save_data(probs, loss, h, global_input_bounds, arm_idx)
 
-    with open(f"tree.pickle_{trial}.pkl", "wb") as file:
+    # TODO: params['exp_name'] cannot be relied on as exp_name is defined by the user
+    tree_path = Path(f"{params['exp_name']}/{acqf}/tree.pickle_{trial}.pkl")
+    tree_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(tree_path, "wb") as file:
         tree = (root, mset)
         pickle.dump(tree, file)
 
@@ -435,7 +438,7 @@ def reformat_xbounds(x_bounds, device="cuda"):
         for param_bounds in stage:
             x_b[0].append(param_bounds[0])
             x_b[1].append(param_bounds[1])
-    return torch.tensor(x_b)
+    return torch.tensor(x_b, device=device)
 
 
 def generate_hps(
@@ -484,8 +487,10 @@ def generate_hps(
     random.seed(rand_seed)
     botorch.utils.sampling.manual_seed(seed=rand_seed)
 
-    x_b = reformat_xbounds(x_bounds)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    x_b = reformat_xbounds(x_bounds, device=device)
 
+    # TODO: params["trial"] cannot be relied on as exp_name is defined by the user
     first_iter, n_stages = params["n_init_data"] + 1, len(h_ind_list)
     root, mset, loss, probs, arm_idx, h, x_b = lambo_preprocessing(
         acq_type, h_ind_list, x_b, n_stages, params["trial"], first_iter, iteration
@@ -629,7 +634,7 @@ if __name__ == "__main__":
     trial = args.trial
     wandb.init(
         entity="cost-bo",
-        project="memoised-realworld-exp",
+        project="jan-2024-cost-aware-bo",
         group=f"Stacking-{args.exp_group}|-acqf_{args.acqf}|-dec-fac_{args.decay_factor}"
         f"|init-eta_{args.init_eta}",
         name=f"{time.strftime('%Y-%m-%d-%H%M')}-trial-number_{trial}",

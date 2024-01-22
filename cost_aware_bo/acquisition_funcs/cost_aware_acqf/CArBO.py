@@ -8,7 +8,7 @@ from torch.distributions import Normal
 from torch import Tensor
 import torch
 
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DEVICE = torch.device("cpu" if torch.cuda.is_available() else "cpu")
 
 
 class CArBO(AnalyticAcquisitionFunction):
@@ -102,7 +102,7 @@ class CArBO(AnalyticAcquisitionFunction):
                 if (not torch.is_tensor(stage_costs))
                 else torch.cat([stage_costs, cost_samples], axis=2)
             )
-
+        stage_costs = stage_costs.to(DEVICE)
         return stage_costs
 
     def compute_expected_inverse_cost(self, X: Tensor) -> Tensor:
@@ -112,6 +112,7 @@ class CArBO(AnalyticAcquisitionFunction):
 
         inv_cost = 1 / stage_costs
         inv_cost = inv_cost.mean(dim=0)
+        inv_cost = inv_cost.to(DEVICE)
 
         return inv_cost
 
@@ -155,6 +156,7 @@ class CArBO(AnalyticAcquisitionFunction):
         updf = torch.exp(normal.log_prob(u))
 
         ei = sigma * (updf + u * ucdf)
+        ei = ei.to(DEVICE)
 
         return ei
 
