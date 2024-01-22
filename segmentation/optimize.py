@@ -11,11 +11,11 @@ from pathlib import Path
 import torch
 import wandb
 from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
-import s3fs
 
-from tuning_multi import t5_fine_tuning
-
-s3=s3fs.S3FileSystem()
+from segmentation_exp import (  # Importing DroneDataset to prevent pickle error
+    main,
+    DroneDataset
+)
 
 sys.path.append("./")
 
@@ -34,29 +34,29 @@ parser.add_argument(
     default="EI",
 )
 parser.add_argument(
-    "--cache-root", type=str, default=".cachestore", help="Cache directory"
+    "--cache-root", type=Path, default=".cachestore", help="Cache directory"
 )
 parser.add_argument("--disable-cache", action="store_true", help="Disable cache")
 parser.add_argument(
-    "--data-dir", type=str, help="Directory with the data", default="./inputs"
+    "--data-dir", type=Path, help="Directory with the data", default="./inputs"
 )
 args = parser.parse_args()
 
-data_dir: str = args.data_dir
+data_dir: Path = args.data_dir
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 init_dataset_path = Path(
-    f"{data_dir}/{args.exp_name}/t5_init_dataset-trial_{args.trial}.pk"
+    f"inputs/{args.exp_name}/t5_init_dataset-trial_{args.trial}.pk"
 )
-s3.mkdirs(init_dataset_path.parent, exist_ok=True)
+init_dataset_path.parent.mkdir(parents=True, exist_ok=True)
 dataset = {}
 t5_init_dataset = {}
-if s3.exists(init_dataset_path):
-    with s3.open(init_dataset_path, "rb") as f:
+if init_dataset_path.exists():
+    with init_dataset_path.open("rb") as f:
         t5_init_dataset = pickle.load(f)
 
-with s3.open(data_dir / "initial_hparams_multi.json") as f:
+with (data_dir / "initial_hparams_multi.json").open() as f:
     initial_hparams = json.load(f)
     hp_sampling_range = initial_hparams["hp_sampling_range"]
     params = initial_hparams["params"]
@@ -93,7 +93,7 @@ try:
         tic = time.time()
 
         if i >= n_init_data and warmup:  # Only execute this for the once for a trial
-            with s3.open(init_dataset_path, "wb") as f:
+            with init_dataset_path.open("wb") as f:
                 t5_init_dataset = {
                     "dataset": dataset,
                     "consumed_budget": consumed_budget,
@@ -114,10 +114,9 @@ try:
             acq_type=args.acqf,
         )
 
-        output_dir: str = args.cache_root / f"iter_{i}"
-        s3.mkdirs(output_dir)
-        with s3.open(output_dir, "wb") as output_dir_file:
-            pipeline_outputs = t5_fine_tuning(data_dir, output_dir_file, new_hp_dict)
+        output_dir: Path = args.cache_root / f"iter_{i}"
+        output_dir.mkdir(parents=True)
+        pipeline_outputs = main(data_dir, output_dir, new_hp_dict)
         obj, cost_per_stage = pipeline_outputs["obj"], pipeline_outputs["costs"]
 
         consumed_budget += sum(cost_per_stage)
@@ -153,6 +152,6 @@ try:
         i += 1
 finally:
     # Clean up cache
-    if s3.exists(args.cache_root):
-        s3.rmdir(args.cache_root, ignore_errors=True)
+    if os.path.exists(args.cache_root):
+        shutil.rmtree(args.cache_root, ignore_errors=True)
     wandb.finish()

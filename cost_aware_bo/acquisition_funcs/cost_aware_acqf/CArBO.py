@@ -1,18 +1,17 @@
-from typing import Any, Dict, Optional, Union
-
-import torch
-from botorch.acquisition.analytic import AnalyticAcquisitionFunction
 from botorch.acquisition.objective import MCAcquisitionObjective, PosteriorTransform
-from botorch.models.model import Model
+from botorch.acquisition.analytic import AnalyticAcquisitionFunction
 from botorch.sampling import MCSampler
+from botorch.models.model import Model
 from botorch.utils import t_batch_mode_transform
-from torch import Tensor
+from typing import Union, Optional, Dict, Any
 from torch.distributions import Normal
+from torch import Tensor
+import torch
 
-DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+DEVICE = torch.device("cpu" if torch.cuda.is_available() else "cpu")
 
 
-class EIPUVariants(AnalyticAcquisitionFunction):
+class CArBO(AnalyticAcquisitionFunction):
     r"""Modification of Standard Expected Improvement Class defined in BoTorch
     See: https://botorch.org/api/_modules/botorch/acquisition/analytic.html#ExpectedImprovement
     """
@@ -28,6 +27,7 @@ class EIPUVariants(AnalyticAcquisitionFunction):
         maximize: bool = True,
         acq_type: str = "",
         unstandardizer=None,
+        normalizer=None,
         unnormalizer=None,
         bounds: Tensor = None,
         iter: int = None,
@@ -60,6 +60,7 @@ class EIPUVariants(AnalyticAcquisitionFunction):
         self.acq_obj = acq_objective
         self.acq_type = acq_type
         self.unstandardizer = unstandardizer
+        self.normalizer = normalizer
         self.unnormalizer = unnormalizer
         self.bounds = bounds
         self.params = params
@@ -68,73 +69,60 @@ class EIPUVariants(AnalyticAcquisitionFunction):
         self.consumed_budget = consumed_budget
         self.warmup = True
 
-    def compute_expected_inverse_cost(
-        self, X: Tensor, delta: int = 0, alpha_epsilon=False
-    ) -> Tensor:
-        r"""Used to computed the expected inverse cost by which we 'scale' the EI term"""
-        cat_stages = None
+    def get_mc_samples(self, X: Tensor, gp_model, bounds):
+        cost_posterior = gp_model.posterior(X)
+        cost_samples = self.cost_sampler(cost_posterior)
+        cost_samples = cost_samples.to(DEVICE)
+        cost_samples = cost_samples.max(dim=2)[0]
+
+        cost_samples = self.unstandardizer(cost_samples, bounds=bounds)
+        cost_samples = torch.exp(cost_samples)
+
+        cost_samples = self.acq_obj(cost_samples)
+
+        cost_samples = cost_samples[:, :, None]
+        cost_samples = cost_samples.to(DEVICE)
+
+        return cost_samples
+
+    def get_stagewise_expected_costs(self, X):
+        if self.acq_type == "CArBO":
+            return self.get_mc_samples(X, self.cost_gp[0], self.bounds["c"][:, 0])
+
+        # Use MC Sampling to get the expected costs of unmemoized stages
+        stage_costs = None
         for i, cost_model in enumerate(self.cost_gp):
-            if i < delta:
-                cost_samples = torch.full(
-                    (self.params["cost_samples"], X.shape[0]),
-                    self.params["epsilon"],
-                    device=DEVICE,
-                )  # generate a tensor of epsilons
-                reshaped_samples = cost_samples[:, :, None]
-                cat_stages = (
-                    reshaped_samples
-                    if (not torch.is_tensor(cat_stages))
-                    else torch.cat([cat_stages, reshaped_samples], axis=2)
-                )
-            else:
-                hyp_indexes = self.params["h_ind"][i]
-                if self.acq_type in ("EEIPU", "MS_CArBO"):
-                    cost_posterior = cost_model.posterior(X[:, :, hyp_indexes])
-                else:
-                    cost_posterior = cost_model.posterior(X)
-                cost_samples = self.cost_sampler(cost_posterior)
-                cost_samples = cost_samples.to(DEVICE)
-                cost_samples = cost_samples.max(dim=2)[0]
+            hyp_indexes = self.params["h_ind"][i]
 
-                cost_samples = self.unstandardizer(
-                    cost_samples, bounds=self.bounds["c"][:, i]
-                )
-                cost_samples = torch.exp(cost_samples)
+            cost_samples = self.get_mc_samples(
+                X[:, :, hyp_indexes], cost_model, self.bounds["c"][:, i]
+            )
+            stage_costs = (
+                cost_samples
+                if (not torch.is_tensor(stage_costs))
+                else torch.cat([stage_costs, cost_samples], axis=2)
+            )
 
-                cost_samples = self.acq_obj(cost_samples)
+        return stage_costs
 
-                reshaped_samples = cost_samples[:, :, None]
-                reshaped_samples = reshaped_samples.to(DEVICE)
-                # reshaped_samples = torch.log(reshaped_samples)
-                # reshaped_samples = self.cost_normalizer(reshaped_samples, self.params)
-                cat_stages = (
-                    reshaped_samples
-                    if (not torch.is_tensor(cat_stages))
-                    else torch.cat([cat_stages, reshaped_samples], axis=2)
-                )
+    def compute_expected_inverse_cost(self, X: Tensor) -> Tensor:
+        stage_costs = self.get_stagewise_expected_costs(X)
 
-        # norm_stages = self.cost_normalizer(cat_stages[:,:,n_mem:n_stages], self.params)
+        stage_costs = stage_costs.sum(dim=-1)
 
-        # cat_stages = torch.cat([cat_stages[:,:,:n_mem],  norm_stages], axis=-1).to(DEVICE)
+        inv_cost = 1 / stage_costs
+        inv_cost = inv_cost.mean(dim=0)
 
-        cat_stages = cat_stages.sum(dim=-1)
-
-        cat_stages = 1 / cat_stages
-        cat_stages = cat_stages.mean(dim=0)
-        return cat_stages
+        return inv_cost
 
     def compute_expected_cost(self, X: Tensor) -> Tensor:
-        r"""Custom function.
-        Used for debugging the return value of expected inverse cost function above.
-        """
-
         all_cost_obj = []
         for i, cost_model in enumerate(self.cost_gp):
             hyp_indexes = self.params["h_ind"][i]
-            if self.acq_type in ("EEIPU", "MS_CArBO"):
-                cost_posterior = cost_model.posterior(X[:, hyp_indexes])
-            else:
+            if self.acq_type == "CArBO":
                 cost_posterior = cost_model.posterior(X)
+            else:
+                cost_posterior = cost_model.posterior(X[:, hyp_indexes])
             cost_samples = self.cost_sampler(cost_posterior)
             cost_samples = cost_samples.to(DEVICE)
             cost_samples = cost_samples.max(dim=2)[0]
@@ -147,24 +135,32 @@ class EIPUVariants(AnalyticAcquisitionFunction):
             all_cost_obj.append(cost_obj.mean(dim=0).item())
         return all_cost_obj
 
-    @t_batch_mode_transform(expected_q=1, assert_output_shape=False)
-    def forward(self, X: Tensor, delta: int = 0, curr_iter: int = -1) -> Tensor:
-        r"""Evaluate qExpectedImprovement on the candidate set `X`."""
+    def custom_EI(self, X):
         self.best_f = self.best_f.to(X)
         posterior = self.model.posterior(
             X=X, posterior_transform=self.posterior_transform
         )
+
         mean = posterior.mean
         view_shape = mean.shape[:-2] if mean.shape[-2] == 1 else mean.shape[:-1]
         mean = mean.view(view_shape)
         sigma = posterior.variance.clamp_min(1e-9).sqrt().view(view_shape)
+
         u = (mean - self.best_f.expand_as(mean)) / sigma
         if not self.maximize:
             u = -u
+
         normal = Normal(torch.zeros_like(u), torch.ones_like(u))
         ucdf = normal.cdf(u)
         updf = torch.exp(normal.log_prob(u))
+
         ei = sigma * (updf + u * ucdf)
+
+        return ei
+
+    @t_batch_mode_transform(expected_q=1, assert_output_shape=False)
+    def forward(self, X: Tensor, delta: int = 0, curr_iter: int = -1) -> Tensor:
+        ei_x = self.custom_EI(X)
 
         total_budget = self.params["total_budget"] + 0
 
@@ -173,14 +169,6 @@ class EIPUVariants(AnalyticAcquisitionFunction):
 
         cost_cool = remaining / init_budget
 
-        if self.acq_type in ["EEIPU", "CArBO", "EIPS", "MS_CArBO"]:
-            inv_cost = self.compute_expected_inverse_cost(X, delta=delta)
+        inv_cost = self.compute_expected_inverse_cost(X)
 
-            return (
-                ei * (inv_cost**cost_cool) if self.acq_type != "EIPS" else ei * inv_cost
-            )
-
-        else:
-            raise Exception(
-                "ERROR: Only EEIPU, MS_CArBO, CArBO, and EIPS are supported!"
-            )
+        return ei_x * (inv_cost**cost_cool)
