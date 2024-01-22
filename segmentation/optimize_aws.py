@@ -60,7 +60,7 @@ if s3.exists(init_dataset_path):
     with s3.open(init_dataset_path, "rb") as f:
         segment_init_dataset = pickle.load(f)
 
-with (data_dir / "initial_hparams_multi.json").open() as f:
+with (data_dir / "sampling-range.json").open() as f:
     initial_hparams = json.load(f)
     hp_sampling_range = initial_hparams["hp_sampling_range"]
     params = initial_hparams["params"]
