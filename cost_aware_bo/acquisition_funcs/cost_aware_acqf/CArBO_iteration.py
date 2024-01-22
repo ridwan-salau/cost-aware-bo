@@ -19,6 +19,7 @@ import torch
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+
 def carbo_iteration(
     X,
     y,

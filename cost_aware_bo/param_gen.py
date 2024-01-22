@@ -324,13 +324,15 @@ def log_metrics(
     return
 
 
-def lambo_preprocessing(acqf, h_ind, x_bounds, n_stages, trial, first_iter, iteration):
+def lambo_preprocessing(
+    acqf, h_ind, x_bounds, n_stages, trial, first_iter, iteration, exp_name
+):
     # TODO: Refactor this if block to take it outside the function
     if acqf != "LaMBO" or iteration < first_iter:
         return None, None, None, None, None, None, x_bounds
 
     tree = None
-    tree_path = Path(f"{params['exp_name']}/{acqf}/tree.pickle_{trial}.pkl")
+    tree_path = Path(f"{exp_name}/{acqf}/tree.pickle_{trial}.pkl")
     if tree_path.exists():
         with open(tree_path, "rb"):
             pickle.load(tree)
@@ -384,6 +386,7 @@ def lambo_post_iteration(
     first_iter,
     iteration,
     trial,
+    exp_name,
 ):
     # TODO: Refactor this if block to take it outside the function
     if acqf != "LaMBO" or iteration < first_iter:
@@ -422,8 +425,7 @@ def lambo_post_iteration(
 
     root.save_data(probs, loss, h, global_input_bounds, arm_idx)
 
-    # TODO: params['exp_name'] cannot be relied on as exp_name is defined by the user
-    tree_path = Path(f"{params['exp_name']}/{acqf}/tree.pickle_{trial}.pkl")
+    tree_path = Path(f"{exp_name}/{acqf}/tree.pickle_{trial}.pkl")
     tree_path.parent.mkdir(parents=True, exist_ok=True)
     with open(tree_path, "wb") as file:
         tree = (root, mset)
@@ -446,6 +448,8 @@ def generate_hps(
     hp_sampling_range,
     iteration,
     params,
+    exp_name,
+    trial,
     consumed_budget=None,
     acq_type="EEIPU",
 ):
@@ -490,10 +494,9 @@ def generate_hps(
     device = "cuda" if torch.cuda.is_available() else "cpu"
     x_b = reformat_xbounds(x_bounds, device=device)
 
-    # TODO: params["trial"] cannot be relied on as exp_name is defined by the user
     first_iter, n_stages = params["n_init_data"] + 1, len(h_ind_list)
     root, mset, loss, probs, arm_idx, h, x_b = lambo_preprocessing(
-        acq_type, h_ind_list, x_b, n_stages, params["trial"], first_iter, iteration
+        acq_type, h_ind_list, x_b, n_stages, trial, first_iter, iteration, exp_name
     )
 
     new_hp, n_memoised, n_init_data = None, 0, params["n_init_data"]
@@ -548,7 +551,8 @@ def generate_hps(
             h_ind_list,
             first_iter,
             iteration,
-            params["trial"],
+            trial,
+            exp_name,
         )
 
     # When new_hp is None, `generate_hparams` will generate random samples.

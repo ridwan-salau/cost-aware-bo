@@ -14,7 +14,6 @@ from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
 
 from segmentation_exp import (  # Importing DroneDataset to prevent pickle error
     main,
-    DroneDataset
 )
 
 sys.path.append("./")
@@ -112,6 +111,8 @@ try:
             params=params,
             consumed_budget=consumed_budget,
             acq_type=args.acqf,
+            trial=args.trial,
+            exp_name=args.exp_name,
         )
 
         output_dir: Path = args.cache_root / f"iter_{i}"

@@ -24,7 +24,7 @@ from cachestore import Cache, LocalStorage
 
 from data_processing import prepare_data
 
-s3=s3fs.S3FileSystem()
+s3 = s3fs.S3FileSystem()
 
 parser = ArgumentParser()
 parser.add_argument(
@@ -323,7 +323,9 @@ params = {
     "n_prefixes": 5,
 }
 
-root = "mbz-hpc-aws-master/AROARU6TOWKRU3FNVE2PB:Ridwan.Salahuddeen@mbzuai.ac.ae/stacking"
+root = (
+    "mbz-hpc-aws-master/AROARU6TOWKRU3FNVE2PB:Ridwan.Salahuddeen@mbzuai.ac.ae/stacking"
+)
 init_dataset_path = Path(
     f"{root}/inputs/{args.exp_name}/stacking_init_dataset-trial_{args.trial}.pk"
 )
@@ -385,6 +387,8 @@ try:
             params=params,
             consumed_budget=consumed_budget,
             acq_type=args.acqf,
+            trial=args.trial,
+            exp_name=args.exp_name,
         )
 
         output_dir: Path = args.cache_root / f"iter_{i}"
