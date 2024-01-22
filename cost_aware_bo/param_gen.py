@@ -334,9 +334,8 @@ def lambo_preprocessing(
     tree = None
     tree_path = Path(f"{exp_name}/{acqf}/tree.pickle_{trial}.pkl")
     if tree_path.exists():
-        with open(tree_path, "rb"):
-            pickle.load(tree)
-            root, mset = tree
+        with open(tree_path, "rb") as tree_file:
+            root, mset = pickle.load(tree_file)
             probs, loss, h, global_input_bounds, arm_idx = root.retrieve_data()
             return root, mset, loss, probs, arm_idx, h, global_input_bounds
 
