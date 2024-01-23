@@ -97,7 +97,7 @@ try:
         tic = time.time()
 
         if i >= n_init_data and warmup:  # Only execute this for the once for a trial
-            with init_dataset_path.open("wb") as f:
+            with s3.open(init_dataset_path, "wb") as f:
                 segment_init_dataset = {
                     "dataset": dataset,
                     "consumed_budget": consumed_budget,
