@@ -17,7 +17,7 @@ from segmentation_exp import (  # Importing DroneDataset to prevent pickle error
 )
 import s3fs
 
-s3=s3fs.S3FileSystem()
+s3 = s3fs.S3FileSystem()
 
 sys.path.append("./")
 

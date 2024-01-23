@@ -331,7 +331,6 @@ def lambo_preprocessing(
     if acqf != "LaMBO" or iteration < first_iter:
         return None, None, None, None, None, None, x_bounds
 
-    tree = None
     tree_path = Path(f"{exp_name}/{acqf}/tree.pickle_{trial}.pkl")
     if tree_path.exists():
         with open(tree_path, "rb") as tree_file:
