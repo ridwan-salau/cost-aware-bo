@@ -6,10 +6,12 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 import albumentations as A
+import cachestore
 import cv2
 import numpy as np
 import pandas as pd
 import pydensecrf.densecrf as dcrf
+import s3fs
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
@@ -21,7 +23,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms as T
 from tqdm import tqdm
 
-import cachestore
+from cache_storage import AWSStorage
 
 parser = ArgumentParser()
 # parser.add_argument('--metrics-path', type=Path, required=True)
@@ -43,7 +45,7 @@ epochs = 3
 cache = cachestore.Cache(
     f"segmentation_{args.exp_name}_cache",
     disable=args.disable_cache,
-    storage=cachestore.LocalStorage(args.cache_root),
+    storage=AWSStorage(args.cache_root),
 )
 
 print(f"{cache.name=}")

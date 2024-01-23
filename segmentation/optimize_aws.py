@@ -8,15 +8,15 @@ from argparse import ArgumentParser
 from copy import deepcopy
 from pathlib import Path
 
+import s3fs
 import torch
 import wandb
 from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
 
 from segmentation_exp import (  # Importing DroneDataset to prevent pickle error
-    main,
     DroneDataset,  # noqa
+    main,
 )
-import s3fs
 
 s3 = s3fs.S3FileSystem()
 
