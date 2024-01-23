@@ -120,8 +120,8 @@ try:
 
         output_dir: Path = args.cache_root / f"iter_{i}"
         output_dir.mkdir(parents=True)
-        pipeline_outputs = main(new_hp_dict)
-        obj, cost_per_stage = pipeline_outputs["obj"], pipeline_outputs["costs"]
+        score_miou, score_miou_crf, cost_per_stage = main(new_hp_dict)
+        obj = score_miou
 
         consumed_budget += sum(cost_per_stage)
 
