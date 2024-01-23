@@ -95,7 +95,7 @@ class DroneDataset(Dataset):
 
         # Build the cache
         print("Transforming data")
-        for idx in tqdm(range(len(self))):
+        for idx in (range(len(self))):
             self.apply_transforms(idx)
 
     def __len__(self):
@@ -238,7 +238,7 @@ def train(
     model.train()
     for epoch in range(epochs):
         train_loader = DataLoader(datasets[epoch], batch_size=batch_size, shuffle=True)
-        for i, data in enumerate(tqdm(train_loader)):
+        for i, data in enumerate((train_loader)):
             # training phase
             image_tiles, mask_tiles = data
             if patch:
@@ -343,7 +343,7 @@ def crf(image, predicted_mask, **kwargs):
 def miou_score(model, test_set, **crf_kwargs):
     score_iou = []
     score_iou_crf = []
-    for i in tqdm(range(len(test_set))):
+    for i in (range(len(test_set))):
         img, mask = test_set[i]
 
         output, score, score_crf = predict_image_mask_miou(
