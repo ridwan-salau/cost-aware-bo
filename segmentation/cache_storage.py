@@ -24,7 +24,7 @@ class AWSStorage(LocalStorage):
         root: str | PathLike | None = None,
         openfn: Callable[..., IO[Any]] | Callable[..., ContextManager] | None = None,
     ) -> None:
-        super(AWSStorage).__init__(root, openfn)
+        super().__init__(root, openfn)
         self._openfn = s3.open
 
     @contextmanager
