@@ -76,9 +76,6 @@ def create_df():
 
 df = create_df()
 
-# Reduce the number of datapoints to 20%
-df = df.sample(frac=0.2, replace=False)
-
 # split data
 X_trainval, X_test = train_test_split(df["id"].values, test_size=0.1, random_state=19)
 X_train, X_val = train_test_split(X_trainval, test_size=0.15, random_state=19)
