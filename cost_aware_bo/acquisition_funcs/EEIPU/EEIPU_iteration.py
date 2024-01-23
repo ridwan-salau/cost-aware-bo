@@ -1,19 +1,21 @@
-from .EEIPU import EEIPU
-from cost_aware_bo.functions.processing_funcs import (
-    normalize,
-    unnormalize,
-    standardize,
-    unstandardize,
-    get_gen_bounds,
-    generate_prefix_pool,
-)
+from botorch.acquisition.objective import IdentityMCObjective
+from botorch.sampling import SobolQMCNormalSampler
+
 from cost_aware_bo.functions.iteration_funcs import (
     get_gp_models,
     get_multistage_cost_models,
 )
+from cost_aware_bo.functions.processing_funcs import (
+    generate_prefix_pool,
+    get_gen_bounds,
+    normalize,
+    standardize,
+    unnormalize,
+    unstandardize,
+)
 from cost_aware_bo.optimize_mem_acqf import optimize_acqf_by_mem
-from botorch.sampling import SobolQMCNormalSampler
-from botorch.acquisition.objective import IdentityMCObjective
+
+from .EEIPU import EEIPU
 
 
 def eeipu_iteration(

@@ -11,19 +11,17 @@ import cv2
 import numpy as np
 import pandas as pd
 import pydensecrf.densecrf as dcrf
-import s3fs
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from cache_storage import AWSStorage
 from PIL import Image
 from pydensecrf.utils import create_pairwise_gaussian, unary_from_labels
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms as T
 from tqdm import tqdm
-
-from cache_storage import AWSStorage
 
 parser = ArgumentParser()
 # parser.add_argument('--metrics-path', type=Path, required=True)

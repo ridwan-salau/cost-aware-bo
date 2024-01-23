@@ -1,9 +1,12 @@
-from cost_aware_bo.functions.processing_funcs import get_initial_data
-from .MSET import MSET, Node
-import numpy as np
-import random
-import torch
 import copy
+import random
+
+import numpy as np
+import torch
+
+from cost_aware_bo.functions.processing_funcs import get_initial_data
+
+from .MSET import MSET, Node
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

@@ -1,17 +1,19 @@
-from .EIPS import EIPS
-from cost_aware_bo.functions.processing_funcs import (
-    normalize,
-    unnormalize,
-    standardize,
-    unstandardize,
-    get_gen_bounds,
-    get_cost_bounds,
-)
-from cost_aware_bo.functions.iteration_funcs import get_gp_models, get_cost_model
-from cost_aware_bo.optimize_mem_acqf import optimize_acqf_by_mem
-from botorch.sampling import SobolQMCNormalSampler
-from botorch.acquisition.objective import IdentityMCObjective
 import torch
+from botorch.acquisition.objective import IdentityMCObjective
+from botorch.sampling import SobolQMCNormalSampler
+
+from cost_aware_bo.functions.iteration_funcs import get_cost_model, get_gp_models
+from cost_aware_bo.functions.processing_funcs import (
+    get_cost_bounds,
+    get_gen_bounds,
+    normalize,
+    standardize,
+    unnormalize,
+    unstandardize,
+)
+from cost_aware_bo.optimize_mem_acqf import optimize_acqf_by_mem
+
+from .EIPS import EIPS
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

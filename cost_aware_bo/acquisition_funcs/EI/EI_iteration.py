@@ -1,11 +1,12 @@
 from botorch.acquisition import ExpectedImprovement
-from cost_aware_bo.functions.processing_funcs import (
-    normalize,
-    unnormalize,
-    standardize,
-    get_gen_bounds,
-)
+
 from cost_aware_bo.functions.iteration_funcs import get_gp_models
+from cost_aware_bo.functions.processing_funcs import (
+    get_gen_bounds,
+    normalize,
+    standardize,
+    unnormalize,
+)
 from cost_aware_bo.optimize_mem_acqf import optimize_acqf_by_mem
 
 

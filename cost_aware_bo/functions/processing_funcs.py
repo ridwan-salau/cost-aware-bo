@@ -1,6 +1,7 @@
-import torch
 import copy
 from typing import Dict, List
+
+import torch
 
 # from functions.synthetic_functions import Cost_F, F # We shouldn't have this here, I think
 from botorch.models import SingleTaskGP

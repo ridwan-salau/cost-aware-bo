@@ -10,9 +10,9 @@ from pathlib import Path
 
 import torch
 import wandb
-from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
-
 from tuning_multi import t5_fine_tuning
+
+from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
 
 sys.path.append("./")
 

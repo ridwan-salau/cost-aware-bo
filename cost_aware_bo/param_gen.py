@@ -1,6 +1,7 @@
 import csv
 import json
 import os
+import pickle
 import random
 import time
 from argparse import ArgumentParser
@@ -12,8 +13,21 @@ import botorch
 import numpy as np
 import torch
 import wandb
-import pickle
 
+from .acquisition_funcs.cost_aware_acqf import CArBO_iteration, EIPS_iteration
+from .acquisition_funcs.EEIPU.EEIPU_iteration import eeipu_iteration
+from .acquisition_funcs.EI.EI_iteration import ei_iteration
+from .acquisition_funcs.LaMBO.LaMBO import (
+    build_partitions,
+    build_tree,
+    get_pdf,
+    remove_invalid_partitions,
+    select_arm,
+    update_all_probabilities,
+    update_loss_estimators,
+)
+from .acquisition_funcs.LaMBO.LaMBO_iteration import lambo_iteration
+from .acquisition_funcs.MS_BO.MS_BO_iteration import msbo_iteration
 from .functions.processing_funcs import get_dataset_bounds
 from .optimizer.optimize_acqf_funcs import (
     _optimize_acqf_batch,
@@ -21,20 +35,6 @@ from .optimizer.optimize_acqf_funcs import (
     gen_candidates_scipy,
     optimize_acqf,
 )
-from .acquisition_funcs.LaMBO.LaMBO import (
-    select_arm,
-    update_all_probabilities,
-    update_loss_estimators,
-    build_partitions,
-    get_pdf,
-    build_tree,
-    remove_invalid_partitions,
-)
-from .acquisition_funcs.cost_aware_acqf import CArBO_iteration, EIPS_iteration
-from .acquisition_funcs.EEIPU.EEIPU_iteration import eeipu_iteration
-from .acquisition_funcs.EI.EI_iteration import ei_iteration
-from .acquisition_funcs.LaMBO.LaMBO_iteration import lambo_iteration
-from .acquisition_funcs.MS_BO.MS_BO_iteration import msbo_iteration
 
 botorch.optim.optimize.optimize_acqf = optimize_acqf
 botorch.optim.optimize._optimize_acqf_batch = _optimize_acqf_batch

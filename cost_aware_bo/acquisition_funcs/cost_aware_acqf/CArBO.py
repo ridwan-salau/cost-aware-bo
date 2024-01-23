@@ -1,12 +1,13 @@
-from botorch.acquisition.objective import MCAcquisitionObjective, PosteriorTransform
-from botorch.acquisition.analytic import AnalyticAcquisitionFunction
-from botorch.sampling import MCSampler
-from botorch.models.model import Model
-from botorch.utils import t_batch_mode_transform
-from typing import Union, Optional, Dict, Any
-from torch.distributions import Normal
-from torch import Tensor
+from typing import Any, Dict, Optional, Union
+
 import torch
+from botorch.acquisition.analytic import AnalyticAcquisitionFunction
+from botorch.acquisition.objective import MCAcquisitionObjective, PosteriorTransform
+from botorch.models.model import Model
+from botorch.sampling import MCSampler
+from botorch.utils import t_batch_mode_transform
+from torch import Tensor
+from torch.distributions import Normal
 
 DEVICE = torch.device("cpu" if torch.cuda.is_available() else "cpu")
 
