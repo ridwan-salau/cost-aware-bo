@@ -14,7 +14,7 @@ s3 = s3fs.S3FileSystem()
 class CustFileLock(FileLock):
     def acquire(self) -> None:
         if self._lockfile is None:
-            self._file_path.mkdir(parents=True, exist_ok=True)
+            self._file_path.parent.mkdir(parents=True, exist_ok=True)
             self._lockfile = open(self._file_path, "w")
             fcntl.flock(self._lockfile, fcntl.LOCK_EX)
 
