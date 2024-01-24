@@ -18,7 +18,7 @@ from segmentation_exp import (  # Importing DroneDataset to prevent pickle error
 
 from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
 
-s3 = s3fs.S3FileSystem()
+s3 = s3fs.S3FileSystem(config_kwargs = dict(region_name="me-central-1"))
 
 sys.path.append("./")
 

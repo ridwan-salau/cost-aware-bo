@@ -8,7 +8,7 @@ import s3fs
 from cachestore import LocalStorage
 from cachestore.common import FileLock
 
-s3 = s3fs.S3FileSystem()
+s3 = s3fs.S3FileSystem(config_kwargs = dict(region_name="me-central-1"))
 
 
 class CustFileLock(FileLock):
