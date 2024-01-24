@@ -12,6 +12,8 @@ s3 = s3fs.S3FileSystem()
 
 
 class CustFileLock(FileLock):
+    def __init__(self, lockfile: str | Path) -> None:
+        super().__init__(lockfile)
     def acquire(self) -> None:
         if self._lockfile is None:
             self._file_path.parent.mkdir(parents=True, exist_ok=True)
