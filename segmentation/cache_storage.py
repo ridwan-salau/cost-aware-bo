@@ -43,7 +43,7 @@ class AWSStorage(LocalStorage):
                 s3.rm_file(filename)
                 raise
             finally:
-                s3.rm_file(lockfile)
+                lockfile.unlink()
 
     def remove(self, key: str) -> None:
         filename = self._root / key
