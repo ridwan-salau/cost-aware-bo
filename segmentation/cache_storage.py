@@ -7,6 +7,7 @@ from typing import IO, Any, Callable, ContextManager, Iterator
 import s3fs
 from cachestore import LocalStorage
 from cachestore.common import FileLock
+from cachestore.formatters import Formatter
 
 s3 = s3fs.S3FileSystem(config_kwargs = dict(region_name="me-central-1"))
 
@@ -29,6 +30,10 @@ class AWSStorage(LocalStorage):
     ) -> None:
         super().__init__(root, openfn)
         self._openfn = s3.open
+        # TODO: Remove this code – it's just here for testing writing to S3
+        with self._openfn(self._root / "test.txt", "wb") as fp:
+            Formatter.write(fp, list(range(10)))
+
 
     @contextmanager
     def open(self, key: str, mode: str) -> Iterator[IO[Any]]:
