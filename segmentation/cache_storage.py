@@ -30,9 +30,6 @@ class AWSStorage(LocalStorage):
         super().__init__(root, openfn)
         self._openfn = s3.open
         self._root = Path(root)
-        # TODO: Remove this code – it's just here for testing writing to S3
-        with self._openfn((self._root / "test.pkl").as_posix(), "wb") as fp:
-            Cache().formatter.write(fp, list(range(10)))
 
 
     @contextmanager
