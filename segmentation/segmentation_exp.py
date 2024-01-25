@@ -1,9 +1,11 @@
 import math
 import os
+import pickle
 import time
 import uuid
 from argparse import ArgumentParser
 from pathlib import Path
+from uuid import uuid4
 
 import albumentations as A
 import cachestore
@@ -11,11 +13,12 @@ import cv2
 import numpy as np
 import pandas as pd
 import pydensecrf.densecrf as dcrf
+import s3fs
 import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from cache_storage import AWSStorage
+# from cache_storage import AWSStorage
 from PIL import Image
 from pydensecrf.utils import create_pairwise_gaussian, unary_from_labels
 from sklearn.model_selection import train_test_split
@@ -23,6 +26,7 @@ from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms as T
 from tqdm import tqdm
 
+s3 = s3fs.S3FileSystem(config_kwargs = dict(region_name="me-central-1"))
 parser = ArgumentParser()
 # parser.add_argument('--metrics-path', type=Path, required=True)
 parser.add_argument("--disable-cache", action="store_true", help="Disable cache")
@@ -43,7 +47,8 @@ epochs = 3
 cache = cachestore.Cache(
     f"segmentation_{args.exp_name}_cache",
     disable=args.disable_cache,
-    storage=AWSStorage(args.cache_root),
+    # storage=AWSStorage(args.cache_root),
+    storage=cachestore.LocalStorage(args.cache_root),
 )
 
 print(f"{cache.name=}")
@@ -168,7 +173,10 @@ def get_dataset(epochs, mean, std):
         for _ in range(epochs)
     ]
     val_set = DroneDataset(IMAGE_PATH, MASK_PATH, X_val, mean, std, t_val, patch=False)
-    return train_sets, val_set
+    file_name = f"{args.cache_root}/{uuid4().hex}.pkl"
+    with s3.open(file_name, "wb") as fp:
+        pickle.dump(fp, (train_sets, val_set))
+    return file_name
 
 
 def pixel_accuracy(output, mask):
@@ -364,11 +372,14 @@ def fit(epochs, max_lr, weight_decay, batch_size, mean, std, patch=False, **crf_
 
     # Stage I: Data pre-processing and transformations
     stage1_params = [epochs, mean, std]
-    train_sets, val_set = get_dataset(*stage1_params)
+    file_name = get_dataset(*stage1_params)
 
     end_1_time = time.time()
 
     # Stage II: Train the model
+    with open(file_name, "rb") as fp:
+        train_sets, val_set = pickle.load(fp)
+    
     name = train(
         stage1_params, epochs, train_sets, max_lr, weight_decay, batch_size, patch=patch
     )
