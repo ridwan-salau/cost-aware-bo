@@ -9,7 +9,7 @@ from cachestore import LocalStorage
 from cachestore.common import FileLock
 
 s3 = s3fs.S3FileSystem(config_kwargs = dict(region_name="me-central-1"))
-
+s3.endpoint_url
 
 class CustFileLock(FileLock):
     def __init__(self, lockfile: str | Path) -> None:
