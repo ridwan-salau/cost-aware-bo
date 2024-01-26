@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import IO, Any, Callable, ContextManager, Iterator
 
 import s3fs
-from cachestore import LocalStorage, Cache
+from cachestore import LocalStorage
 from cachestore.common import FileLock
 
 s3 = s3fs.S3FileSystem(config_kwargs = dict(region_name="me-central-1"))
@@ -29,9 +29,7 @@ class AWSStorage(LocalStorage):
     ) -> None:
         super().__init__(root, openfn)
         self._openfn = s3.open
-        # TODO: Remove this code – it's just here for testing writing to S3
-        with self._openfn(self._root / "test.txt", "wb") as fp:
-            Cache().formatter.write(fp, list(range(10)))
+        self._root = Path(root)
 
 
     @contextmanager
