@@ -38,7 +38,7 @@ args, _ = parser.parse_known_args()
 
 disable_cache = args.acqf != "EEIPU"
 cache = Cache(
-    f"stacking_{args.exp_name}_{args.trial}_cache",
+    f"t5-pipeline_{args.exp_name}_{args.trial}_cache",
     storage=LocalStorage(args.cache_root),
     disable=disable_cache,
 )
