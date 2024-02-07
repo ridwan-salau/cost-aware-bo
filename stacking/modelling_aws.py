@@ -10,6 +10,7 @@ from typing import Any, Dict
 
 import numpy as np
 import pandas as pd
+import s3fs
 import torch
 import wandb
 import xgboost as xgb
@@ -22,6 +23,8 @@ from sklearn.metrics import roc_auc_score
 from sklearn.model_selection import KFold
 
 from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
+
+s3 = s3fs.S3FileSystem(config_kwargs = dict(region_name="me-central-1"))
 
 parser = ArgumentParser()
 parser.add_argument(
@@ -44,7 +47,7 @@ parser.add_argument("--disable-cache", action="store_true", help="Disable cache"
 parser.add_argument(
     "--data-dir", type=Path, help="Directory with the data", default="./inputs"
 )
-args = parser.parse_args()
+args, _ = parser.parse_known_args()
 disable_cache = args.acqf != "EEIPU"
 cache = Cache(
     f"stacking_{args.exp_name}_{args.trial}_cache",
@@ -320,14 +323,17 @@ params = {
     "n_prefixes": 5,
 }
 
-init_dataset_path = Path(
-    f"inputs/{args.exp_name}/stacking_init_dataset-trial_{args.trial}.pk"
+root = (
+    "mbz-hpc-aws-master/AROARU6TOWKRU3FNVE2PB:Ridwan.Salahuddeen@mbzuai.ac.ae/stacking"
 )
-init_dataset_path.parent.mkdir(parents=True, exist_ok=True)
+init_dataset_path = Path(
+    f"{root}/inputs/{args.exp_name}/stacking_init_dataset-trial_{args.trial}.pk"
+)
+s3.mkdirs(init_dataset_path.parent, exist_ok=True)
 dataset = {}
 stacking_init_dataset = {}
-if init_dataset_path.exists():
-    with init_dataset_path.open("rb") as f:
+if s3.exists(init_dataset_path):
+    with s3.open(init_dataset_path, "rb") as f:
         stacking_init_dataset = pickle.load(f)
 
 args_dict = deepcopy(vars(args))
@@ -362,7 +368,7 @@ try:
         tic = time.time()
 
         if i >= n_init_data and warmup:  # Only execute this for the once for a trial
-            with init_dataset_path.open("wb") as f:
+            with s3.open(init_dataset_path, "wb") as f:
                 stacking_init_dataset = {
                     "dataset": dataset,
                     "consumed_budget": consumed_budget,

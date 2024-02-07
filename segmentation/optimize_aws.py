@@ -8,14 +8,17 @@ from argparse import ArgumentParser
 from copy import deepcopy
 from pathlib import Path
 
+import s3fs
 import torch
 import wandb
+from segmentation_exp import (  # Importing DroneDataset to prevent pickle error
+    DroneDataset,  # noqa
+    main,
+)
+
 from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
-import s3fs
 
-from tuning_multi import t5_fine_tuning
-
-s3=s3fs.S3FileSystem()
+s3 = s3fs.S3FileSystem(config_kwargs = dict(region_name="me-central-1"))
 
 sys.path.append("./")
 
@@ -34,29 +37,30 @@ parser.add_argument(
     default="EI",
 )
 parser.add_argument(
-    "--cache-root", type=str, default=".cachestore", help="Cache directory"
+    "--cache-root", type=Path, default=".cachestore", help="Cache directory"
 )
 parser.add_argument("--disable-cache", action="store_true", help="Disable cache")
 parser.add_argument(
-    "--data-dir", type=str, help="Directory with the data", default="./inputs"
+    "--data-dir", type=Path, help="Directory with the data", default="./inputs"
 )
 args, _ = parser.parse_known_args()
 
-data_dir: str = args.data_dir
+data_dir: Path = args.data_dir
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
+root = "mbz-hpc-aws-master/AROARU6TOWKRU3FNVE2PB:Ridwan.Salahuddeen@mbzuai.ac.ae/segmentation"
 init_dataset_path = Path(
-    f"{data_dir}/{args.exp_name}/t5_init_dataset-trial_{args.trial}.pk"
+    f"{root}/inputs/{args.exp_name}/segment_init_dataset-trial_{args.trial}.pk"
 )
 s3.mkdirs(init_dataset_path.parent, exist_ok=True)
 dataset = {}
-t5_init_dataset = {}
+segment_init_dataset = {}
 if s3.exists(init_dataset_path):
     with s3.open(init_dataset_path, "rb") as f:
-        t5_init_dataset = pickle.load(f)
+        segment_init_dataset = pickle.load(f)
 
-with s3.open(data_dir / "initial_hparams_multi.json") as f:
+with (data_dir / "sampling-range.json").open() as f:
     initial_hparams = json.load(f)
     hp_sampling_range = initial_hparams["hp_sampling_range"]
     params = initial_hparams["params"]
@@ -83,10 +87,10 @@ consumed_budget, total_budget, n_init_data = (
 
 i = 0
 warmup = True
-if t5_init_dataset:
-    dataset = t5_init_dataset["dataset"]
-    params["budget_0"] = consumed_budget = t5_init_dataset["consumed_budget"]
-    i = t5_init_dataset["n_init_data"]
+if segment_init_dataset:
+    dataset = segment_init_dataset["dataset"]
+    params["budget_0"] = consumed_budget = segment_init_dataset["consumed_budget"]
+    i = segment_init_dataset["n_init_data"]
     warmup = False
 try:
     while consumed_budget < total_budget:
@@ -94,14 +98,14 @@ try:
 
         if i >= n_init_data and warmup:  # Only execute this for the once for a trial
             with s3.open(init_dataset_path, "wb") as f:
-                t5_init_dataset = {
+                segment_init_dataset = {
                     "dataset": dataset,
                     "consumed_budget": consumed_budget,
                     "n_init_data": i,
                 }
-                print("T5 HP Dataset")
-                print(t5_init_dataset)
-                pickle.dump(t5_init_dataset, f)
+                print("Segmentation HP Dataset")
+                print(segment_init_dataset)
+                pickle.dump(segment_init_dataset, f)
             warmup = False
             params["budget_0"] = consumed_budget
         print(hp_sampling_range)
@@ -116,11 +120,10 @@ try:
             exp_name=args.exp_name,
         )
 
-        output_dir: str = args.cache_root / f"iter_{i}"
-        s3.mkdirs(output_dir)
-        with s3.open(output_dir, "wb") as output_dir_file:
-            pipeline_outputs = t5_fine_tuning(data_dir, output_dir_file, new_hp_dict)
-        obj, cost_per_stage = pipeline_outputs["obj"], pipeline_outputs["costs"]
+        output_dir: Path = args.cache_root / f"iter_{i}"
+        output_dir.mkdir(parents=True)
+        score_miou, _, cost_per_stage = main(new_hp_dict)
+        obj = score_miou
 
         consumed_budget += sum(cost_per_stage)
 
@@ -155,6 +158,6 @@ try:
         i += 1
 finally:
     # Clean up cache
-    if s3.exists(args.cache_root):
-        s3.rmdir(args.cache_root, ignore_errors=True)
+    if os.path.exists(args.cache_root):
+        shutil.rmtree(args.cache_root, ignore_errors=True)
     wandb.finish()

@@ -1,12 +1,13 @@
-from botorch.acquisition.objective import MCAcquisitionObjective, PosteriorTransform
-from botorch.acquisition.analytic import AnalyticAcquisitionFunction
-from botorch.sampling import MCSampler
-from botorch.models.model import Model
-from botorch.utils import t_batch_mode_transform
-from typing import Union, Optional, Dict, Any
-from torch.distributions import Normal
-from torch import Tensor
+from typing import Any, Dict, Optional, Union
+
 import torch
+from botorch.acquisition.analytic import AnalyticAcquisitionFunction
+from botorch.acquisition.objective import MCAcquisitionObjective, PosteriorTransform
+from botorch.models.model import Model
+from botorch.sampling import MCSampler
+from botorch.utils import t_batch_mode_transform
+from torch import Tensor
+from torch.distributions import Normal
 
 DEVICE = torch.device("cpu" if torch.cuda.is_available() else "cpu")
 
@@ -102,7 +103,7 @@ class CArBO(AnalyticAcquisitionFunction):
                 if (not torch.is_tensor(stage_costs))
                 else torch.cat([stage_costs, cost_samples], axis=2)
             )
-
+        stage_costs = stage_costs.to(DEVICE)
         return stage_costs
 
     def compute_expected_inverse_cost(self, X: Tensor) -> Tensor:
@@ -112,6 +113,7 @@ class CArBO(AnalyticAcquisitionFunction):
 
         inv_cost = 1 / stage_costs
         inv_cost = inv_cost.mean(dim=0)
+        inv_cost = inv_cost.to(DEVICE)
 
         return inv_cost
 
@@ -155,6 +157,7 @@ class CArBO(AnalyticAcquisitionFunction):
         updf = torch.exp(normal.log_prob(u))
 
         ei = sigma * (updf + u * ucdf)
+        ei = ei.to(DEVICE)
 
         return ei
 

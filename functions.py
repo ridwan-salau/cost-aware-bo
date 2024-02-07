@@ -1,20 +1,21 @@
-import torch
 import copy
 import random
 from collections import deque
+
+import torch
 from botorch.models import SingleTaskGP
-from gpytorch.mlls import ExactMarginalLogLikelihood
 from botorch.test_functions import (
+    Ackley,
     Beale,
     Branin,
     Hartmann,
-    StyblinskiTang,
-    Rosenbrock,
-    Levy,
-    Ackley,
     HolderTable,
+    Levy,
     Michalewicz,
+    Rosenbrock,
+    StyblinskiTang,
 )
+from gpytorch.mlls import ExactMarginalLogLikelihood
 
 SYNTHETIC_FUNCTIONS = {
     # Stage 1

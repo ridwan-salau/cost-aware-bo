@@ -1,6 +1,7 @@
 import csv
 import json
 import os
+import pickle
 import random
 import time
 from argparse import ArgumentParser
@@ -12,8 +13,21 @@ import botorch
 import numpy as np
 import torch
 import wandb
-import pickle
 
+from .acquisition_funcs.cost_aware_acqf import CArBO_iteration, EIPS_iteration
+from .acquisition_funcs.EEIPU.EEIPU_iteration import eeipu_iteration
+from .acquisition_funcs.EI.EI_iteration import ei_iteration
+from .acquisition_funcs.LaMBO.LaMBO import (
+    build_partitions,
+    build_tree,
+    get_pdf,
+    remove_invalid_partitions,
+    select_arm,
+    update_all_probabilities,
+    update_loss_estimators,
+)
+from .acquisition_funcs.LaMBO.LaMBO_iteration import lambo_iteration
+from .acquisition_funcs.MS_BO.MS_BO_iteration import msbo_iteration
 from .functions.processing_funcs import get_dataset_bounds
 from .optimizer.optimize_acqf_funcs import (
     _optimize_acqf_batch,
@@ -21,20 +35,6 @@ from .optimizer.optimize_acqf_funcs import (
     gen_candidates_scipy,
     optimize_acqf,
 )
-from .acquisition_funcs.LaMBO.LaMBO import (
-    select_arm,
-    update_all_probabilities,
-    update_loss_estimators,
-    build_partitions,
-    get_pdf,
-    build_tree,
-    remove_invalid_partitions,
-)
-from .acquisition_funcs.cost_aware_acqf import CArBO_iteration, EIPS_iteration
-from .acquisition_funcs.EEIPU.EEIPU_iteration import eeipu_iteration
-from .acquisition_funcs.EI.EI_iteration import ei_iteration
-from .acquisition_funcs.LaMBO.LaMBO_iteration import lambo_iteration
-from .acquisition_funcs.MS_BO.MS_BO_iteration import msbo_iteration
 
 botorch.optim.optimize.optimize_acqf = optimize_acqf
 botorch.optim.optimize._optimize_acqf_batch = _optimize_acqf_batch
@@ -324,17 +324,17 @@ def log_metrics(
     return
 
 
-def lambo_preprocessing(acqf, h_ind, x_bounds, n_stages, trial, first_iter, iteration):
+def lambo_preprocessing(
+    acqf, h_ind, x_bounds, n_stages, trial, first_iter, iteration, exp_name
+):
     # TODO: Refactor this if block to take it outside the function
     if acqf != "LaMBO" or iteration < first_iter:
         return None, None, None, None, None, None, x_bounds
 
-    tree = None
-    filename = f"tree_pickle__{trial}.pkl"
-    if os.path.exists(filename):
-        with open(filename, "rb"):
-            pickle.load(tree)
-            root, mset = tree
+    tree_path = Path(f"{exp_name}/{acqf}/tree.pickle_{trial}.pkl")
+    if tree_path.exists():
+        with open(tree_path, "rb") as tree_file:
+            root, mset = pickle.load(tree_file)
             probs, loss, h, global_input_bounds, arm_idx = root.retrieve_data()
             return root, mset, loss, probs, arm_idx, h, global_input_bounds
 
@@ -384,6 +384,7 @@ def lambo_post_iteration(
     first_iter,
     iteration,
     trial,
+    exp_name,
 ):
     # TODO: Refactor this if block to take it outside the function
     if acqf != "LaMBO" or iteration < first_iter:
@@ -422,7 +423,9 @@ def lambo_post_iteration(
 
     root.save_data(probs, loss, h, global_input_bounds, arm_idx)
 
-    with open(f"tree.pickle_{trial}.pkl", "wb") as file:
+    tree_path = Path(f"{exp_name}/{acqf}/tree.pickle_{trial}.pkl")
+    tree_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(tree_path, "wb") as file:
         tree = (root, mset)
         pickle.dump(tree, file)
 
@@ -435,7 +438,7 @@ def reformat_xbounds(x_bounds, device="cuda"):
         for param_bounds in stage:
             x_b[0].append(param_bounds[0])
             x_b[1].append(param_bounds[1])
-    return torch.tensor(x_b)
+    return torch.tensor(x_b, device=device)
 
 
 def generate_hps(
@@ -443,6 +446,8 @@ def generate_hps(
     hp_sampling_range,
     iteration,
     params,
+    exp_name,
+    trial,
     consumed_budget=None,
     acq_type="EEIPU",
 ):
@@ -484,11 +489,12 @@ def generate_hps(
     random.seed(rand_seed)
     botorch.utils.sampling.manual_seed(seed=rand_seed)
 
-    x_b = reformat_xbounds(x_bounds)
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    x_b = reformat_xbounds(x_bounds, device=device)
 
     first_iter, n_stages = params["n_init_data"] + 1, len(h_ind_list)
     root, mset, loss, probs, arm_idx, h, x_b = lambo_preprocessing(
-        acq_type, h_ind_list, x_b, n_stages, params["trial"], first_iter, iteration
+        acq_type, h_ind_list, x_b, n_stages, trial, first_iter, iteration, exp_name
     )
 
     new_hp, n_memoised, n_init_data = None, 0, params["n_init_data"]
@@ -543,7 +549,8 @@ def generate_hps(
             h_ind_list,
             first_iter,
             iteration,
-            params["trial"],
+            trial,
+            exp_name,
         )
 
     # When new_hp is None, `generate_hparams` will generate random samples.
@@ -629,7 +636,7 @@ if __name__ == "__main__":
     trial = args.trial
     wandb.init(
         entity="cost-bo",
-        project="memoised-realworld-exp",
+        project="jan-2024-cost-aware-bo",
         group=f"Stacking-{args.exp_group}|-acqf_{args.acqf}|-dec-fac_{args.decay_factor}"
         f"|init-eta_{args.init_eta}",
         name=f"{time.strftime('%Y-%m-%d-%H%M')}-trial-number_{trial}",

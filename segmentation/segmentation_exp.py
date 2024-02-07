@@ -6,6 +6,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 import albumentations as A
+import cachestore
 import cv2
 import numpy as np
 import pandas as pd
@@ -14,14 +15,13 @@ import segmentation_models_pytorch as smp
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from cache_storage import AWSStorage
 from PIL import Image
 from pydensecrf.utils import create_pairwise_gaussian, unary_from_labels
 from sklearn.model_selection import train_test_split
 from torch.utils.data import DataLoader, Dataset
 from torchvision import transforms as T
 from tqdm import tqdm
-
-import cachestore
 
 parser = ArgumentParser()
 # parser.add_argument('--metrics-path', type=Path, required=True)
@@ -43,7 +43,7 @@ epochs = 3
 cache = cachestore.Cache(
     f"segmentation_{args.exp_name}_cache",
     disable=args.disable_cache,
-    storage=cachestore.LocalStorage(args.cache_root),
+    storage=AWSStorage(args.cache_root),
 )
 
 print(f"{cache.name=}")
@@ -76,9 +76,6 @@ def create_df():
 
 df = create_df()
 
-# Reduce the number of datapoints to 20%
-df = df.sample(frac=0.2, replace=False)
-
 # split data
 X_trainval, X_test = train_test_split(df["id"].values, test_size=0.1, random_state=19)
 X_train, X_val = train_test_split(X_trainval, test_size=0.15, random_state=19)
@@ -98,7 +95,7 @@ class DroneDataset(Dataset):
 
         # Build the cache
         print("Transforming data")
-        for idx in tqdm(range(len(self))):
+        for idx in (range(len(self))):
             self.apply_transforms(idx)
 
     def __len__(self):
@@ -241,7 +238,7 @@ def train(
     model.train()
     for epoch in range(epochs):
         train_loader = DataLoader(datasets[epoch], batch_size=batch_size, shuffle=True)
-        for i, data in enumerate(tqdm(train_loader)):
+        for i, data in enumerate((train_loader)):
             # training phase
             image_tiles, mask_tiles = data
             if patch:
@@ -346,7 +343,7 @@ def crf(image, predicted_mask, **kwargs):
 def miou_score(model, test_set, **crf_kwargs):
     score_iou = []
     score_iou_crf = []
-    for i in tqdm(range(len(test_set))):
+    for i in (range(len(test_set))):
         img, mask = test_set[i]
 
         output, score, score_crf = predict_image_mask_miou(

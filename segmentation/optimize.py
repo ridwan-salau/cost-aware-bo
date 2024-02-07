@@ -8,14 +8,16 @@ from argparse import ArgumentParser
 from copy import deepcopy
 from pathlib import Path
 
+import s3fs
 import torch
 import wandb
-from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
-
 from segmentation_exp import (  # Importing DroneDataset to prevent pickle error
     main,
-    DroneDataset
 )
+
+from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
+
+s3 = s3fs.S3FileSystem(config_kwargs = dict(region_name="me-central-1"))
 
 sys.path.append("./")
 
@@ -40,23 +42,23 @@ parser.add_argument("--disable-cache", action="store_true", help="Disable cache"
 parser.add_argument(
     "--data-dir", type=Path, help="Directory with the data", default="./inputs"
 )
-args = parser.parse_args()
+args, _ = parser.parse_known_args()
 
 data_dir: Path = args.data_dir
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 init_dataset_path = Path(
-    f"inputs/{args.exp_name}/t5_init_dataset-trial_{args.trial}.pk"
+    f"inputs/{args.exp_name}/segment_init_dataset-trial_{args.trial}.pk"
 )
 init_dataset_path.parent.mkdir(parents=True, exist_ok=True)
 dataset = {}
-t5_init_dataset = {}
+segment_init_dataset = {}
 if init_dataset_path.exists():
     with init_dataset_path.open("rb") as f:
-        t5_init_dataset = pickle.load(f)
+        segment_init_dataset = pickle.load(f)
 
-with (data_dir / "initial_hparams_multi.json").open() as f:
+with (data_dir / "sampling-range.json").open() as f:
     initial_hparams = json.load(f)
     hp_sampling_range = initial_hparams["hp_sampling_range"]
     params = initial_hparams["params"]
@@ -68,7 +70,7 @@ date_now = f"{time.strftime('%Y-%m-%d-%H%M')}"
 
 wandb.init(
     entity="cost-bo",
-    project="memoised-realworld-exp",
+    project="jan-2024-cost-aware-bo",
     group=f"{args.exp_name}|-acqf_{args.acqf}|-dec-fac_{args.decay_factor}"
     f"|init-eta_{args.init_eta}",
     name=f"{date_now}-trial-number_{args.trial}",
@@ -83,10 +85,10 @@ consumed_budget, total_budget, n_init_data = (
 
 i = 0
 warmup = True
-if t5_init_dataset:
-    dataset = t5_init_dataset["dataset"]
-    params["budget_0"] = consumed_budget = t5_init_dataset["consumed_budget"]
-    i = t5_init_dataset["n_init_data"]
+if segment_init_dataset:
+    dataset = segment_init_dataset["dataset"]
+    params["budget_0"] = consumed_budget = segment_init_dataset["consumed_budget"]
+    i = segment_init_dataset["n_init_data"]
     warmup = False
 try:
     while consumed_budget < total_budget:
@@ -94,14 +96,14 @@ try:
 
         if i >= n_init_data and warmup:  # Only execute this for the once for a trial
             with init_dataset_path.open("wb") as f:
-                t5_init_dataset = {
+                segment_init_dataset = {
                     "dataset": dataset,
                     "consumed_budget": consumed_budget,
                     "n_init_data": i,
                 }
-                print("T5 HP Dataset")
-                print(t5_init_dataset)
-                pickle.dump(t5_init_dataset, f)
+                print("Segmentation HP Dataset")
+                print(segment_init_dataset)
+                pickle.dump(segment_init_dataset, f)
             warmup = False
             params["budget_0"] = consumed_budget
         print(hp_sampling_range)
@@ -112,12 +114,14 @@ try:
             params=params,
             consumed_budget=consumed_budget,
             acq_type=args.acqf,
+            trial=args.trial,
+            exp_name=args.exp_name,
         )
 
         output_dir: Path = args.cache_root / f"iter_{i}"
         output_dir.mkdir(parents=True)
-        pipeline_outputs = main(data_dir, output_dir, new_hp_dict)
-        obj, cost_per_stage = pipeline_outputs["obj"], pipeline_outputs["costs"]
+        score_miou, score_miou_crf, cost_per_stage = main(new_hp_dict)
+        obj = score_miou
 
         consumed_budget += sum(cost_per_stage)
 

@@ -10,9 +10,9 @@ from pathlib import Path
 
 import torch
 import wandb
-from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
-
 from tuning import t5_fine_tuning
+
+from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
 
 sys.path.append("./")
 
@@ -37,7 +37,7 @@ parser.add_argument("--disable-cache", action="store_true", help="Disable cache"
 parser.add_argument(
     "--data-dir", type=Path, help="Directory with the data", default="./inputs"
 )
-args = parser.parse_args()
+args, _ = parser.parse_known_args()
 disable_cache = args.acqf != "EEIPU"
 
 data_dir: Path = args.data_dir
@@ -66,7 +66,7 @@ date_now = f"{time.strftime('%Y-%m-%d-%H%M')}"
 
 wandb.init(
     entity="cost-bo",
-    project="memoised-realworld-exp",
+    project="jan-2024-cost-aware-bo",
     group=f"{args.exp_name}|-acqf_{args.acqf}|-dec-fac_{args.decay_factor}"
     f"|init-eta_{args.init_eta}",
     name=f"{date_now}-trial-number_{args.trial}",
@@ -110,6 +110,8 @@ try:
             params=params,
             consumed_budget=consumed_budget,
             acq_type=args.acqf,
+            trial=args.trial,
+            exp_name=args.exp_name,
         )
 
         output_dir: Path = args.cache_root / f"iter_{i}"
