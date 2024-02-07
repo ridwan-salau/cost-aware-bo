@@ -7,6 +7,7 @@ from typing import Dict, List, Tuple, Union
 import datasets
 import torch
 from cachestore import Cache, LocalStorage
+from cache_storage import AWSStorage
 from datasets import load_dataset
 from torch.utils.data import DataLoader, TensorDataset
 from transformers import T5Config, T5ForConditionalGeneration, T5Tokenizer
@@ -44,8 +45,8 @@ args, _ = parser.parse_known_args()
 
 disable_cache = args.acqf != "EEIPU"
 cache = Cache(
-    f"stacking_{args.exp_name}_{args.trial}_cache",
-    storage=LocalStorage(args.cache_root),
+    f"t5-pipeline{args.exp_name}_{args.trial}_cache",
+    storage=AWSStorage(args.cache_root),
     disable=disable_cache,
 )
 
