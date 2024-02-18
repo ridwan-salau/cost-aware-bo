@@ -171,7 +171,7 @@ def fine_tuning(
 
     train_dataloader = torch.load((data_prepoc_output_path / "training_data").open("rb"))
     val_dataloader = torch.load((data_prepoc_output_path / "validation_data").open("rb"))
-    validation_dataset = datasets.load_from_disk(dataset / "validation_data")
+    validation_dataset = datasets.load_from_disk(f's3://{dataset / "validation_data"}')
     if num_samples > 0 and num_samples < 13368:
         validation_dataset = validation_dataset.select(range(num_samples))
     metrics, fine_tuned_model, fine_tuned_tokenizer = tuning(
@@ -266,7 +266,7 @@ def model_distillation(
     # Define your training & validation dataset and dataloader
     train_dataloader = torch.load((data_prepoc_output_path / "training_data").open("rb"))
     val_dataloader = torch.load((data_prepoc_output_path / "validation_data").open("rb"))
-    validation_dataset = datasets.load_from_disk(dataset / "validation_data")
+    validation_dataset = datasets.load_from_disk(f's3://{dataset / "validation_data"}')
 
     if num_samples > 0 and num_samples < 13368:
         validation_dataset = validation_dataset.select(range(num_samples))
