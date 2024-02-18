@@ -5,7 +5,7 @@ import time
 from contextlib import contextmanager
 from copy import deepcopy
 from io import BytesIO
-from pathlib import Path
+from pathlib import Path, PurePath, PosixPath
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 from typing import Any, Dict, List, Tuple, Union
 
@@ -413,8 +413,8 @@ def torch_save(obj, path_to_model, **kwargs):
     return torch.save(obj, s3.open(path_to_model, "wb"))
 
 class AWSPath(Path):
-    def __init__(self) -> None:
-        super().__init__()
+    def __new__(cls, *args, **kwargs: Any):
+        return super().__new__(Path, *args, **kwargs)
     def exists(self) -> bool:
         return s3.exists(self.as_posix())
     def mkdir(self, mode: int = 511, parents: bool = False, exist_ok: bool = False) -> None:
