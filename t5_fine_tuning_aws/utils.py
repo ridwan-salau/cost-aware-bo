@@ -405,6 +405,19 @@ def download_model(path_to_model, tmp_dir):
         with s3_fileobj(f'{path_to_model}/{file}') as f: 
             with open(f"{tmp_dir}/{file}", "wb") as tempfile:
                 tempfile.write(f.read()) 
+def upload_model(local_path_to_model, s3_path_to_model):
+    """Upload saved model to s3
+    
+    Keyword arguments:
+    local_path_to_model -- local path where model is saved. Likely a temporary directory
+    s3_path_to_model -- path to s3 storage
+    Return: None
+    """
+    files = os.listdir()
+    for file in files:
+        with s3.open(f"{s3_path_to_model}/{file}", "rb") as f: 
+            with open(f"{local_path_to_model}/{file}", "rb") as tempfile:
+                f.write(tempfile.read()) 
 
 def torch_save(obj, path_to_model, **kwargs):
     """Function to save pytorch object to S3"""

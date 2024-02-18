@@ -149,6 +149,8 @@ try:
             eta=eta,
         )
         i += 1
+except:
+    wandb.set_trace()
 finally:
     # Clean up cache
     # if os.path.exists(args.cache_root):
