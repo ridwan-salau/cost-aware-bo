@@ -22,6 +22,7 @@ from utils import (
     download_model,
     torch_save,
     AWSPath as Path,
+    upload_model,
 )
 
 parser = ArgumentParser()
@@ -185,9 +186,12 @@ def fine_tuning(
         validation_dataset,
     )
 
-    model_chkpt_path = output_dir / str(global_epochs)
-    fine_tuned_model.save_pretrained(model_chkpt_path / "fine_tuned_model/", save_function=torch_save)
-    fine_tuned_tokenizer.save_pretrained(model_chkpt_path / "fine_tuned_tokenizer/", save_function=torch_save)
+    model_chkpt_path = output_dir / str(global_epochs) / "fine_tuned_model/"
+    local_tmp_dir = TemporaryDirectory()
+    fine_tuned_model.save_pretrained(local_tmp_dir)
+    fine_tuned_tokenizer.save_pretrained(local_tmp_dir)
+
+    upload_model(local_tmp_dir, model_chkpt_path)
 
     # metrics["epoch_num"].append(hparams["1__num_epochs"])
     metrics["learning_rate"].append(hparams["1__learning_rate"])
@@ -282,9 +286,12 @@ def model_distillation(
         output_dir,
     )
 
-    model_chkpt_path = output_dir / str(global_epochs)
-    distilled_model.save_pretrained(model_chkpt_path / "distilled_model", save_function=torch_save)
-    distilled_tokenizer.save_pretrained(model_chkpt_path / "distilled_tokenizer", save_function=torch_save)
+    model_chkpt_path = output_dir / str(global_epochs) / "distilled_model"
+    local_tmp_dir = TemporaryDirectory()
+    distilled_model.save_pretrained(local_tmp_dir)
+    distilled_tokenizer.save_pretrained(local_tmp_dir)
+
+    upload_model(local_tmp_dir, model_chkpt_path)
 
     # metrics["epoch_num"].append(hparams["2__num_epochs"])
     metrics["learning_rate"].append(hparams["2__learning_rate"])
