@@ -150,7 +150,6 @@ def fine_tuning(
     dataset = Path(dataset)
     output_dir = Path(output_dir)
     data_prepoc_output_path = Path(data_prepoc_output_path)
-    model_path = Path(model_path)
 
     # start_time = time.time()
     model_path = model_name
