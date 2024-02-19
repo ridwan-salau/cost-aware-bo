@@ -403,8 +403,8 @@ def download_model(path_to_model, tmp_dir):
     s3_files = s3.listdir(path_to_model, detail=False)
     print("Files to download:", s3_files)
     for s3_file in s3_files:
-        with s3_fileobj(f'{path_to_model}/{s3_file}') as f: 
-            with open(f"{tmp_dir}/{s3_file}", "wb") as tempfile:
+        with s3_fileobj(s3_file) as f: 
+            with open(f"{tmp_dir}/{Path(s3_file).name}", "wb") as tempfile:
                 tempfile.write(f.read()) 
 
 def upload_model(local_path_to_model, s3_path_to_model):
