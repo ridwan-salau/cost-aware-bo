@@ -156,7 +156,8 @@ def fine_tuning(
     model_path = model_name
     if isinstance(model_name, Path) and model_name.exists():
         model_path = model_path / "fine_tuned_model"
-        tmp_model_dir = TemporaryDirectory().name
+        tmp_dir = TemporaryDirectory()
+        tmp_model_dir = tmp_dir.name
         download_model(model_path, tmp_model_dir)
         model_path = tmp_model_dir
 
@@ -187,7 +188,8 @@ def fine_tuning(
     )
 
     model_chkpt_path = output_dir / str(global_epochs) / "fine_tuned_model/"
-    local_tmp_dir = TemporaryDirectory().name
+    tmp_dir = TemporaryDirectory()
+    local_tmp_dir = tmp_dir.name
     fine_tuned_model.save_pretrained(local_tmp_dir)
     fine_tuned_tokenizer.save_pretrained(local_tmp_dir)
 
@@ -233,7 +235,8 @@ def model_distillation(
     output_dir.mkdir(parents=True, exist_ok=True)
     # start_time = time.time()
     # model_name = "t5-small"
-    tmp_model_dir = TemporaryDirectory().name
+    tmp_dir = TemporaryDirectory()
+    tmp_model_dir = tmp_dir.name
     download_model(fine_tuned_model_path, tmp_model_dir)
 
     # Load your fine-tuned t5-small teacher model and tokenizer
@@ -244,7 +247,8 @@ def model_distillation(
     student_model_path = student_tokenizer_path = student_model_name
     if isinstance(student_model_name, Path) and student_model_name.exists():
         student_model_path = student_model_path
-        tmp_model_dir = TemporaryDirectory().name
+        tmp_dir = TemporaryDirectory()
+        tmp_model_dir = tmp_dir.name
         download_model(student_model_path, tmp_model_dir)
         student_model_path = tmp_model_dir
 
@@ -287,7 +291,8 @@ def model_distillation(
     )
 
     model_chkpt_path = output_dir / str(global_epochs) / "distilled_model"
-    local_tmp_dir = TemporaryDirectory().name
+    tmp_dir = TemporaryDirectory()
+    local_tmp_dir = tmp_dir.name
     distilled_model.save_pretrained(local_tmp_dir)
     distilled_tokenizer.save_pretrained(local_tmp_dir)
 
