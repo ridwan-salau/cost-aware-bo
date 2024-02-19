@@ -414,11 +414,11 @@ def upload_model(local_path_to_model, s3_path_to_model):
     s3_path_to_model -- path to s3 storage
     Return: None
     """
-    files = os.listdir(local_path_to_model)
-    print("Files to upload:", files)
-    for file in files:
-        with s3.open(f"{s3_path_to_model}/{file}", "wb") as f: 
-            with open(f"{local_path_to_model}/{file}", "rb") as tempfile:
+    s3_files = os.listdir(local_path_to_model)
+    print("Files to upload:", s3_files)
+    for s3_file in s3_files:
+        with s3.open(s3_file, "wb") as f: 
+            with open(f"{local_path_to_model}/{Path(s3_file).name}", "rb") as tempfile:
                 f.write(tempfile.read()) 
 
 def torch_save(obj, path_to_model, **kwargs):
