@@ -400,7 +400,7 @@ def download_model(path_to_model, tmp_dir):
     """
     Download model at the given S3 path.
     """
-    files = s3.listdir(path_to_model)
+    files = s3.listdir(path_to_model, detail=False)
     print("Files to download:", files)
     for file in files:
         with s3_fileobj(f'{path_to_model}/{file}') as f: 
