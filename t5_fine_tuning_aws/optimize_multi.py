@@ -44,7 +44,7 @@ data_dir: Path = args.data_dir
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 init_dataset_path = Path(
-    f"inputs/{args.exp_name}/t5_init_dataset-trial_{args.trial}.pk"
+    f"{data_dir}/{args.exp_name}/t5_init_dataset-trial_{args.trial}.pk"
 )
 init_dataset_path.parent.mkdir(parents=True, exist_ok=True)
 dataset = {}
