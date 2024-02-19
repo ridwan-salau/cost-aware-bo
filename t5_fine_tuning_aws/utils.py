@@ -413,7 +413,7 @@ def upload_model(local_path_to_model, s3_path_to_model):
     s3_path_to_model -- path to s3 storage
     Return: None
     """
-    files = os.listdir()
+    files = os.listdir(local_path_to_model)
     for file in files:
         with s3.open(f"{s3_path_to_model}/{file}", "rb") as f: 
             with open(f"{local_path_to_model}/{file}", "rb") as tempfile:
