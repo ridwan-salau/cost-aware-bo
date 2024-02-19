@@ -415,7 +415,7 @@ def upload_model(local_path_to_model, s3_path_to_model):
     """
     files = os.listdir(local_path_to_model)
     for file in files:
-        with s3.open(f"{s3_path_to_model}/{file}", "rb") as f: 
+        with s3.open(f"{s3_path_to_model}/{file}", "wb") as f: 
             with open(f"{local_path_to_model}/{file}", "rb") as tempfile:
                 f.write(tempfile.read()) 
 
