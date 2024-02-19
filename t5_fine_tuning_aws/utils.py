@@ -400,12 +400,13 @@ def download_model(path_to_model, tmp_dir):
     """
     Download model at the given S3 path.
     """
-    files = s3.listdir(path_to_model, detail=False)
-    print("Files to download:", files)
-    for file in files:
-        with s3_fileobj(f'{path_to_model}/{file}') as f: 
-            with open(f"{tmp_dir}/{file}", "wb") as tempfile:
+    s3_files = s3.listdir(path_to_model, detail=False)
+    print("Files to download:", s3_files)
+    for s3_file in s3_files:
+        with s3_fileobj(f'{path_to_model}/{s3_file}') as f: 
+            with open(f"{tmp_dir}/{s3_file}", "wb") as tempfile:
                 tempfile.write(f.read()) 
+
 def upload_model(local_path_to_model, s3_path_to_model):
     """Upload saved model to s3
     
@@ -414,11 +415,11 @@ def upload_model(local_path_to_model, s3_path_to_model):
     s3_path_to_model -- path to s3 storage
     Return: None
     """
-    s3_files = os.listdir(local_path_to_model)
-    print("Files to upload:", s3_files)
-    for s3_file in s3_files:
-        with s3.open(s3_file, "wb") as f: 
-            with open(f"{local_path_to_model}/{Path(s3_file).name}", "rb") as tempfile:
+    files = os.listdir(local_path_to_model)
+    print("Files to upload:", files)
+    for file in files:
+        with s3.open(f"{s3_path_to_model}/{file}", "wb") as f: 
+            with open(f"{local_path_to_model}/{file}", "rb") as tempfile:
                 f.write(tempfile.read()) 
 
 def torch_save(obj, path_to_model, **kwargs):
