@@ -401,6 +401,7 @@ def download_model(path_to_model, tmp_dir):
     Download model at the given S3 path.
     """
     files = s3.listdir(path_to_model)
+    print("Files to download:", files)
     for file in files:
         with s3_fileobj(f'{path_to_model}/{file}') as f: 
             with open(f"{tmp_dir}/{file}", "wb") as tempfile:
@@ -414,6 +415,7 @@ def upload_model(local_path_to_model, s3_path_to_model):
     Return: None
     """
     files = os.listdir(local_path_to_model)
+    print("Files to upload:", files)
     for file in files:
         with s3.open(f"{s3_path_to_model}/{file}", "wb") as f: 
             with open(f"{local_path_to_model}/{file}", "rb") as tempfile:

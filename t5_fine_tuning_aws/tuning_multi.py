@@ -234,7 +234,7 @@ def model_distillation(
     # start_time = time.time()
     # model_name = "t5-small"
     tmp_model_dir = TemporaryDirectory().name
-    download_model(fine_tuned_model_path / "fine_tuned_model", tmp_model_dir)
+    download_model(fine_tuned_model_path, tmp_model_dir)
 
     # Load your fine-tuned t5-small teacher model and tokenizer
     teacher_model = T5ForConditionalGeneration.from_pretrained(
@@ -243,7 +243,7 @@ def model_distillation(
 
     student_model_path = student_tokenizer_path = student_model_name
     if isinstance(student_model_name, Path) and student_model_name.exists():
-        student_model_path = student_model_path / "distilled_model"
+        student_model_path = student_model_path
         tmp_model_dir = TemporaryDirectory().name
         download_model(student_model_path, tmp_model_dir)
         student_model_path = tmp_model_dir
