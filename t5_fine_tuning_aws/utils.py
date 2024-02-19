@@ -31,7 +31,7 @@ def load_hyperparameters(hparams_path: Union[Path, str]) -> Dict:
     """Function for loading hyperparameters.
     hparams_path (Path or str): directory path where the hyperparameters json file is stored
     """
-    with open(hparams_path) as _hparams:
+    with s3.open(hparams_path) as _hparams:
         hyperparmeters = json.load(_hparams)
     hyperparameters_dict = hyperparmeters["new_hp"]
     return hyperparameters_dict
@@ -196,7 +196,7 @@ def distillation(
     accumulation_steps=2,
 ) -> Tuple[Dict[str, List], PreTrainedModel, PreTrainedTokenizerBase]:
     """Function for model distillation."""
-    log_file = open(output_dir / "logs.txt", "a", encoding="utf-8")
+    log_file = s3.open(output_dir / "logs.txt", "a", encoding="utf-8")
     log_file.write("starting logs\n")
     torch.cuda.empty_cache()
     rouge_metric = evaluate.load("rouge")
