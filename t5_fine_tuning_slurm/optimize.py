@@ -10,7 +10,7 @@ from pathlib import Path
 
 import torch
 import wandb
-from tuning_multi import t5_fine_tuning
+from tuning import t5_fine_tuning
 
 from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
 
@@ -27,7 +27,7 @@ parser.add_argument(
     "--acqf",
     type=str,
     help="Acquisition function",
-    choices=["EEIPU", "MS_CArBO", "EIPS", "CArBO", "EI", "RAND", "LaMBO", "MS_BO"],
+    choices=["EEIPU", "MS_CArBO", "EIPS", "CArBO", "EI", "RAND"],
     default="EI",
 )
 parser.add_argument(
@@ -38,13 +38,14 @@ parser.add_argument(
     "--data-dir", type=Path, help="Directory with the data", default="./inputs"
 )
 args, _ = parser.parse_known_args()
+disable_cache = args.acqf != "EEIPU"
 
 data_dir: Path = args.data_dir
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
 init_dataset_path = Path(
-    f"{data_dir}/{args.exp_name}/t5_init_dataset-trial_{args.trial}.pk"
+    f"inputs/{args.exp_name}/t5_init_dataset-trial_{args.trial}.pk"
 )
 init_dataset_path.parent.mkdir(parents=True, exist_ok=True)
 dataset = {}
@@ -53,7 +54,7 @@ if init_dataset_path.exists():
     with init_dataset_path.open("rb") as f:
         t5_init_dataset = pickle.load(f)
 
-with (data_dir / "initial_hparams_multi.json").open() as f:
+with (data_dir / "initial_hparams.json").open() as f:
     initial_hparams = json.load(f)
     hp_sampling_range = initial_hparams["hp_sampling_range"]
     params = initial_hparams["params"]
