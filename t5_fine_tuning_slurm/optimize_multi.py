@@ -108,6 +108,7 @@ try:
     # In case of resuming from an earlier session due to SLURMP session timeout, restore the session.
     if session_path.exists():
         dill.load_session(session_path)
+        session_path.unlink()
 
     while consumed_budget < total_budget:
         tic = time.time()
@@ -176,6 +177,7 @@ try:
         if sigurg_received:
             sigurg_received = False
             session_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(data_dir/"RESTART", "w") as f: f.write(args.run_id)
             dill.dump_session(str(session_path))
             sys.exit(0)
 finally:
@@ -183,9 +185,12 @@ finally:
     exc_type, exc_value, exc_traceback = sys.exc_info()
 
     if exc_type == SystemExit:
-        print("No clean up yet!!!")
+        print("Exiting due to session timeout. No clean up yet!!!")
 
     # Clean up cache
-    if os.path.exists(args.cache_root):
+    elif os.path.exists(args.cache_root):
+        # Write empty file "DONE" to signal to the batch script that run is completed.
+        with open("DONE", "w") as f: ...
+        print(f"Cleaning up {args.cache_root}.../unn")
         shutil.rmtree(args.cache_root, ignore_errors=True)
-    wandb.finish()
+        wandb.finish()
