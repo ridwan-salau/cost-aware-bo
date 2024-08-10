@@ -1,10 +1,10 @@
 from copy import deepcopy
 
 import torch
-from functions import Cost_F, F, generate_input_data, get_dataset_bounds, get_gen_bounds
-from single_iteration import bo_iteration
 
+from functions import Cost_F, F, generate_input_data, get_dataset_bounds, get_gen_bounds
 from json_reader import read_json
+from single_iteration import bo_iteration
 
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

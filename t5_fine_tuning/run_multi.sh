@@ -6,7 +6,7 @@ set -e
 run_trial() {
     # Your function code goes here
     # For example: sleep 5; echo "Function completed"
-    log_file=log/$acqf/$exp_name"_trial_"$trial 
+    log_file=log/$acqf/$exp_name"_trial_"$trial.log
     data_dir="${2:-./inputs}" 
 
     cache_root=.cachestore/${acqf}/${RANDOM}_trial_${trial} 
@@ -14,12 +14,12 @@ run_trial() {
     CUDA_VISIBLE_DEVICES=$gpu_id taskset --cpu-list $((60*gpu_id))-$((60*(gpu_id+1))) \
     python optimize_multi.py \
         --exp-name $exp_name --trial $trial --cache-root \
-        $cache_root --acqf $acqf --data-dir $data_dir 2>&1 | tee ${log_file}.log 
+        $cache_root --acqf $acqf --data-dir $data_dir 2>&1 | tee ${log_file} 
     rm -rf $cache_root 
 
 }
 
-ACQF_ARRAY=(EEIPU CArBO MS_BO MS_CArBO EIPS EI) #LaMBO
+ACQF_ARRAY=(EEIPU CArBO LaMBO MS_BO EIPS EI MS_CArBO)
 exp_name=t5-pipe-multi-new
 
 mkdir -p log/{EEIPU,EI,CArBO,EIPS,MS_CArBO,MS_BO,LaMBO}

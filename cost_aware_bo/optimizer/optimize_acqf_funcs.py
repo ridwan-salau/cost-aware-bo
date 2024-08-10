@@ -6,11 +6,11 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy as np
 import torch
+from botorch import settings
 from botorch.acquisition.acquisition import (
     AcquisitionFunction,
     OneShotAcquisitionFunction,
 )
-from botorch import settings
 from botorch.acquisition.knowledge_gradient import qKnowledgeGradient
 from botorch.acquisition.utils import is_nonnegative
 from botorch.exceptions import UnsupportedError

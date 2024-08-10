@@ -1,7 +1,9 @@
-from cost_aware_bo.optimizer.optimize_acqf_funcs import optimize_acqf
-from itertools import chain
-import torch
 import copy
+from itertools import chain
+
+import torch
+
+from cost_aware_bo.optimizer.optimize_acqf_funcs import optimize_acqf
 
 
 def update_candidate(

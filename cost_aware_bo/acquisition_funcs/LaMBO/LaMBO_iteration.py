@@ -1,10 +1,11 @@
-from botorch.acquisition import ExpectedImprovement
+from botorch.acquisition import UpperConfidenceBound
+
 from cost_aware_bo.functions.iteration_funcs import get_gp_models
 from cost_aware_bo.functions.processing_funcs import (
-    normalize,
-    unnormalize,
-    standardize,
     get_gen_bounds,
+    normalize,
+    standardize,
+    unnormalize,
 )
 from cost_aware_bo.optimize_mem_acqf import optimize_acqf_by_mem
 
@@ -29,7 +30,7 @@ def lambo_iteration(
         params["h_ind"], params["normalization_bounds"], bound_type="norm"
     )
 
-    acqf = ExpectedImprovement(model=gp_model, best_f=train_y.max())
+    acqf = UpperConfidenceBound(model=gp_model, beta=0.2, maximize=True)
 
     new_x, n_memoised, acq_value = optimize_acqf_by_mem(
         acqf=acqf,

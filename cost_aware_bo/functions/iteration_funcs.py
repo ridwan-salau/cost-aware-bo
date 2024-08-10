@@ -1,11 +1,13 @@
+import csv
+
+import torch
+from botorch import fit_gpytorch_model
+
 from cost_aware_bo.functions.processing_funcs import (
-    standardize,
     assert_positive_costs,
     initialize_GP_model,
+    standardize,
 )
-from botorch import fit_gpytorch_model
-import csv
-import torch
 
 
 def iteration_logs(acqf, trial_number, iteration, best_f, sum_stages, cum_cost):

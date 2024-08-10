@@ -1,0 +1,14 @@
+FROM pytorch/pytorch:2.0.0-cuda11.7-cudnn8-runtime
+
+WORKDIR /t5_fine_tuning
+
+COPY . .
+
+RUN conda env create -f t5env.yml
+
+RUN conda activate t5env
+
+ENV WANDB_API_KEY
+
+ENTRYPOINT ["bash", "run.sh"]
+CMD ["EEIPU", "./inputs"]
