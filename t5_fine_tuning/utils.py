@@ -125,6 +125,8 @@ def tuning(
                 summary_ids,
                 summary_attention_mask,
             ) = batch
+
+            print(model.device_ids, input_ids.device, input_attention_mask.device)
             outputs = model(
                 input_ids=input_ids,
                 attention_mask=input_attention_mask,

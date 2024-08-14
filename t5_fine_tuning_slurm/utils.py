@@ -82,9 +82,9 @@ def model_validation(model, val_dataloader, generated_summaries):
 
     return val_losses, generated_summaries
 
-
+from transformers import T5ForConditionalGeneration
 def tuning(
-    model,
+    model: T5ForConditionalGeneration,
     train_dataloader,
     val_dataloader,
     optimizer,
@@ -173,7 +173,7 @@ def tuning(
     )
     metrics["bleu_scores"].append(bleu_score)
 
-    model = model.module
+    # model = model.module
     return metrics, model, tokenizer
 
 

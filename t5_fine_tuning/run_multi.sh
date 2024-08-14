@@ -1,20 +1,19 @@
 #! /bin/bash
 set -e
-
-
+data_dir="${$1:-./inputs}" 
+model_name=${2:-t5-small}
 
 run_trial() {
     # Your function code goes here
     # For example: sleep 5; echo "Function completed"
-    log_file=log/$acqf/$exp_name"_trial_"$trial.log
-    data_dir="${2:-./inputs}" 
+    log_file=log2/$acqf/$exp_name"_trial_"$trial.log
 
     cache_root=.cachestore/${acqf}/${RANDOM}_trial_${trial} 
     gpu_id=$((target_dev%max_concurrent_executions))
-    CUDA_VISIBLE_DEVICES=$gpu_id taskset --cpu-list $((60*gpu_id))-$((60*(gpu_id+1))) \
+    CUDA_VISIBLE_DEVICES=$gpu_id taskset --cpu-list $((4*gpu_id))-$((4*(gpu_id+1))) \
     python optimize_multi.py \
-        --exp-name $exp_name --trial $trial --cache-root \
-        $cache_root --acqf $acqf --data-dir $data_dir 2>&1 | tee ${log_file} 
+        --exp-name $exp_name --trial $trial --cache-root $cache_root \
+        --model-name ${model_name} --acqf $acqf --data-dir $data_dir 2>&1 | tee ${log_file} 
     rm -rf $cache_root 
 
 }

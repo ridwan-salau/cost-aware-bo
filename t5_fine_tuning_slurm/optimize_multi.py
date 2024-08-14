@@ -16,7 +16,6 @@ from tuning_multi import t5_fine_tuning
 from cost_aware_bo import generate_hps, log_metrics, update_dataset_new_run
 
 import signal
-import sys
 
 sys.path.append("./")
 
@@ -43,6 +42,7 @@ parser.add_argument(
     "--data-dir", type=Path, help="Directory with the data", default="./inputs"
 )
 parser.add_argument("--resume", action="store_true", help="Resume existing run")
+parser.add_argument("--model-name", help="Name of T5 model to use for finetuning", default="t5-small")
 
 args, _ = parser.parse_known_args()
 
@@ -50,16 +50,16 @@ data_dir: Path = args.data_dir
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 
-# Handle session termination due to SIGURG
+# Handle session termination due to SIGTERM (sent by Slurm before job is killed)
 session_path: Path = data_dir / "sessions" / args.exp_name / args.date_now / "session.pkl"
-sigurg_received = False
+sigterm_received = False
 def signal_handler(signal_number, frame):
-    global sigurg_received
-    sigurg_received = True
+    global sigterm_received
+    sigterm_received = True
     print(f"Received signal: {signal_number}. Completing the current iteration...")
 
-# Register the signal handler for the specific signal number
-signal.signal(signal.SIGURG, signal_handler)
+# Register the signal handler for SIGTERM
+signal.signal(signal.SIGTERM, signal_handler)
 
 init_dataset_path = data_dir / args.exp_name / f"t5_init_dataset-trial_{args.trial}.pk"
 init_dataset_path.parent.mkdir(parents=True, exist_ok=True)
@@ -105,9 +105,11 @@ if t5_init_dataset:
     warmup = False
 
 try:
-    # In case of resuming from an earlier session due to SLURMP session timeout, restore the session.
+    # In case of resuming from an earlier session due to Slurm job requeue
     if session_path.exists():
-        dill.load_session(session_path)
+        with session_path.open("rb") as f:
+            saved_state = dill.load(f)
+            locals().update(saved_state)
         session_path.unlink()
 
     while consumed_budget < total_budget:
@@ -139,7 +141,7 @@ try:
 
         output_dir: Path = args.cache_root / f"iter_{i}"
         output_dir.mkdir(parents=True)
-        pipeline_outputs = t5_fine_tuning(data_dir, output_dir, new_hp_dict)
+        pipeline_outputs = t5_fine_tuning(data_dir, output_dir, new_hp_dict, model_name=args.model_name)
         obj, cost_per_stage = pipeline_outputs["obj"], pipeline_outputs["costs"]
 
         consumed_budget += sum(cost_per_stage)
@@ -174,23 +176,32 @@ try:
         )
         i += 1
 
-        if sigurg_received:
-            sigurg_received = False
+        if sigterm_received:
+            sigterm_received = False
             session_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(data_dir/"RESTART", "w") as f: f.write(args.run_id)
-            dill.dump_session(str(session_path))
+            with session_path.open("wb") as f:
+                dill.dump({
+                    "dataset": dataset,
+                    "consumed_budget": consumed_budget,
+                    "i": i,
+                    "warmup": warmup,
+                    "params": params,
+                }, f)
+            with open("RESTART", "w") as f:
+                f.write(os.environ.get("SLURM_JOB_ID", ""))
             sys.exit(0)
-finally:
 
+finally:
     exc_type, exc_value, exc_traceback = sys.exc_info()
 
     if exc_type == SystemExit:
-        print("Exiting due to session timeout. No clean up yet!!!")
-
-    # Clean up cache
+        print("Exiting due to SIGTERM. Session saved for resuming.")
     elif os.path.exists(args.cache_root):
-        # Write empty file "DONE" to signal to the batch script that run is completed.
-        with open("DONE", "w") as f: ...
-        print(f"Cleaning up {args.cache_root}.../unn")
+        print(f"Cleaning up {args.cache_root}...")
         shutil.rmtree(args.cache_root, ignore_errors=True)
         wandb.finish()
+
+    # Write empty file "DONE" to signal to the batch script that run is completed.
+    if consumed_budget >= total_budget:
+        with open("DONE", "w") as f:
+            pass

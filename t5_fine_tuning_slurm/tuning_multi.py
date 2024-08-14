@@ -160,8 +160,8 @@ def fine_tuning(
         weight_decay=hparams["1__weight_decay"],
     )
 
-    train_dataloader = torch.load(data_prepoc_output_path / "training_data")
-    val_dataloader = torch.load(data_prepoc_output_path / "validation_data")
+    train_dataloader = torch.load(data_prepoc_output_path / "training_data", map_location=torch.device("cuda:0"))
+    val_dataloader = torch.load(data_prepoc_output_path / "validation_data", map_location=torch.device("cuda:0"))
     validation_dataset = datasets.load_from_disk(dataset / "validation_data")
     if num_samples > 0 and num_samples < 13368:
         validation_dataset = validation_dataset.select(range(num_samples))
@@ -407,6 +407,7 @@ def t5_fine_tuning(
     fine_tune_num_stgs: int = 1,
     dstl_num_epochs: int = 6,
     dstl_num_stgs: int = 3,
+    model_name: str = "t5-small",
 ):
     """Main Pipeline."""
     print(f"HPs for this iteration:\n\n{stg_hparams}\n\n")
@@ -438,7 +439,7 @@ def t5_fine_tuning(
     # Stage 2: Fine-tuning
     start_fine_tune = time.time()
     all_stages_costs.append(start_fine_tune - start_data_proc)
-    fine_tuned_model_path = "t5-small"
+    fine_tuned_model_path = model_name
     global_epochs = 0
     ft_epochs_per_stage = (ft_num_epochs // fine_tune_num_stgs) + (
         1 if (ft_num_epochs % fine_tune_num_stgs) else 0
@@ -462,7 +463,7 @@ def t5_fine_tuning(
 
     # Stage 3: Distillation
     start_distil = time.time()
-    distilled_model_path = "t5-small"
+    distilled_model_path = model_name
     global_epochs = 0
     dstl_epochs_per_stage = (dstl_num_epochs // dstl_num_stgs) + (
         1 if (dstl_num_epochs % dstl_num_stgs) else 0
