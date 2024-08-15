@@ -2,7 +2,7 @@
 #SBATCH --job-name=t5_optimization
 #SBATCH --output=%A/slurm_out/%a.out
 #SBATCH --error=%A/slurm_err/%a.err
-#SBATCH --time=00:05:00
+#SBATCH --time=12:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
