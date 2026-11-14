@@ -12,7 +12,11 @@ from typing import Dict, List, Tuple, Union
 import botorch
 import numpy as np
 import torch
-import wandb
+
+try:
+    import wandb
+except ImportError:
+    wandb = None
 
 from .acquisition_funcs.cost_aware_acqf import CArBO_iteration, EIPS_iteration
 from .acquisition_funcs.EEIPU.EEIPU_iteration import eeipu_iteration
@@ -187,8 +191,10 @@ def update_dataset_new_run(
     x_bounds,
     acqf,
     dtype=torch.float64,
-    device="cuda",
+    device=None,
 ):
+    if device is None:
+        device = "cuda" if torch.cuda.is_available() else "cpu"
     # Check PIRLIB output directory for new objective and cost values
     new_stg_costs = torch.tensor(new_stg_costs, dtype=dtype, device=device)
     new_obj = torch.tensor([new_obj], dtype=dtype, device=device)
@@ -252,8 +258,6 @@ def log_metrics(
     inv_cost = 1 / sum_stages
     dataset_x = [hp_tensor.tolist() for hp_tensor in dataset["x"].values()]
 
-    hp_table = wandb.Table(columns=list(range(len(dataset_x[0]))), data=dataset_x)
-
     if verbose:  # and iteration >= bo_params['n_init_data']:
         print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}]", end=":\t")
         print(f"f(x)={new_y:>4.3f}", end="\t")
@@ -275,19 +279,6 @@ def log_metrics(
         sum_c_x=sum_stages,
         cum_costs=cum_cost,
         eta=eta,
-    )
-    csv_log_table = wandb.Table(columns=list(csv_log.keys()))
-    csv_log_table.add_data(*csv_log.values())
-
-    log = dict(
-        best_f=best_f,
-        f_x=new_y,
-        sum_c_x=sum_stages,
-        cum_costs=cum_cost,
-        inv_cost=inv_cost,
-        c_x=dict(zip(map(str, range(len(stage_cost_list))), stage_cost_list)),
-        hp_table=hp_table,
-        csv_log_table=csv_log_table,
     )
 
     dir_name = f"./experiment_logs/{exp_name}"
@@ -320,7 +311,21 @@ def log_metrics(
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writerow(csv_log)
 
-    wandb.log(log, step=iteration)
+    if wandb is not None and getattr(wandb, "run", None) is not None:
+        hp_table = wandb.Table(columns=list(range(len(dataset_x[0]))), data=dataset_x)
+        csv_log_table = wandb.Table(columns=list(csv_log.keys()))
+        csv_log_table.add_data(*csv_log.values())
+        log = dict(
+            best_f=best_f,
+            f_x=new_y,
+            sum_c_x=sum_stages,
+            cum_costs=cum_cost,
+            inv_cost=inv_cost,
+            c_x=dict(zip(map(str, range(len(stage_cost_list))), stage_cost_list)),
+            hp_table=hp_table,
+            csv_log_table=csv_log_table,
+        )
+        wandb.log(log, step=iteration)
     return
 
 
@@ -432,7 +437,9 @@ def lambo_post_iteration(
     return mset, root
 
 
-def reformat_xbounds(x_bounds, device="cuda"):
+def reformat_xbounds(x_bounds, device=None):
+    if device is None:
+        device = "cuda" if torch.cuda.is_available() else "cpu"
     x_b = [[], []]
     for stage in x_bounds:
         for param_bounds in stage:
@@ -454,7 +461,7 @@ def generate_hps(
     h_ind = {}  # {0: [0,1], 1: [2,3,4], } [[0,1], [2,3,4]...] [0,1,2,3,4...]
     hp_names = {}  # {0: ["mean", "std"], 1: ["lr", "batch_size", "decay"], }
     stage_ids = sorted(
-        [(key.split("__")) for key in hp_sampling_range], key=lambda item: item[0]
+        [(key.split("__")) for key in hp_sampling_range], key=lambda item: int(item[0])
     )
 
     for i, (stg_id, hp_name) in enumerate(stage_ids):
@@ -556,7 +563,10 @@ def generate_hps(
     # When new_hp is None, `generate_hparams` will generate random samples.
     # It also saves the new_hp to the respective files where the main function can read them
     new_hp = generate_hparams(
-        new_hp, x_bounds, hp_dtypes, sampling_seed=iteration * (params["trial"] + 1)
+        new_hp,
+        x_bounds,
+        hp_dtypes,
+        sampling_seed=iteration * (params.get("trial", trial) + 1),
     )
 
     logging_metadata = {

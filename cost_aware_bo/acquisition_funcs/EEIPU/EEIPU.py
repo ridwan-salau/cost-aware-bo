@@ -201,11 +201,12 @@ class EEIPU(AnalyticAcquisitionFunction):
         ei_x = self.custom_EI(X)
 
         total_budget = self.params["total_budget"] + 0
+        budget_0 = self.params.get("budget_0", 0)
 
-        remaining = total_budget - self.consumed_budget
-        init_budget = total_budget - self.params["budget_0"]
+        remaining = max(0.0, total_budget - (self.consumed_budget or 0.0))
+        init_budget = total_budget - budget_0
 
-        cost_cool = remaining / init_budget
+        cost_cool = remaining / init_budget if init_budget > 0 else 0.0
 
         inv_cost = self.compute_expected_inverse_cost(X, delta=delta)
 

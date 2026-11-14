@@ -25,7 +25,11 @@ def normalize(data, bounds=None):
 
     for dim in range(dims):
         mn, mx = bounds[0][dim].item(), bounds[1][dim].item()
-        data_[:, dim] = (data_[:, dim] - mn) / (mx - mn)
+        span = mx - mn
+        if span == 0:
+            data_[:, dim] = 0.0
+        else:
+            data_[:, dim] = (data_[:, dim] - mn) / span
     return data_
 
 
@@ -41,6 +45,8 @@ def unnormalize(data, bounds=None):
 def standardize(data, bounds=None):
     data_ = data + 0
     mean, std = bounds[0].item(), bounds[1].item()
+    if std == 0 or torch.isnan(torch.tensor(std)):
+        return data_ - mean
     data_ = (data_ - mean) / std
     return data_
 

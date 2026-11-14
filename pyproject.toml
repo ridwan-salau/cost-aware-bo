@@ -3,29 +3,61 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "cost-aware-bo"
+name = "eeipu"
 authors = [
-  { name="Abdulmajid Esofi", email="abdelmajid.essofi@mbzuai.ac.ae" },
-  { name="Ridwan Salahuddeen", email="ridzy619@yahoo.com" },
+  { name = "Ridwan Salahuddeen", email = "ridzy619@yahoo.com" },
+  { name = "Abdelmajid Essofi", email = "abdelmajid.essofi@mbzuai.ac.ae" },
 ]
-description = "Cost-Aware Bayesian Optimization"
+description = "Memoization- and Cost-Aware Bayesian Optimization (EEIPU) for Multi-Stage ML Pipelines"
 readme = "README.md"
-requires-python = ">=3.7"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "Operating System :: OS Independent",
+license = { file = "LICENSE" }
+requires-python = ">=3.9"
+keywords = [
+  "bayesian-optimization",
+  "hyperparameter-optimization",
+  "cost-aware",
+  "memoization",
+  "botorch",
+  "ml-pipelines",
 ]
-dynamic = ["dependencies", "version"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Science/Research",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+  "botorch>=0.8.3",
+  "einops>=0.6.1",
+  "gpytorch>=1.9.1",
+  "numpy>=1.24.0",
+  "scipy>=1.10.0",
+  "torch>=2.0.0",
+]
+dynamic = ["version"]
 
-
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
-version = {attr = "cost_aware_bo.__version__"}
-
+[project.optional-dependencies]
+wandb = ["wandb>=0.15.1"]
+dev = ["pytest>=7.0", "build>=1.0", "twine>=4.0"]
 
 [project.urls]
-"Homepage" = "https://github.com/ridwan-salau/cost-aware-bo"
+Homepage = "https://github.com/ridwan-salau/cost-aware-bo"
+Repository = "https://github.com/ridwan-salau/cost-aware-bo"
 "Bug Tracker" = "https://github.com/ridwan-salau/cost-aware-bo/issues"
+Paper = "https://arxiv.org/abs/2411.03731"
+
+[tool.setuptools.dynamic]
+version = { attr = "cost_aware_bo.__version__" }
 
 [tool.setuptools.packages.find]
-exclude = ["run_real_world.sh", "run.sh", "env.yml", "t5_fine_tuning", "cost_aware_bo.egg-info"]
+include = ["cost_aware_bo*", "eeipu*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
