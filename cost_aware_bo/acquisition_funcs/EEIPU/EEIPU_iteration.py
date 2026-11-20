@@ -1,3 +1,4 @@
+import torch
 from botorch.acquisition.objective import IdentityMCObjective
 from botorch.sampling import SobolQMCNormalSampler
 
@@ -47,7 +48,9 @@ def eeipu_iteration(
         train_x, c, iter, params["h_ind"], bounds, acqf_str
     )
 
-    cost_sampler = SobolQMCNormalSampler(sample_shape=params["cost_samples"], seed=iter)
+    cost_sampler = SobolQMCNormalSampler(
+        sample_shape=torch.Size([params["cost_samples"]]), seed=iter
+    )
     acqf = EEIPU(
         acq_type=acqf_str,
         model=gp_model,

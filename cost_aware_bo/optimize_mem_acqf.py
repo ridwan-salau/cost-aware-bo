@@ -2,8 +2,23 @@ import copy
 from itertools import chain
 
 import torch
+from botorch.acquisition import AcquisitionFunction
+from botorch.optim import optimize_acqf as botorch_optimize_acqf
 
-from cost_aware_bo.optimizer.optimize_acqf_funcs import optimize_acqf
+from cost_aware_bo.optimizer.optimize_acqf_funcs import optimize_acqf as _compat_shim  # noqa: F401
+
+
+class _MemoizedAcqWrapper(AcquisitionFunction):
+    """Adapts (X, delta, curr_iter) acquisition functions to standard BoTorch forward(X)."""
+
+    def __init__(self, base_acqf, delta: int, curr_iter: int) -> None:
+        super().__init__(model=base_acqf.model)
+        self.base_acqf = base_acqf
+        self.delta = delta
+        self.curr_iter = curr_iter
+
+    def forward(self, X: torch.Tensor) -> torch.Tensor:
+        return self.base_acqf(X, delta=self.delta, curr_iter=self.curr_iter)
 
 
 def update_candidate(
@@ -29,23 +44,26 @@ def optimize_acqf_by_mem(
     for prefix in prefix_pool:
         cand_generation_bounds = copy.deepcopy(bounds)
         pref_stages = len(prefix)
-        prefix = list(chain(*prefix))
+        flat_prefix = list(chain(*prefix))
+        fixed_features = (
+            {i: float(val) for i, val in enumerate(flat_prefix)}
+            if flat_prefix
+            else None
+        )
 
-        for i, pref_param in enumerate(prefix):
-            cand_generation_bounds[0][i], cand_generation_bounds[1][i] = (
-                pref_param,
-                pref_param,
-            )
+        wrapped_acqf = (
+            _MemoizedAcqWrapper(acqf, delta=pref_stages, curr_iter=iter or 0)
+            if acqf_str and "EIPU" in acqf_str
+            else acqf
+        )
 
-        new_candidate, acqf_val = optimize_acqf(
-            acq_function=acqf,
-            acq_type=acqf_str,
-            delta=pref_stages,
-            curr_iter=iter,
+        new_candidate, acqf_val = botorch_optimize_acqf(
+            acq_function=wrapped_acqf,
             bounds=cand_generation_bounds,
             q=1,
             num_restarts=10,
             raw_samples=512,
+            fixed_features=fixed_features,
             options={"seed": seed},
         )
 

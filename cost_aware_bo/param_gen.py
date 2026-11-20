@@ -33,17 +33,6 @@ from .acquisition_funcs.LaMBO.LaMBO import (
 from .acquisition_funcs.LaMBO.LaMBO_iteration import lambo_iteration
 from .acquisition_funcs.MS_BO.MS_BO_iteration import msbo_iteration
 from .functions.processing_funcs import get_dataset_bounds
-from .optimizer.optimize_acqf_funcs import (
-    _optimize_acqf_batch,
-    gen_batch_initial_conditions,
-    gen_candidates_scipy,
-    optimize_acqf,
-)
-
-botorch.optim.optimize.optimize_acqf = optimize_acqf
-botorch.optim.optimize._optimize_acqf_batch = _optimize_acqf_batch
-botorch.generation.gen.gen_candidates_scipy = gen_candidates_scipy
-botorch.optim.initializers.gen_batch_initial_conditions = gen_batch_initial_conditions
 
 iteration_funcs = {
     "EEIPU_iteration": eeipu_iteration,
@@ -64,19 +53,20 @@ def read_json(filename):
     return params
 
 
-def sample_value(lower, upper, seed, dtype=float, choice_list=[]):
-    np.random.seed(seed)
+def sample_value(lower, upper, seed, dtype=float, choice_list=[], rng=None):
+    if rng is None:
+        rng = np.random.default_rng(seed)
 
     assert lower < upper, "hyperparameter lower bound must be less than upper bound"
     assert not (
         dtype and choice_list
     ), "Only one of dtype and choice_list should be set to a value"
     if dtype == float:
-        val = np.random.uniform(lower, upper)
+        val = float(rng.uniform(lower, upper))
     elif dtype == round:
-        val = np.random.randint(lower, upper)
+        val = int(rng.integers(lower, upper + 1))
     elif dtype == str:
-        val = choice_list[np.random.randint(0, len(choice_list))]
+        val = choice_list[int(rng.integers(0, len(choice_list)))]
     else:
         raise ValueError("Invalid `dtype` provided. Provide one of `int` and `float`")
 
@@ -131,6 +121,7 @@ def generate_hparams(
     """
     new_hp = []
     hp = hp[:] if hp else hp
+    rng = np.random.default_rng(sampling_seed)
     for stg_bounds, stg_dtypes in zip(x_bounds, dtypes):
         stg_hps = []
 
@@ -142,7 +133,9 @@ def generate_hparams(
             if hp:
                 val = clip(eval(dtype)(hp.pop(0)), lower, upper)
             else:
-                val = sample_value(lower, upper, sampling_seed, dtype=eval(dtype))
+                val = sample_value(
+                    lower, upper, sampling_seed, dtype=eval(dtype), rng=rng
+                )
             stg_hps.append(val)
 
         new_hp.extend(stg_hps)
@@ -474,6 +467,7 @@ def generate_hps(
             hp_names[stg_id].append(hp_name)
 
     h_ind_list = list(dict(sorted(h_ind.items())).values())
+    hp_names = dict(sorted(hp_names.items()))
     params["h_ind"] = h_ind_list
 
     x_bounds = {}
@@ -505,7 +499,7 @@ def generate_hps(
     )
 
     new_hp, n_memoised, n_init_data = None, 0, params["n_init_data"]
-    if iteration > n_init_data:
+    if iteration >= n_init_data:
         x = torch.stack(list(dataset["x"].values()), axis=1)
         y = dataset["y"].unsqueeze(-1)
         c = dataset["c"]
@@ -562,11 +556,16 @@ def generate_hps(
 
     # When new_hp is None, `generate_hparams` will generate random samples.
     # It also saves the new_hp to the respective files where the main function can read them
+    sampling_seed = (
+        int(params.get("rand_seed", 0)) * 10000
+        + int(params.get("trial", trial)) * 1000
+        + int(iteration)
+    )
     new_hp = generate_hparams(
         new_hp,
         x_bounds,
         hp_dtypes,
-        sampling_seed=iteration * (params.get("trial", trial) + 1),
+        sampling_seed=sampling_seed,
     )
 
     logging_metadata = {

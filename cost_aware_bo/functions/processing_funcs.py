@@ -97,11 +97,14 @@ def get_cost_bounds(C, bounds):
     std_c_bounds = [[], []]
     for stage in range(C.shape[1]):
         stage_costs = C[:, stage]
-        # print("Stage costs:", stage_costs)
         log_sc = torch.log(stage_costs)
-        std_c_bounds[0].append(log_sc.mean().item())
-        std_c_bounds[1].append(log_sc.std().item())
-    bounds["c"] = torch.tensor(std_c_bounds, device=DEVICE)
+        mean_val = log_sc.mean().item()
+        std_val = log_sc.std().item() if log_sc.numel() > 1 else 1.0
+        if std_val == 0.0 or torch.isnan(torch.tensor(std_val)):
+            std_val = 1.0
+        std_c_bounds[0].append(mean_val)
+        std_c_bounds[1].append(std_val)
+    bounds["c"] = torch.tensor(std_c_bounds, device=DEVICE, dtype=torch.double)
 
     return bounds
 
@@ -110,14 +113,19 @@ def get_dataset_bounds(X: Dict[str, List], Y, C, gen_bounds):
     bounds = {}
     bounds["x"] = gen_bounds + 0.0
 
-    x_cube_bounds = [
-        [min(hp_values) for hp_values in X.values()],
-        [max(hp_values) for hp_values in X.values()],
-    ]
-    bounds["x_cube"] = torch.tensor(x_cube_bounds, device=DEVICE)
+    # Use the declared search-space bounds [lower, upper] (shape [2, D]) rather
+    # than observed min/max so BO can explore the full search space.
+    if gen_bounds.ndim == 2 and gen_bounds.shape[1] == 2:
+        bounds["x_cube"] = gen_bounds.T.to(device=DEVICE, dtype=torch.double)
+    else:
+        bounds["x_cube"] = gen_bounds.to(device=DEVICE, dtype=torch.double)
 
+    y_mean = Y.mean().item()
+    y_std = Y.std().item() if Y.numel() > 1 else 1.0
+    if y_std == 0.0 or torch.isnan(torch.tensor(y_std)):
+        y_std = 1.0
     bounds["y"] = torch.tensor(
-        [[Y.mean().item()], [Y.std().item()]], device=DEVICE, dtype=torch.double
+        [[y_mean], [y_std]], device=DEVICE, dtype=torch.double
     )
 
     bounds = get_cost_bounds(C, bounds)
@@ -153,7 +161,9 @@ def initialize_GP_model(X, y, params=None):
 
 
 def generate_prefix_pool(X, Y, acqf, params):
-    first_idx = params["n_init_data"]
+    first_idx = (
+        0 if params.get("include_init_prefixes", True) else params["n_init_data"]
+    )
     x, y = X[first_idx:], Y[first_idx:]
 
     data_pool = [(x[i, :], y[i].item()) for i in range(x.shape[0])]
@@ -163,17 +173,26 @@ def generate_prefix_pool(X, Y, acqf, params):
     if acqf not in ["EEIPU", "EIPU-MEMO"]:
         return prefix_pool
 
-    for i, (param_config, obj) in enumerate(data_pool):
-        if i >= params["n_prefixes"]:
+    seen = set()
+    added_configs = 0
+    n_memoizable_stages = len(params["h_ind"]) - 1
+
+    for param_config, _obj in data_pool:
+        if added_configs >= params["n_prefixes"]:
             break
 
         prefix = []
-        n_memoizable_stages = len(params["h_ind"]) - 1
-
-        # mem_stages = random.randint(1, n_memoizable_stages)
+        added_any = False
         for j in range(n_memoizable_stages):
             stage_params = params["h_ind"][j]
-            prefix.append(list(param_config[stage_params].cpu().detach().numpy()))
-            prefix_pool.append(copy.deepcopy(prefix))
+            stage_vals = [float(v) for v in param_config[stage_params].cpu().detach().numpy()]
+            prefix.append(stage_vals)
+            key = tuple(tuple(round(v, 9) for v in stg) for stg in prefix)
+            if key not in seen:
+                seen.add(key)
+                prefix_pool.append(copy.deepcopy(prefix))
+                added_any = True
+        if added_any:
+            added_configs += 1
 
     return prefix_pool

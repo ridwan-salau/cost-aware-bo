@@ -1,0 +1,179 @@
+\documentclass[11pt,letterpaper]{article}
+\usepackage[margin=0.95in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{microtype}
+\usepackage{tikz}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,shapes.geometric}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!60!black,
+  citecolor=blue!60!black,
+  urlcolor=blue!60!black
+}
+
+\title{\textbf{Cost-Aware Hyperparameter Tuning on Local and Enclave Hardware:\\Reference Design, Audit Logging, and Public-Data Benchmark}}
+
+\author{
+  Ridwan Salahuddeen\\
+  \texttt{ridzy619@yahoo.com}
+}
+
+\date{November 2026}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Organizations subject to data-custody laws or air-gapped security rules often cannot send training data to commercial cloud services. When hyperparameter tuning runs on a fixed local computer instead, repeating early preprocessing and feature-extraction steps takes up most of the available runtime. This note describes a standalone reference design for running memoization- and cost-aware Bayesian optimization (\texttt{eeipu}, version~1.0.0) offline on local hardware or inside a trusted execution environment (TEE), combined with a content-addressed disk cache and a SHA-256 hash-chained audit log. In a benchmark on the public CIFAR-10 dataset with a 120-second compute budget per run on an Apple M1 computer (three random seeds, four methods), \texttt{EEIPU} evaluated $116.0 \pm 21.6$ hyperparameter settings, compared with $41.3 \pm 7.5$ for standard Expected Improvement (\texttt{EI}, $+180.6\%$), $43.3 \pm 3.2$ for \texttt{EI} with Stage~0 caching ($+167.7\%$), and $54.7 \pm 3.2$ for random search ($+112.2\%$). \texttt{EEIPU} reached a mean best validation accuracy of $84.93\% \pm 0.64\%$, compared with $82.33\% \pm 0.99\%$ for \texttt{EI}, $82.27\% \pm 1.29\%$ for \texttt{EI+Cache}, and $82.60\% \pm 0.40\%$ for random search. Stage~0 cache reuse occurred on $78.7\%$ of \texttt{EEIPU} evaluations, used $41.9\%$ less disk space than \texttt{EI+Cache}, added $0.75$~ms per iteration for audit logging, and passed hash-chain verification and tamper checks on all 12 runs.
+\end{abstract}
+
+\section{Background and Constraints}
+In public safety, healthcare, and defense, legal and institutional rules often require sensitive files to stay on hardware controlled by the organization. In the United States, for example, 18 U.S.C.\ \S\,3509(m) requires child-exploitation evidence to remain in government custody, and the Federal Bureau of Investigation Criminal Justice Information Services (CJIS) Security Policy sets rules for encryption, system isolation, and logging. Similar restrictions apply to patient records under the Health Insurance Portability and Accountability Act (HIPAA).
+
+These rules impose three practical limits on machine learning workflows:
+\begin{enumerate}
+  \item \textbf{Offline operation:} Hyperparameter search must run locally, either on an on-premises machine or inside a hardware trusted execution environment (TEE), without outbound network traffic or external tracking services.
+  \item \textbf{Fixed hardware:} Agencies and laboratories usually work with a fixed workstation or small local server rather than a large cloud cluster, so repeated training runs consume scarce compute time.
+  \item \textbf{Record keeping:} When a trained model is used to sort evidence or assist reviewers, examiners need a tamper-evident log linking each trained model and validation score to the exact dataset split, base model, and hyperparameters used.
+\end{enumerate}
+
+Many machine learning and multimodal workflows, including vision-transformer key-event detection, speech transcription, and parameter-efficient fine-tuning, are built as multi-stage pipelines. An early stage (Stage~0) prepares data or computes features with a frozen pretrained model, and a later stage (Stage~1) trains a smaller classifier or adapter on those features. Standard Bayesian optimization treats the pipeline as a single black box and re-runs Stage~0 on every trial. Expected Expected Improvement Per Unit Cost (EEIPU)~\cite{essofi2024reducing} addresses this by fitting a separate Gaussian Process cost model for each stage and checking whether reusing cached outputs from earlier stages offers more expected improvement per unit of runtime. This note describes a clean-room local setup for EEIPU with hash-chained logging and reports measurements on a public image dataset.
+
+\section{Reference Design}
+The reference code is built from scratch on the open-source \texttt{eeipu} package (version~1.0.0, Apache-2.0 license) using its \texttt{EEIPUOptimizer} ask-and-tell interface. It uses no third-party proprietary code, model weights, or internal vendor designs. Figure~\ref{fig:arch} shows the layout of the local execution boundary and its components.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  node distance=0.65cm and 0.9cm,
+  box/.style={rectangle, draw=blue!55!black, fill=blue!4, rounded corners=3pt, minimum height=0.95cm, text width=2.9cm, align=center, font=\footnotesize},
+  store/.style={rectangle, draw=teal!60!black, fill=teal!5, rounded corners=3pt, minimum height=0.85cm, text width=2.9cm, align=center, font=\footnotesize},
+  audit/.style={rectangle, draw=orange!70!black, fill=orange!6, rounded corners=3pt, minimum height=0.85cm, text width=3.2cm, align=center, font=\footnotesize},
+  arrow/.style={-{Stealth[length=2.2mm]}, thick, draw=black!75}
+]
+  \node[store, text width=3.3cm] (data) {\textbf{Read-Only Dataset}\\Local / Enclave Mount\\(\texttt{\scriptsize dataset\_manifest\_hash})};
+  \node[box, right=of data] (stage0) {\textbf{Stage 0 (Cached)}\\Preprocessing and\\Feature Extraction};
+  \node[store, below=0.75cm of stage0] (cache) {\textbf{Stage 0 Disk Cache}\\Content-Addressed\\$k(b,\theta_0)=\mathrm{SHA256}(\cdot)$};
+  \node[box, right=of stage0] (stage1) {\textbf{Stage 1 (Training)}\\Classifier / Adapter\\Train and Validate};
+  \node[box, below=0.75cm of stage1] (opt) {\textbf{Offline \texttt{EEIPUOptimizer}}\\Objective GP + Cost GPs\\Top-$k$ Prefix Pool};
+  \node[audit, below=0.75cm of data] (log) {\textbf{SHA-256 Audit Log}\\Append-Only JSONL\\$h_t=\mathrm{SHA256}(\text{rec}_t \| h_{t-1})$};
+
+  \draw[arrow] (data) -- (stage0);
+  \draw[arrow] (stage0) -- node[above, font=\scriptsize] {features} (stage1);
+  \draw[arrow, <->] (stage0) -- node[right, font=\scriptsize, align=left] {hit: load\\miss: save} (cache);
+  \draw[arrow] (stage1) -- node[right, font=\scriptsize, align=left] {$y$, $[c_0, c_1]$} (opt);
+  \draw[arrow] (opt.north west) -- node[above, sloped, font=\scriptsize] {next $\theta$} (stage0.south east);
+  \draw[arrow] (opt.west) -- (log.east);
+
+  \begin{scope}[on background layer]
+    \node[draw=gray!70!black, dashed, thick, rounded corners=5pt, inner sep=10pt,
+          fit=(data)(stage0)(cache)(stage1)(opt)(log),
+          label={[font=\footnotesize\bfseries, text=gray!45!black]above:Local Machine or TEE Boundary (No Outbound Network, Encrypted Local Storage)}] (boundary) {};
+  \end{scope}
+\end{tikzpicture}
+\caption{Reference layout for offline cost-aware hyperparameter tuning on a local machine or inside a trusted execution environment (TEE). Data, intermediate feature caches, optimization, and audit logs stay inside the execution boundary.}
+\label{fig:arch}
+\end{figure}
+
+\subsection{Stage Separation and Content-Addressed Caching}
+A multi-stage pipeline separates upstream feature extraction (Stage~0) from downstream training (Stage~1). For Stage~0 hyperparameters $\theta_0$ and base-model identifier $b$, the cache key is computed as:
+\[
+  k(b, \theta_0) = \mathrm{SHA256}\!\left(\mathrm{JSON}_{\text{canonical}}(\{b, \theta_0\})\right)_{[0:16]}.
+\]
+When a cached file for $k(b, \theta_0)$ already exists on local disk, Stage~0 is skipped and only the file-loading time counts against the wall-clock compute budget. The cached file also records its original uncached Stage~0 runtime. Passing that uncached runtime to the Stage~0 cost Gaussian Process keeps the cost model accurate for uncached settings, while the budget counter tracks actual time spent.
+
+\subsection{Offline Acquisition Loop}
+\texttt{EEIPUOptimizer} runs in-process with PyTorch and BoTorch and does not require network access or external experiment trackers (\texttt{wandb} is optional). After $n_{\text{init}}$ independent random warm-up trials drawn across the full search space, each step fits a Gaussian Process to the validation metric $f(\theta)$ and one log-cost Gaussian Process per stage $c_s(\theta_s)$. It then gathers up to $k$ distinct top-scoring Stage~0 prefixes and maximizes the EEIPU acquisition function over both fresh Stage~0 settings and cached prefixes whose Stage~0 cost is discounted to a small constant $\epsilon$.
+
+\subsection{Hash-Chained Audit Log and Enclave Attestation}
+After each trial, the runner appends one JSON-Lines (JSONL) entry to an append-only log file. Each entry stores:
+\begin{itemize}
+  \item \textbf{Provenance fields:} package version (\texttt{eeipu\_version}), base model identifier (\texttt{backbone\_id}), SHA-256 hash of the dataset split manifest (\texttt{dataset\_manifest\_hash}), and SHA-256 hash of the trained Stage~1 model weights (\texttt{model\_weights\_hash}).
+  \item \textbf{Run fields:} sequence number (\texttt{seq}), UTC timestamp, method name (\texttt{acq\_type}), random seed, iteration number, hyperparameters, cache-hit flag and key, per-stage runtimes in seconds, and validation accuracy.
+  \item \textbf{Hash chain:} the previous entry hash $h_{t-1}$ (starting from 64 zero characters) and the current hash $h_t = \mathrm{SHA256}(\mathrm{JSON}_{\text{canonical}}(\text{record}_t))$.
+\end{itemize}
+A standalone checker (\texttt{verify\_audit\_log}) recomputes every hash from the first entry to the last entry $h_T$ and reports any change or missing line. On hardware that supports remote attestation (such as AWS Nitro Enclaves, Intel SGX or TDX, or AMD SEV-SNP), placing the final hash $h_T$ in the attestation report's user-data field binds the audit log to the measured enclave image without exporting training data.
+
+\section{Public-Data Benchmark}
+To test the design without proprietary code or restricted data, we ran a two-stage image classification benchmark on the public CIFAR-10 dataset. This mirrors the frozen-backbone plus downstream-head structure used in visual triage workflows:
+\begin{itemize}
+  \item \textbf{Stage~0 (cached):} Resize a CIFAR-10 training subset (\texttt{0\_\_train\_samples} $\in [400, 1600]$) and a fixed $500$-image validation split to \texttt{0\_\_img\_size} $\in [64, 160]$, then extract embeddings with a frozen ImageNet-pretrained ResNet-18 model (\texttt{torchvision.resnet18:IMAGENET1K\_V1}).
+  \item \textbf{Stage~1 (trained):} Train a two-layer multilayer perceptron (MLP) with AdamW, tuning learning rate (\texttt{1\_\_lr} $\in [10^{-4}, 10^{-2}]$), weight decay (\texttt{1\_\_weight\_decay} $\in [10^{-5}, 10^{-2}]$), hidden width (\texttt{1\_\_hidden\_dim} $\in [32, 256]$), and epochs (\texttt{1\_\_epochs} $\in [5, 25]$).
+  \item \textbf{Compared methods:} Four methods were tested under the same $120$-second wall-clock budget per run ($n_{\text{init}} = 6$, random seeds $\{0, 1, 2\}$): (1)~\texttt{RAND} (uniform random search), (2)~\texttt{EI} (BoTorch \texttt{LogExpectedImprovement} without caching), (3)~\texttt{EI\_CACHE} (\texttt{LogExpectedImprovement} with the same Stage~0 disk cache enabled, to separate passive caching from memoization-aware search), and (4)~\texttt{EEIPU} (memoization-aware search with the Stage~0 disk cache).
+  \item \textbf{Hardware:} Personal Apple MacBook Pro (M1), using Apple Metal Performance Shaders (MPS) for ResNet-18 and MLP execution and the CPU for double-precision BoTorch Gaussian Process fitting.
+\end{itemize}
+
+\section{Measured Results}
+Table~\ref{tab:results} and Figure~\ref{fig:benchmark} show the measured validation accuracy, candidate count, and cache reuse for each method. Table~\ref{tab:overhead} reports measured cache timing, disk usage, and audit-log latency.
+
+\begin{table}[h]
+\centering
+\footnotesize
+\caption{Measured performance under a 120-second wall-clock budget on public CIFAR-10 (mean $\pm$ standard deviation over seeds 0, 1, and 2).}
+\label{tab:results}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+\textbf{Method} & \textbf{Candidates} & \textbf{Best Val.\ Acc.\ (\%)} & \textbf{Stage 0 Hits} & \textbf{Hit Rate} \\
+\midrule
+Random Search (\texttt{RAND}) & $54.7 \pm 3.2$ & $82.60 \pm 0.40$ & $0.0$ & $0.0\%$ \\
+Expected Improvement (\texttt{EI}) & $41.3 \pm 7.5$ & $82.33 \pm 0.99$ & $0.0$ & $0.0\%$ \\
+\texttt{EI + Stage 0 Cache} (\texttt{EI\_CACHE}) & $43.3 \pm 3.2$ & $82.27 \pm 1.29$ & $2.7$ & $6.2\%$ \\
+\texttt{EEIPU} (this work) & $\mathbf{116.0 \pm 21.6}$ & $\mathbf{84.93 \pm 0.64}$ & $\mathbf{91.3}$ & $\mathbf{78.7\%}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\input{results/fig_benchmark.tex}
+
+\begin{table}[h]
+\centering
+\footnotesize
+\caption{Measured cache timing, disk usage, and audit-log latency (means over seeds 0, 1, and 2).}
+\label{tab:overhead}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+\textbf{Method} & \textbf{Stage 0 Miss (s)} & \textbf{Stage 0 Hit (ms)} & \textbf{Cache (MB)} & \textbf{Audit Write (ms)} & \textbf{Verify (ms)} \\
+\midrule
+\texttt{RAND} & $1.706$ & --- & $0.0$ & $0.58$ & $2.64$ \\
+\texttt{EI} & $2.542$ & --- & $0.0$ & $0.67$ & $2.28$ \\
+\texttt{EI\_CACHE} & $2.571$ & $5.89$ & $128.8$ & $0.66$ & $1.44$ \\
+\texttt{EEIPU} & $2.514$ & $\mathbf{2.81}$ & $\mathbf{74.8}$ & $0.75$ & $4.24$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The measurements show four main patterns:
+\begin{enumerate}
+  \item \textbf{More evaluations and higher accuracy:} Within the 120-second budget, \texttt{EEIPU} evaluated $116.0 \pm 21.6$ candidates, which is $+180.6\%$ more than \texttt{EI} ($41.3 \pm 7.5$), $+167.7\%$ more than \texttt{EI\_CACHE} ($43.3 \pm 3.2$), and $+112.2\%$ more than \texttt{RAND} ($54.7 \pm 3.2$). \texttt{EEIPU} also reached the highest validation accuracy on each of the three seeds ($84.2\%$, $85.2\%$, and $85.4\%$; mean $84.93\% \pm 0.64\%$), exceeding \texttt{EI} by $2.60$ percentage points, \texttt{EI\_CACHE} by $2.67$ percentage points, and \texttt{RAND} by $2.33$ percentage points.
+  \item \textbf{Effect of passive caching alone:} Giving standard \texttt{EI} the same Stage~0 disk cache (\texttt{EI\_CACHE}) produced an average of only $2.7$ cache hits ($6.2\%$ hit rate) and $2.0$ additional candidates, because continuous acquisition rarely selects an identical Stage~0 setting twice. \texttt{EI\_CACHE} also wrote $128.8$~MB of cached files per run, whereas \texttt{EEIPU} achieved a $78.7\%$ hit rate using $74.8$~MB ($41.9\%$ less disk space) by reusing a smaller set of high-scoring Stage~0 prefixes.
+  \item \textbf{Cache read speed:} Loading cached Stage~0 features took $2.81$~ms on average, compared with $2.514$~s to compute Stage~0 from scratch (an $895\times$ reduction in Stage~0 time on a cache hit).
+  \item \textbf{Audit-log cost and tamper checks:} Writing each SHA-256 log record took $0.58$ to $0.75$~ms per iteration (less than $0.05\%$ of an uncached evaluation), and checking a complete trial log took $1.44$ to $4.24$~ms. All 12 logs ($4$ methods $\times$ $3$ seeds) passed \texttt{verify\_audit\_log}. In an automated tamper test (\texttt{verify\_tamper\_detection}) that modified a single recorded accuracy value in a copy of each log, the checker flagged all 12 modified logs ($100\%$).
+\end{enumerate}
+
+\section{Scope, Limitations, and Future Work}
+This work is a clean-room reference implementation tested only on public data (CIFAR-10) using personal Apple M1 hardware. It does not report measurements inside a hardware TEE; instead, it documents the offline execution layout, content-addressed cache, and hash-chained log format needed for local and enclave deployment. Planned follow-up work includes testing Vision Transformer (\texttt{vit\_b\_16}, already implemented in \texttt{pipeline.py}), speech-transcription, and parameter-efficient fine-tuning pipelines on public datasets, as well as adding container templates that bind the terminal audit hash $h_T$ to hardware TEE attestation quotes.
+
+\section{Reproducibility and Code Availability}
+The benchmark scripts, audit-log verifier, and \texttt{eeipu} package (version~1.0.0, Apache-2.0 license) are available in the \texttt{benchmarks/on\_prem\_enclave/} directory of \url{https://github.com/ridwan-salau/cost-aware-bo}. All results were generated with Python~3.12, PyTorch~2.15, and BoTorch~0.18 using:
+\begin{verbatim}
+python run_benchmark.py --budget-sec 120 --n-init 6 --seeds 0 1 2
+python plot_results.py --results-dir ./results --budget-sec 120
+\end{verbatim}
+
+\begin{thebibliography}{1}
+\bibitem{essofi2024reducing}
+A.~Essofi, R.~Salahuddeen, M.~Nwadike, E.~Zhalieva, K.~Zhang, E.~P. Xing, W.~Neiswanger, and Q.~Ho,
+``Reducing hyperparameter tuning costs in ML, vision and language model training pipelines via memoization-awareness,''
+\emph{arXiv preprint arXiv:2411.03731}, 2024.
+\end{thebibliography}
+
+\end{document}

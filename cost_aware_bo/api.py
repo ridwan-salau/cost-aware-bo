@@ -98,8 +98,20 @@ class EEIPUOptimizer:
         hparams: Dict[str, Union[float, int]],
         objective: float,
         stage_costs: Sequence[float],
+        budget_cost: Optional[float] = None,
     ) -> None:
-        """Record the observed objective (to maximize) and per-stage costs."""
+        """Record the observed objective (to maximize) and per-stage costs.
+
+        Args:
+            hparams: Evaluated hyperparameter dictionary.
+            objective: Observed validation metric (to maximize).
+            stage_costs: Per-stage compute costs used to fit the stage cost GPs
+                (for memoized stages, passing the uncached stage compute cost keeps
+                the cost surrogate calibrated while ``budget_cost`` tracks actual
+                wall-clock budget spent).
+            budget_cost: Actual total cost charged against ``total_budget``.
+                Defaults to ``sum(stage_costs)``.
+        """
         if self._x_bounds is None:
             # Allow direct observe() calls even before suggest() by deriving bounds
             stage_map: Dict[int, List[Tuple[float, float]]] = {}
@@ -111,7 +123,9 @@ class EEIPUOptimizer:
             self._x_bounds = [stage_map[k] for k in sorted(stage_map)]
 
         costs_list = [float(c) for c in stage_costs]
-        self.consumed_budget += sum(costs_list)
+        self.consumed_budget += (
+            float(budget_cost) if budget_cost is not None else sum(costs_list)
+        )
         self.dataset = update_dataset_new_run(
             dataset=self.dataset,
             new_hp_dict=hparams,

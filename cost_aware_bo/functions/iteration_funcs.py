@@ -1,7 +1,11 @@
 import csv
 
 import torch
-from botorch import fit_gpytorch_model
+
+try:
+    from botorch.fit import fit_gpytorch_mll as fit_gpytorch_model
+except ImportError:
+    from botorch import fit_gpytorch_model
 
 from cost_aware_bo.functions.processing_funcs import (
     assert_positive_costs,

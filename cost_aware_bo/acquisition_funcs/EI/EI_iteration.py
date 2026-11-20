@@ -1,4 +1,7 @@
-from botorch.acquisition import ExpectedImprovement
+try:
+    from botorch.acquisition import LogExpectedImprovement as ExpectedImprovement
+except ImportError:
+    from botorch.acquisition import ExpectedImprovement
 
 from cost_aware_bo.functions.iteration_funcs import get_gp_models
 from cost_aware_bo.functions.processing_funcs import (
